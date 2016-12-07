@@ -35,11 +35,24 @@ class INA219:
 	__INA219_CONFIG_GAIN_4_160MV             = 0x1000  # Gain 4, 160mV Range
 	__INA219_CONFIG_GAIN_8_320MV             = 0x1800  # Gain 8, 320mV Range
 
-	__INA219_CONFIG_BADCRES_MASK             = 0x0780  # Bus ADC Resolution Mask
-	__INA219_CONFIG_BADCRES_9BIT             = 0x0080  # 9-bit bus res = 0..511
-	__INA219_CONFIG_BADCRES_10BIT            = 0x0100  # 10-bit bus res = 0..1023
-	__INA219_CONFIG_BADCRES_11BIT            = 0x0200  # 11-bit bus res = 0..2047
-	__INA219_CONFIG_BADCRES_12BIT            = 0x0400  # 12-bit bus res = 0..4097
+#	__INA219_CONFIG_BADCRES_MASK             = 0x0780  # Bus ADC Resolution Mask
+#	__INA219_CONFIG_BADCRES_9BIT             = 0x0080  # 9-bit bus res = 0..511
+#	__INA219_CONFIG_BADCRES_10BIT            = 0x0100  # 10-bit bus res = 0..1023
+#	__INA219_CONFIG_BADCRES_11BIT            = 0x0200  # 11-bit bus res = 0..2047
+#	__INA219_CONFIG_BADCRES_12BIT            = 0x0400  # 12-bit bus res = 0..4097
+
+	__INA219_CONFIG_BADCRES_MASK             = 0x0780  # Shunt ADC Resolution and Averaging Mask
+	__INA219_CONFIG_BADCRES_9BIT_1S_84US     = 0x0000  # 1 x 9-bit shunt sample
+	__INA219_CONFIG_BADCRES_10BIT_1S_148US   = 0x0080  # 1 x 10-bit shunt sample
+	__INA219_CONFIG_BADCRES_11BIT_1S_276US   = 0x0100  # 1 x 11-bit shunt sample
+	__INA219_CONFIG_BADCRES_12BIT_1S_532US   = 0x0180  # 1 x 12-bit shunt sample
+	__INA219_CONFIG_BADCRES_12BIT_2S_1060US  = 0x0480  # 2 x 12-bit shunt samples averaged together
+	__INA219_CONFIG_BADCRES_12BIT_4S_2130US  = 0x0500  # 4 x 12-bit shunt samples averaged together
+	__INA219_CONFIG_BADCRES_12BIT_8S_4260US  = 0x0580  # 8 x 12-bit shunt samples averaged together
+	__INA219_CONFIG_BADCRES_12BIT_16S_8510US = 0x0600  # 16 x 12-bit shunt samples averaged together
+	__INA219_CONFIG_BADCRES_12BIT_32S_17MS   = 0x0680  # 32 x 12-bit shunt samples averaged together
+	__INA219_CONFIG_BADCRES_12BIT_64S_34MS   = 0x0700  # 64 x 12-bit shunt samples averaged together
+	__INA219_CONFIG_BADCRES_12BIT_128S_69MS  = 0x0780  # 128 x 12-bit shunt samples averaged together
 
 	__INA219_CONFIG_SADCRES_MASK             = 0x0078  # Shunt ADC Resolution and Averaging Mask
 	__INA219_CONFIG_SADCRES_9BIT_1S_84US     = 0x0000  # 1 x 9-bit shunt sample
@@ -123,18 +136,24 @@ class INA219:
 		# Set Config register to take into account the settings above
 		config = self.__INA219_CONFIG_BVOLTAGERANGE_32V | \
 				 self.__INA219_CONFIG_GAIN_8_320MV | \
-				 self.__INA219_CONFIG_BADCRES_12BIT | \
-				 self.__INA219_CONFIG_SADCRES_12BIT_1S_532US | \
+				 self.__INA219_CONFIG_BADCRES_12BIT_128S_69MS | \
+				 self.__INA219_CONFIG_SADCRES_12BIT_128S_69MS | \
 				 self.__INA219_CONFIG_MODE_SANDBVOLT_CONTINUOUS
+
+#		config = self.__INA219_CONFIG_BVOLTAGERANGE_32V | \
+#				 self.__INA219_CONFIG_GAIN_8_320MV | \
+#				 self.__INA219_CONFIG_BADCRES_12BIT | \
+#				 self.__INA219_CONFIG_SADCRES_12BIT_1S_532US | \
+#				 self.__INA219_CONFIG_MODE_SANDBVOLT_CONTINUOUS
 		
 		bytes = [(config >> 8) & 0xFF, config & 0xFF]
 		self.i2c.writeList(self.__INA219_REG_CONFIG, bytes)
 
 	def getBusVoltage_raw(self):
-		result = self.i2c.readU16(self.__INA219_REG_BUSVOLTAGE)
-		
+		result = self.i2c.readList(self.__INA219_REG_BUSVOLTAGE,2)
+		raw16 =  (result[0] << 8) | (result[1])
 		# Shift to the right 3 to drop CNVR and OVF and multiply by LSB
-		return (result >> 3) * 4
+		return (raw16 >> 3) * 4
 		
 	def getShuntVoltage_raw(self):
 		result = self.i2c.readList(self.__INA219_REG_SHUNTVOLTAGE,2)
