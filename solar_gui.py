@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import Tkinter as tk
+from solar_monitor import Solar, setupSolar
 
 class Application(tk.Frame):
 	def __init__(self, master=None):
@@ -215,10 +216,37 @@ class Application(tk.Frame):
 		#
 		self.canvas.create_line(0,0,800,500)
 
+	def updateGuiFields(self, solarData):
+		
+		self.sensor1_LabelFrame["text"] = solarData["names"][0];
+		self.sensor2_LabelFrame["text"] = solarData["names"][1];
+		self.sensor3_LabelFrame["text"] = solarData["names"][2];
+		self.sensor4_LabelFrame["text"] = solarData["names"][3];
+		
+		self.sensor1_voltageStringVar.set("%2.3f Volts" % solarData["voltage"][0])
+		self.sensor2_voltageStringVar.set("%2.3f Volts" % solarData["voltage"][1])
+		self.sensor3_voltageStringVar.set("%2.3f Volts" % solarData["voltage"][2])
+		self.sensor4_voltageStringVar.set("%2.3f Volts" % solarData["voltage"][3])
+
+		self.sensor1_currentStringVar.set("%2.3f Amps" % (solarData["current"][0]/1000.0))
+		self.sensor2_currentStringVar.set("%2.3f Amps" % (solarData["current"][1]/1000.0))
+		self.sensor3_currentStringVar.set("%2.3f Amps" % (solarData["current"][2]/1000.0))
+		self.sensor4_currentStringVar.set("%2.3f Amps" % (solarData["current"][3]/1000.0))
+
+		self.sensor1_powerStringVar.set("%2.3f Watts" % (solarData["voltage"][0]*solarData["current"][0]/1000.0))
+		self.sensor2_powerStringVar.set("%2.3f Watts" % (solarData["voltage"][1]*solarData["current"][1]/1000.0))
+		self.sensor3_powerStringVar.set("%2.3f Watts" % (solarData["voltage"][2]*solarData["current"][2]/1000.0))
+		self.sensor4_powerStringVar.set("%2.3f Watts" % (solarData["voltage"][3]*solarData["current"][3]/1000.0))
 
 
-
-
+	def periodicEventHandler(self):
+		self.after(1000,self.periodicEventHandler);
+		print "Got here.";
+		
+		data = self.mySolar.gatherData();
+		self.updateGuiFields(data);
+		self.mySolar.recordData(data);
+		self.mySolar.printResults(data);
 
 
 
@@ -227,7 +255,12 @@ class Application(tk.Frame):
 def main():
 	app = Application()                       
 	app.master.title('Solar Panel Monitor')    
-	app.mainloop()              
+	
+	app.after(0,app.periodicEventHandler);
+	
+	app.mySolar = setupSolar()
+	app.mainloop() ;
+	 
 
 
 	

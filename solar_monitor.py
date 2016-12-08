@@ -146,9 +146,7 @@ class SolarDb:
 			self.m_currents[index].append(data["current"][index]);
 			self.m_sensorNames.append(data["names"][index] );
 		
-		
-
-def main():
+def setupSolar():
 	mySolarSensors = SolarSensors()
 
 #	ina = INA219(0x40);
@@ -157,16 +155,21 @@ def main():
 #	mySolarSensors.addSensor("Battery2", ina ); # A1 jumper.
 #	mySolarSensors.addSensor("Load", ina ); # A0 and A1 jumpers.
 
-	mySolarSensors.addSensor("Panel", INA219(0x45) ); # no jumpers.
-	mySolarSensors.addSensor("Battery1", INA219(0x41) ); # A0 jumper.
-	mySolarSensors.addSensor("Battery2", INA219(0x44) ); # A1 jumper.
-	mySolarSensors.addSensor("Load", INA219(0x40) ); # A0 and A1 jumpers.
+	mySolarSensors.addSensor("Solar Panel (45)", INA219(0x45) ); # A0 and A1 jumpers.
+	mySolarSensors.addSensor("Battery 1 (44)", INA219(0x44) ); # A1 jumper.
+	mySolarSensors.addSensor("Battery 2 (41)", INA219(0x41) ); # A0 jumper.
+	mySolarSensors.addSensor("Load (40)", INA219(0x40) ); # no jumpers.
 	
 	mySolar = Solar(mySolarSensors, Timestamper() );
+	return mySolar;
+
+
+def main():
+	mySolar = setupSolar()
 	while(True):
 		data = mySolar.gatherData();
 		mySolar.recordData(data);
-		text = mySolar.printResults(data);
+		mySolar.printResults(data);
 		# update gui
 		time.sleep(1.0)
 
