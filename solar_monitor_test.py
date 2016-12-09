@@ -272,34 +272,34 @@ class TestSolar(unittest.TestCase):
 		self.m_solar.recordData( self.m_solar.gatherData() );
 		self.assertEqual(False, os.path.exists("test_solarLog_2016_11_30.txt"));
 		
-		for index in xrange(3600-1):
+		for index in xrange(600-1):
 			self.m_TimestamperMock.advanceOneSec();
 			self.m_solar.recordData( self.m_solar.gatherData() );
 		self.assertEqual(False, os.path.exists("test_solarLog_2016_11_30.txt"));
 
-		self.assertEqual("01:59:59", self.m_TimestamperMock.getTime());
+		self.assertEqual("01:09:59", self.m_TimestamperMock.getTime());
 
 		# advance so that the hour rolls over.  will trigger a file creation and write.
 		self.m_TimestamperMock.advanceOneSec();
-		self.assertEqual("02:00:00", self.m_TimestamperMock.getTime());
+		self.assertEqual("01:10:00", self.m_TimestamperMock.getTime());
 
 		self.m_solar.recordData( self.m_solar.gatherData() );
 		self.assertEqual(True, os.path.exists("test_solarLog_2016_11_30.txt"));
 		size_after_3600 = self.getFileSize("test_solarLog_2016_11_30.txt");
 
 		# advance to right before the next rollover. make sure no writes in between.
-		for index in xrange(3600-1):
+		for index in xrange(600-1):
 			self.m_TimestamperMock.advanceOneSec();
 			self.m_solar.recordData( self.m_solar.gatherData() );
 			size_after_7199 = self.getFileSize("test_solarLog_2016_11_30.txt");
 			self.assertEqual(size_after_3600, size_after_7199);
 
-		self.assertEqual("02:59:59", self.m_TimestamperMock.getTime());
+		self.assertEqual("01:19:59", self.m_TimestamperMock.getTime());
 
 		
 		# advance so that the hour rolls over.  will trigger a file write.
 		self.m_TimestamperMock.advanceOneSec();
-		self.assertEqual("03:00:00", self.m_TimestamperMock.getTime());
+		self.assertEqual("01:20:00", self.m_TimestamperMock.getTime());
 
 		self.m_solar.recordData( self.m_solar.gatherData() );
 		self.assertEqual(True, os.path.exists("test_solarLog_2016_11_30.txt"));
@@ -319,7 +319,7 @@ class TestSolar(unittest.TestCase):
 
 		self.assertEqual("23:59:59", self.m_TimestamperMock.getTime());
 
-		# advance so that the hour rolls over.  will trigger a file creation and write.
+		# advance so that the window rolls over.  will trigger a file creation and write.
 		self.m_TimestamperMock.advanceOneSec();
 		self.assertEqual("00:00:00", self.m_TimestamperMock.getTime());
 		self.assertEqual("2016_11_31", self.m_TimestamperMock.getDate());
@@ -328,16 +328,16 @@ class TestSolar(unittest.TestCase):
 		self.assertEqual(False, os.path.exists("test_solarLog_2016_11_31.txt"));
 
 		# advance to right before the next rollover. make sure no writes in between.
-		for index in xrange(3600-1):
+		for index in xrange(600-1):
 			self.m_TimestamperMock.advanceOneSec();
 			self.m_solar.recordData( self.m_solar.gatherData() );
 
-		self.assertEqual("00:59:59", self.m_TimestamperMock.getTime());
+		self.assertEqual("00:09:59", self.m_TimestamperMock.getTime());
 
 		
-		# advance so that the hour rolls over.  will trigger a file write.
+		# advance so that the window rolls over.  will trigger a file write.
 		self.m_TimestamperMock.advanceOneSec();
-		self.assertEqual("01:00:00", self.m_TimestamperMock.getTime());
+		self.assertEqual("00:10:00", self.m_TimestamperMock.getTime());
 
 		self.m_solar.recordData( self.m_solar.gatherData() );
 		self.assertEqual(True, os.path.exists("test_solarLog_2016_11_31.txt"));

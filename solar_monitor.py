@@ -52,7 +52,7 @@ class Solar:
 	def formatPrintData(self, results):
 		returnValue = []
 		returnValue.append( "%-20s %-20s %-20s %-20s" % (results["names"][0],results["names"][1],results["names"][2],results["names"][3]));
-		returnValue.append( "%2.2f V              %2.2f V              %2.2f V              %2.2f V" % (results["voltage"][0],results["voltage"][1],results["voltage"][2],results["voltage"][3]));
+		returnValue.append( "%2.3f V              %2.3f V              %2.3f V              %2.3f V" % (results["voltage"][0],results["voltage"][1],results["voltage"][2],results["voltage"][3]));
 		returnValue.append( "%5.0f mA             %5.0f mA             %5.0f mA             %5.0f mA" % (results["current"][0],results["current"][1],results["current"][2],results["current"][3]));
 		returnValue.append( "%5.0f mW             %5.0f mW             %5.0f mW             %5.0f mW" % (results["voltage"][0]*results["current"][0],results["voltage"][1]*results["current"][1],results["voltage"][2]*results["current"][2],results["voltage"][3]*results["current"][3]));
 		return returnValue;
@@ -89,7 +89,7 @@ class SolarDb:
 		self.m_times = [];
 		self.m_date = "0000_00_00";
 		self.m_filename = "unknown"
-		self.m_prev_hour = -1;
+		self.m_prev_sampleWindow = -1;
 		for index in xrange(4):
 			emptyList = []
 			self.m_voltages.append(emptyList);
@@ -101,9 +101,9 @@ class SolarDb:
 	def addEntry(self, date, time, data):
 		
 		# if rollover, flush the old data to the file.
-		sampleHour = int(time[0:2])
-		if ( self.m_prev_hour != sampleHour ) and (self.m_date != "0000_00_00"): # the hour rolled over.
-			m_prev_hour = sampleHour;
+		sampleWindow = int(time[3:5])/10
+		if ( self.m_prev_sampleWindow != sampleWindow ) and (self.m_date != "0000_00_00"): # the hour rolled over.
+			m_prev_sampleWindow = sampleWindow;
 			
 			self.m_filename = self.m_filenamePrefix+self.m_date+".txt"
 			
@@ -138,7 +138,7 @@ class SolarDb:
 				self.m_currents.append(emptyList);
 		
 		self.m_date = date;
-		self.m_prev_hour = sampleHour
+		self.m_prev_sampleWindow = sampleWindow
 		
 		self.m_times.append(time);
 		for index in xrange(len(data["voltage"])):
