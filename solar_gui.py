@@ -241,7 +241,7 @@ class Application(tk.Frame):
 
 	def periodicEventHandler(self):
 		self.after(1000,self.periodicEventHandler);
-		print "Got here.";
+#		print "Got here.";
 		
 		data = self.mySolar.gatherData();
 		self.updateGuiFields(data);
