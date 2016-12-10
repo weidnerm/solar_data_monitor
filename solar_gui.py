@@ -10,9 +10,9 @@ class Application(tk.Frame):
 
 		self.plotData = None;
 
-		self.leftPad = 20
+		self.leftPad = 40
 		self.topPad = 10
-		self.bottomPad = 10
+		self.bottomPad = 30
 		self.rightPad = 10
 
 	def createWidgets(self):
@@ -291,8 +291,9 @@ class Application(tk.Frame):
 
 #		self.canvas.create_line(0,0,self.plotwidth,self.plotheight)
 		
+		# plot the data traces
 		if not self.plotData == None:
-			channelIndex = 3
+			channelIndex = 2
 			skipCount = len(self.plotData[channelIndex]["voltage"])/(self.plotwidth-self.leftPad-self.rightPad)
 			print("voltage count=%d   plotWidth=%d   skipcount=%d" % (len(self.plotData[channelIndex]["voltage"]),self.plotwidth-self.leftPad-self.rightPad,skipCount))
 			if skipCount <= 0:
@@ -308,8 +309,43 @@ class Application(tk.Frame):
 			for index in xrange(0,len(self.plotData[channelIndex]["voltage"])-skipCount,skipCount):
 #			for index in xrange(100-1):
 				self.canvas.create_line(plotXBase+horizontalScale*(index),plotYBase-verticalScale*(self.plotData[channelIndex]["voltage"][index]-vertMin),plotXBase+horizontalScale*(index+skipCount),plotYBase-verticalScale*(self.plotData[channelIndex]["voltage"][index+skipCount]-vertMin))
-				
-				
+		
+			#
+			# put the scale info
+			#
+			
+			# axis numbers
+			gridLeft = self.leftPad
+			gridRight = self.plotwidth-self.rightPad
+			gridBottom = self.plotheight-self.bottomPad
+			gridTop = self.topPad
+			gridWidth = gridRight-gridLeft
+			gridHeight = gridBottom-gridTop
+			gridScaleMax = self.plotData[channelIndex]["maxVoltage"]
+			gridScaleMin = self.plotData[channelIndex]["minVoltage"]
+			gridScaleSpan = gridScaleMax-gridScaleMin
+			# x-axis numbers - left
+			self.canvas.create_text(gridLeft, gridBottom + 2, text=self.plotData[channelIndex]["time"][0], anchor=tk.NW)
+			# x-axis numbers - middle-left
+			self.canvas.create_text( gridLeft+gridWidth/4 , gridBottom + 2, text=self.plotData[channelIndex]["time"][len(self.plotData[channelIndex]["voltage"])/4], anchor=tk.N)
+			# x-axis numbers - middle
+			self.canvas.create_text( gridLeft+gridWidth/2 , gridBottom + 2, text=self.plotData[channelIndex]["time"][len(self.plotData[channelIndex]["voltage"])/2], anchor=tk.N)
+			# x-axis numbers - middle-right
+			self.canvas.create_text( gridLeft+gridWidth*3/4 , gridBottom + 2, text=self.plotData[channelIndex]["time"][len(self.plotData[channelIndex]["voltage"])*3/4], anchor=tk.N)
+			# x-axis numbers - right
+			self.canvas.create_text(gridRight, gridBottom + 2, text=self.plotData[channelIndex]["time"][len(self.plotData[channelIndex]["voltage"])-1], anchor=tk.NE)
+
+			# y-axis numbers - top
+			self.canvas.create_text(0, gridTop + 2, text=("%2.2f" % (gridScaleMin+gridScaleSpan)), anchor=tk.NW)
+			# y-axis numbers - middle-top
+			self.canvas.create_text( 0 , gridTop+gridHeight/4, text=("%2.2f" % (gridScaleMin+gridScaleSpan*3/4)), anchor=tk.W)
+			# y-axis numbers - middle
+			self.canvas.create_text( 0 , gridTop+gridHeight/2, text=("%2.2f" % (gridScaleMin+gridScaleSpan/2)), anchor=tk.W)
+			# y-axis numbers - middle-bottom
+			self.canvas.create_text( 0 , gridTop+gridHeight*3/4, text=("%2.2f" % (gridScaleMin+gridScaleSpan/4)), anchor=tk.W)
+			# y-axis numbers - bottom
+			self.canvas.create_text(0, gridBottom - 2, text=("%2.2f" % (gridScaleMin)), anchor=tk.SW)
+		
 
 	def periodicEventHandler(self):
 		self.after(1000,self.periodicEventHandler);
