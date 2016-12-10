@@ -8,6 +8,13 @@ class Application(tk.Frame):
 		self.grid(sticky=tk.N+tk.S+tk.E+tk.W)    
 		self.createWidgets()
 
+		self.plotData = None;
+
+		self.leftPad = 20
+		self.topPad = 10
+		self.bottomPad = 10
+		self.rightPad = 10
+
 	def createWidgets(self):
 		
 		#
@@ -188,22 +195,37 @@ class Application(tk.Frame):
 
 
 		#
-		# set up the plot canvas widgets
+		# set up the left and right buttons
 		#
-
-
-		self.canvasLeftButton = tk.Button(self.canvas_LabelFrame, text='<', command=self.plotGraph)            
+		self.canvasLeftButton = tk.Button(self.canvas_LabelFrame, text='<', command=self.fetchAndPlot)            
 		self.canvasLeftButton.grid(column=0,row=0)            
 
-		self.canvasRightButton = tk.Button(self.canvas_LabelFrame, text='>', command=self.plotGraph)            
+		self.canvasRightButton = tk.Button(self.canvas_LabelFrame, text='>', command=self.fetchAndPlot)            
 		self.canvasRightButton.grid(column=2,row=0)            
 
+	
+	
+		#
+		# set up the plot canvas widgets
+		#
 		self.canvas = tk.Canvas(self.canvas_LabelFrame, width=800, height=500)            
-		self.canvas.grid(column=1,row=0)            
+		self.canvas.grid(column=1,row=0, sticky=tk.E + tk.W + tk.N + tk.S )            
 
 
 
 
+		#
+		# add resize handler
+		#
+		self.canvas.bind("<Configure>", self.on_resize)
+
+
+
+
+
+		#
+		# add quit handler
+		#
 		self.quitButton = tk.Button(self, text='Quit', command=self.quit)            
 		self.quitButton.grid()            
 
@@ -238,12 +260,37 @@ class Application(tk.Frame):
 		self.sensor3_powerStringVar.set("%2.3f Watts" % (solarData["voltage"][2]*solarData["current"][2]/1000.0))
 		self.sensor4_powerStringVar.set("%2.3f Watts" % (solarData["voltage"][3]*solarData["current"][3]/1000.0))
 
+	def fetchAndPlot(self):
+		self.plotDate = self.mySolar.m_Timestamper.getDate()
+		self.plotData = self.mySolar.m_SolarDb.readDayLog(self.plotDate);
+		
+
+		
+		self.plotGraph()
+		
+		print(self.plotDate)
+		
+	def on_resize(self, event):
+		self.plotheight = event.height;
+		self.plotwidth = event.width;
+		print("resized to %d %d" %(self.plotwidth,self.plotheight))
+		self.plotGraph();
+
 	def plotGraph(self):
-		plotDate = self.mySolar.m_Timestamper.getDate()
 		
-		print(plotDate)
-		
-	def getRanges(self,plotData)
+		self.canvas.delete("all");
+		# draw left y axis
+		self.canvas.create_line(self.leftPad,self.topPad,self.leftPad,self.plotheight-self.bottomPad)
+		# draw left y axis
+		self.canvas.create_line(self.plotwidth-self.rightPad,self.topPad,self.plotwidth-self.rightPad,self.plotheight-self.bottomPad)
+		# draw x axis only if there is no data to plot.
+		if self.plotData == None:
+			self.canvas.create_line(self.leftPad, self.plotheight-self.bottomPad, self.plotwidth-self.rightPad,self.plotheight-self.bottomPad)
+
+		self.canvas.create_line(0,0,self.plotwidth,self.plotheight)
+
+		if not self.plotData == None:
+			verticalScale = (self.plotheight-self.topPad-self.bottomPad)/(self.plotData[0]["maxVoltage"] - self.plotData[0]["minVoltage"])
 
 
 	def periodicEventHandler(self):
