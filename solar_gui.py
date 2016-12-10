@@ -293,47 +293,60 @@ class Application(tk.Frame):
 		
 		# plot the data traces
 		if not self.plotData == None:
-			channelIndex = 2
-			skipCount = len(self.plotData[channelIndex]["voltage"])/(self.plotwidth-self.leftPad-self.rightPad)
-			print("voltage count=%d   plotWidth=%d   skipcount=%d" % (len(self.plotData[channelIndex]["voltage"]),self.plotwidth-self.leftPad-self.rightPad,skipCount))
-			if skipCount <= 0:
-				skipCount = 1
-			plotXBase = self.leftPad
-			plotYBase = self.plotheight-self.bottomPad
-			print("maxVoltage=%2.3f  minVoltage=%2.3f" % (self.plotData[channelIndex]["maxVoltage"],self.plotData[channelIndex]["minVoltage"]))
-			verticalScale = float(self.plotheight-self.topPad-self.bottomPad)/(self.plotData[channelIndex]["maxVoltage"] - self.plotData[channelIndex]["minVoltage"])
-			horizontalScale = float(self.plotwidth-self.rightPad-self.leftPad)/float(len(self.plotData[channelIndex]["voltage"]) )
-#			horizontalScale = float(self.plotwidth-self.rightPad-self.leftPad)/float(100 )
-			vertMin = self.plotData[channelIndex]["minVoltage"]
+			self.channelIndex = 2
+			parm = 2
 
-			for index in xrange(0,len(self.plotData[channelIndex]["voltage"])-skipCount,skipCount):
-#			for index in xrange(100-1):
-				self.canvas.create_line(plotXBase+horizontalScale*(index),plotYBase-verticalScale*(self.plotData[channelIndex]["voltage"][index]-vertMin),plotXBase+horizontalScale*(index+skipCount),plotYBase-verticalScale*(self.plotData[channelIndex]["voltage"][index+skipCount]-vertMin))
-		
-			#
-			# put the scale info
-			#
-			
-			# axis numbers
+			tempMinMax = self.getMinMaxForParm(parm)
+			gridScaleMax = tempMinMax[1];
+			gridScaleMin = tempMinMax[0];
 			gridLeft = self.leftPad
 			gridRight = self.plotwidth-self.rightPad
 			gridBottom = self.plotheight-self.bottomPad
 			gridTop = self.topPad
 			gridWidth = gridRight-gridLeft
 			gridHeight = gridBottom-gridTop
-			gridScaleMax = self.plotData[channelIndex]["maxVoltage"]
-			gridScaleMin = self.plotData[channelIndex]["minVoltage"]
 			gridScaleSpan = gridScaleMax-gridScaleMin
+			
+
+			valueCount = len(self.plotData[self.channelIndex]["voltage"])  # assume length of each array is the same.
+			skipCount = valueCount/(self.plotwidth-self.leftPad-self.rightPad) # how many data points get put into each horizontal pixel of the plot
+			print("voltage count=%d   plotWidth=%d   skipcount=%d" % (valueCount,self.plotwidth-self.leftPad-self.rightPad,skipCount))
+			if skipCount <= 0:
+				skipCount = 1
+			plotXBase = self.leftPad
+			plotYBase = self.plotheight-self.bottomPad
+#			print("maxVoltage=%2.3f  minVoltage=%2.3f" % (self.plotData[self.channelIndex]["maxVoltage"],self.plotData[self.channelIndex]["minVoltage"]))
+			verticalScale = float(self.plotheight-self.topPad-self.bottomPad)/(gridScaleMax - gridScaleMin)
+			horizontalScale = float(self.plotwidth-self.rightPad-self.leftPad)/float(valueCount )
+			vertMin = gridScaleMin
+
+			# plot the data
+			leftValue=self.getDataValueForParm(parm,0)
+			for index in xrange(skipCount,valueCount-skipCount,skipCount):
+				rightValue = self.getDataValueForParm(parm,index);
+				self.canvas.create_line(plotXBase+horizontalScale*(index),plotYBase-verticalScale*(leftValue-vertMin),plotXBase+horizontalScale*(index+skipCount),plotYBase-verticalScale*(rightValue-vertMin))
+				leftValue = rightValue;
+			
+			# draw "0" x axis line
+			if (gridScaleMin < 0) and (gridScaleMax > 0): # max is below 0 and min is above, so draw "0" line.
+				self.canvas.create_line(gridLeft,plotYBase-verticalScale*(0-vertMin),gridRight,plotYBase-verticalScale*(0-vertMin))
+
+
+			#
+			# put the scale info
+			#
+			
+			# axis numbers
 			# x-axis numbers - left
-			self.canvas.create_text(gridLeft, gridBottom + 2, text=self.plotData[channelIndex]["time"][0], anchor=tk.NW)
+			self.canvas.create_text(gridLeft, gridBottom + 2, text=self.plotData[self.channelIndex]["time"][0], anchor=tk.NW)
 			# x-axis numbers - middle-left
-			self.canvas.create_text( gridLeft+gridWidth/4 , gridBottom + 2, text=self.plotData[channelIndex]["time"][len(self.plotData[channelIndex]["voltage"])/4], anchor=tk.N)
+			self.canvas.create_text( gridLeft+gridWidth/4 , gridBottom + 2, text=self.plotData[self.channelIndex]["time"][valueCount/4], anchor=tk.N)
 			# x-axis numbers - middle
-			self.canvas.create_text( gridLeft+gridWidth/2 , gridBottom + 2, text=self.plotData[channelIndex]["time"][len(self.plotData[channelIndex]["voltage"])/2], anchor=tk.N)
+			self.canvas.create_text( gridLeft+gridWidth/2 , gridBottom + 2, text=self.plotData[self.channelIndex]["time"][valueCount/2], anchor=tk.N)
 			# x-axis numbers - middle-right
-			self.canvas.create_text( gridLeft+gridWidth*3/4 , gridBottom + 2, text=self.plotData[channelIndex]["time"][len(self.plotData[channelIndex]["voltage"])*3/4], anchor=tk.N)
+			self.canvas.create_text( gridLeft+gridWidth*3/4 , gridBottom + 2, text=self.plotData[self.channelIndex]["time"][valueCount*3/4], anchor=tk.N)
 			# x-axis numbers - right
-			self.canvas.create_text(gridRight, gridBottom + 2, text=self.plotData[channelIndex]["time"][len(self.plotData[channelIndex]["voltage"])-1], anchor=tk.NE)
+			self.canvas.create_text(gridRight, gridBottom + 2, text=self.plotData[self.channelIndex]["time"][valueCount-1], anchor=tk.NE)
 
 			# y-axis numbers - top
 			self.canvas.create_text(0, gridTop + 2, text=("%2.2f" % (gridScaleMin+gridScaleSpan)), anchor=tk.NW)
@@ -346,7 +359,37 @@ class Application(tk.Frame):
 			# y-axis numbers - bottom
 			self.canvas.create_text(0, gridBottom - 2, text=("%2.2f" % (gridScaleMin)), anchor=tk.SW)
 		
+	def getDataValueForParm(self,parm,index):
+		returnVal = 0;
+		if parm == 0:  # voltage
+			returnVal = self.plotData[self.channelIndex]["voltage"][index];
+		elif parm == 1: # current
+			returnVal = self.plotData[self.channelIndex]["current"][index];
+		elif parm == 2: # power
+			returnVal = self.plotData[self.channelIndex]["voltage"][index] * self.plotData[self.channelIndex]["current"][index];
+		return returnVal
+		
+	def getMinMaxForParm(self,parm):
+		returnVal = [999999999.0, -999999999.0] # baseline extreme opposite numbers for min and max
+		channelMax = 0; channelMin = 0
+		for channelIndex in xrange(4):
+			if ( channelIndex == self.channelIndex ):  # is channel enabled. FIXME when clickers working
+				if parm == 0: # voltage
+					channelMax = self.plotData[channelIndex]["maxVoltage"];
+					channelMin = self.plotData[channelIndex]["minVoltage"];
+				elif parm == 1: # current
+					channelMax = self.plotData[channelIndex]["maxCurrent"];
+					channelMin = self.plotData[channelIndex]["minCurrent"];
+				elif parm == 2: # power
+					channelMax = self.plotData[channelIndex]["maxPower"];
+					channelMin = self.plotData[channelIndex]["minPower"];
 
+				if channelMax > returnVal[1]: # find new max
+					returnVal[1] = channelMax;
+				if channelMin < returnVal[0]: # find new min
+					returnVal[0] = channelMin;
+		return returnVal
+				
 	def periodicEventHandler(self):
 		self.after(1000,self.periodicEventHandler);
 		

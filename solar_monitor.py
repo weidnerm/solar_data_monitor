@@ -181,6 +181,8 @@ class SolarDb:
 			returnVal[chanIndex]["minVoltage"] =  99999999.0 # very big.
 			returnVal[chanIndex]["maxCurrent"] = -99999999 # very small.
 			returnVal[chanIndex]["minCurrent"] =  99999999 # very big.
+			returnVal[chanIndex]["maxPower"] = -99999999 # very small.
+			returnVal[chanIndex]["minPower"] =  99999999 # very big.
 
 		for index in xrange(1,len(rawLines)):
 			fields = rawLines[index].split(",");
@@ -198,6 +200,10 @@ class SolarDb:
 					returnVal[chanIndex]["maxCurrent"] = int(fields[2+chanIndex*2])
 				if (returnVal[chanIndex]["minCurrent"] > int(fields[2+chanIndex*2])):
 					returnVal[chanIndex]["minCurrent"] = int(fields[2+chanIndex*2])
+				if (returnVal[chanIndex]["maxPower"] < float(fields[1+chanIndex*2])*int(fields[2+chanIndex*2])):
+					returnVal[chanIndex]["maxPower"] = float(fields[1+chanIndex*2])*int(fields[2+chanIndex*2])
+				if (returnVal[chanIndex]["minPower"] > float(fields[1+chanIndex*2])*int(fields[2+chanIndex*2])):
+					returnVal[chanIndex]["minPower"] = float(fields[1+chanIndex*2])*int(fields[2+chanIndex*2])
 		
 		fileHandle.close()
 		return returnVal;
