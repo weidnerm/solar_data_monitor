@@ -262,6 +262,8 @@ class Application(tk.Frame):
 
 	def fetchAndPlot(self):
 		self.plotDate = self.mySolar.m_Timestamper.getDate()
+#		self.plotDate = "2016_12_09"
+		
 		self.plotData = self.mySolar.m_SolarDb.readDayLog(self.plotDate);
 		
 
@@ -287,11 +289,27 @@ class Application(tk.Frame):
 		if self.plotData == None:
 			self.canvas.create_line(self.leftPad, self.plotheight-self.bottomPad, self.plotwidth-self.rightPad,self.plotheight-self.bottomPad)
 
-		self.canvas.create_line(0,0,self.plotwidth,self.plotheight)
-
+#		self.canvas.create_line(0,0,self.plotwidth,self.plotheight)
+		
 		if not self.plotData == None:
-			verticalScale = (self.plotheight-self.topPad-self.bottomPad)/(self.plotData[0]["maxVoltage"] - self.plotData[0]["minVoltage"])
+			channelIndex = 3
+			skipCount = len(self.plotData[channelIndex]["voltage"])/(self.plotwidth-self.leftPad-self.rightPad)
+			print("voltage count=%d   plotWidth=%d   skipcount=%d" % (len(self.plotData[channelIndex]["voltage"]),self.plotwidth-self.leftPad-self.rightPad,skipCount))
+			if skipCount <= 0:
+				skipCount = 1
+			plotXBase = self.leftPad
+			plotYBase = self.plotheight-self.bottomPad
+			print("maxVoltage=%2.3f  minVoltage=%2.3f" % (self.plotData[channelIndex]["maxVoltage"],self.plotData[channelIndex]["minVoltage"]))
+			verticalScale = float(self.plotheight-self.topPad-self.bottomPad)/(self.plotData[channelIndex]["maxVoltage"] - self.plotData[channelIndex]["minVoltage"])
+			horizontalScale = float(self.plotwidth-self.rightPad-self.leftPad)/float(len(self.plotData[channelIndex]["voltage"]) )
+#			horizontalScale = float(self.plotwidth-self.rightPad-self.leftPad)/float(100 )
+			vertMin = self.plotData[channelIndex]["minVoltage"]
 
+			for index in xrange(0,len(self.plotData[channelIndex]["voltage"])-skipCount,skipCount):
+#			for index in xrange(100-1):
+				self.canvas.create_line(plotXBase+horizontalScale*(index),plotYBase-verticalScale*(self.plotData[channelIndex]["voltage"][index]-vertMin),plotXBase+horizontalScale*(index+skipCount),plotYBase-verticalScale*(self.plotData[channelIndex]["voltage"][index+skipCount]-vertMin))
+				
+				
 
 	def periodicEventHandler(self):
 		self.after(1000,self.periodicEventHandler);
