@@ -159,10 +159,10 @@ class SolarDb:
 		
 		for index in xrange(4):
 			tempVal = {}  # put an empty dictionary for each array entry.
-			tempVal["name"] = []
+			tempVal["name"]    = []
 			tempVal["voltage"] = []
 			tempVal["current"] = []
-			tempVal["time"] = []
+			tempVal["time"]    = []
 			
 			returnVal.append(tempVal);
 		filename = "solarLog_"+date+".csv"
@@ -176,22 +176,28 @@ class SolarDb:
 		returnVal[2]["name"] = firstLineFields[5][:-8];  # strip off " voltage" from the end for the base name.
 		returnVal[3]["name"] = firstLineFields[7][:-8];  # strip off " voltage" from the end for the base name.
 		
+		for chanIndex in xrange(4):
+			returnVal[chanIndex]["maxVoltage"] = -99999999.0 # very small.
+			returnVal[chanIndex]["minVoltage"] =  99999999.0 # very big.
+			returnVal[chanIndex]["maxCurrent"] = -99999999 # very small.
+			returnVal[chanIndex]["minCurrent"] =  99999999 # very big.
+
 		for index in xrange(1,len(rawLines)):
 			fields = rawLines[index].split(",");
-			returnVal[0]["voltage"].append(fields[1])
-			returnVal[1]["voltage"].append(fields[3])
-			returnVal[2]["voltage"].append(fields[5])
-			returnVal[3]["voltage"].append(fields[7])
-			
-			returnVal[0]["current"].append(fields[2])
-			returnVal[1]["current"].append(fields[4])
-			returnVal[2]["current"].append(fields[6])
-			returnVal[3]["current"].append(fields[8])
-			
-			returnVal[0]["time"].append(fields[0])
-			returnVal[1]["time"].append(fields[0])
-			returnVal[2]["time"].append(fields[0])
-			returnVal[3]["time"].append(fields[0])
+				
+			for chanIndex in xrange(4):
+				returnVal[chanIndex]["voltage"].append(float(fields[1+chanIndex*2]))
+				returnVal[chanIndex]["current"].append(int(fields[2+chanIndex*2]))
+				returnVal[chanIndex]["time"].append(fields[0])
+				
+				if (returnVal[chanIndex]["maxVoltage"] < float(fields[1+chanIndex*2])):
+					returnVal[chanIndex]["maxVoltage"] = float(fields[1+chanIndex*2])
+				if (returnVal[chanIndex]["minVoltage"] > float(fields[1+chanIndex*2])):
+					returnVal[chanIndex]["minVoltage"] = float(fields[1+chanIndex*2])
+				if (returnVal[chanIndex]["maxCurrent"] < int(fields[2+chanIndex*2])):
+					returnVal[chanIndex]["maxCurrent"] = int(fields[2+chanIndex*2])
+				if (returnVal[chanIndex]["minCurrent"] > int(fields[2+chanIndex*2])):
+					returnVal[chanIndex]["minCurrent"] = int(fields[2+chanIndex*2])
 		
 		fileHandle.close()
 		return returnVal;

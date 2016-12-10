@@ -387,15 +387,15 @@ class TestSolar(unittest.TestCase):
 		self.assertEqual(100, len(log[3]["time"]) );
 		
 		# check first actual values
-		self.assertEqual(0.388, float(log[0]["voltage"][0]) );
-		self.assertEqual(12.776, float(log[1]["voltage"][0]) );
-		self.assertEqual(12.792, float(log[2]["voltage"][0]) );
-		self.assertEqual(12.756, float(log[3]["voltage"][0]) );
+		self.assertEqual(0.388, log[0]["voltage"][0] );
+		self.assertEqual(12.776, log[1]["voltage"][0] );
+		self.assertEqual(12.792, log[2]["voltage"][0] );
+		self.assertEqual(12.756, log[3]["voltage"][0] );
 
-		self.assertEqual(-1, float(log[0]["current"][0]) );
-		self.assertEqual(-14, float(log[1]["current"][0]) );
-		self.assertEqual(-129, float(log[2]["current"][0]) );
-		self.assertEqual(135, float(log[3]["current"][0]) );
+		self.assertEqual(-1, log[0]["current"][0] );
+		self.assertEqual(-14, log[1]["current"][0] );
+		self.assertEqual(-129, log[2]["current"][0] );
+		self.assertEqual(135, log[3]["current"][0] );
 
 		self.assertEqual("20:18:19", log[0]["time"][0] );
 		self.assertEqual("20:18:19", log[1]["time"][0] );
@@ -403,15 +403,15 @@ class TestSolar(unittest.TestCase):
 		self.assertEqual("20:18:19", log[3]["time"][0] );
 
 		# check second actual values
-		self.assertEqual(0.392, float(log[0]["voltage"][1]) );
-		self.assertEqual(12.776, float(log[1]["voltage"][1]) );
-		self.assertEqual(12.792, float(log[2]["voltage"][1]) );
-		self.assertEqual(12.756, float(log[3]["voltage"][1]) );
+		self.assertEqual(0.392, log[0]["voltage"][1] );
+		self.assertEqual(12.776, log[1]["voltage"][1] );
+		self.assertEqual(12.792, log[2]["voltage"][1] );
+		self.assertEqual(12.756, log[3]["voltage"][1] );
 
-		self.assertEqual(-1, int(log[0]["current"][1]) );
-		self.assertEqual(-13, int(log[1]["current"][1]) );
-		self.assertEqual(-129, int(log[2]["current"][1]) );
-		self.assertEqual(133, int(log[3]["current"][1]) );
+		self.assertEqual(-1, log[0]["current"][1] );
+		self.assertEqual(-13, log[1]["current"][1] );
+		self.assertEqual(-129, log[2]["current"][1] );
+		self.assertEqual(133, log[3]["current"][1] );
 
 		self.assertEqual("20:18:20", log[0]["time"][1] );
 		self.assertEqual("20:18:20", log[1]["time"][1] );
@@ -419,21 +419,30 @@ class TestSolar(unittest.TestCase):
 		self.assertEqual("20:18:20", log[3]["time"][1] );
 
 		# check last actual values
-		self.assertEqual(0.392, float(log[0]["voltage"][99]) );
-		self.assertEqual(12.776, float(log[1]["voltage"][99]) );
-		self.assertEqual(12.792, float(log[2]["voltage"][99]) );
-		self.assertEqual(12.757, float(log[3]["voltage"][99]) );
+		self.assertEqual(0.392, log[0]["voltage"][99] );
+		self.assertEqual(12.776, log[1]["voltage"][99] );
+		self.assertEqual(12.792, log[2]["voltage"][99] );
+		self.assertEqual(12.757, log[3]["voltage"][99] );
 
-		self.assertEqual(-1, int(log[0]["current"][99]) );
-		self.assertEqual(-13, int(log[1]["current"][99]) );
-		self.assertEqual(-129, int(log[2]["current"][99]) );
-		self.assertEqual(137, int(log[3]["current"][99]) );
+		self.assertEqual(-1, log[0]["current"][99] );
+		self.assertEqual(-13, log[1]["current"][99] );
+		self.assertEqual(-129, log[2]["current"][99] );
+		self.assertEqual(137, log[3]["current"][99] );
 
 		self.assertEqual("20:19:59", log[0]["time"][99] );
 		self.assertEqual("20:19:59", log[1]["time"][99] );
 		self.assertEqual("20:19:59", log[2]["time"][99] );
 		self.assertEqual("20:19:59", log[3]["time"][99] );
 
+		self.assertEqual(0.392, log[0]["maxVoltage"] );
+		self.assertEqual(12.776, log[1]["maxVoltage"] );
+		self.assertEqual(12.792, log[2]["maxVoltage"] );
+		self.assertEqual(12.76, log[3]["maxVoltage"] );
+
+		self.assertEqual(0.388, log[0]["minVoltage"] );
+		self.assertEqual(12.772, log[1]["minVoltage"] );
+		self.assertEqual(12.792, log[2]["minVoltage"] );
+		self.assertEqual(12.756, log[3]["minVoltage"] );
 
 
 
