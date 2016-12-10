@@ -192,10 +192,10 @@ class Application(tk.Frame):
 		#
 
 
-		self.canvasLeftButton = tk.Button(self.canvas_LabelFrame, text='<', command=self.quit)            
+		self.canvasLeftButton = tk.Button(self.canvas_LabelFrame, text='<', command=self.plotGraph)            
 		self.canvasLeftButton.grid(column=0,row=0)            
 
-		self.canvasRightButton = tk.Button(self.canvas_LabelFrame, text='>', command=self.quit)            
+		self.canvasRightButton = tk.Button(self.canvas_LabelFrame, text='>', command=self.plotGraph)            
 		self.canvasRightButton.grid(column=2,row=0)            
 
 		self.canvas = tk.Canvas(self.canvas_LabelFrame, width=800, height=500)            
@@ -238,10 +238,16 @@ class Application(tk.Frame):
 		self.sensor3_powerStringVar.set("%2.3f Watts" % (solarData["voltage"][2]*solarData["current"][2]/1000.0))
 		self.sensor4_powerStringVar.set("%2.3f Watts" % (solarData["voltage"][3]*solarData["current"][3]/1000.0))
 
+	def plotGraph(self):
+		plotDate = self.mySolar.m_Timestamper.getDate()
+		
+		print(plotDate)
+		
+	def getRanges(self,plotData)
+
 
 	def periodicEventHandler(self):
 		self.after(1000,self.periodicEventHandler);
-#		print "Got here.";
 		
 		data = self.mySolar.gatherData();
 		self.updateGuiFields(data);

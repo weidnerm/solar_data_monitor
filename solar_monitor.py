@@ -146,11 +146,14 @@ class SolarDb:
 			self.m_currents[index].append(data["current"][index]);
 			self.m_sensorNames.append(data["names"][index] );
 
-	# retval = [0-3] = {} "name"    = [0-3] = string "panel", "load", etc."
-	#                     "voltage" = [0-n] = float Volts
-	#                     "current" = [0-n] = int  mAmps
-	#                     "time"    = [0-n] = string "hh:mm:ss"
 	#
+	# retval = [0-3] = {} "name"       = [0-3] = string "panel", "load", etc."
+	#                     "voltage"    = [0-n] = float Volts
+	#                     "current"    = [0-n] = int  mAmps
+	#                     "time"       = [0-n] = string "hh:mm:ss"
+	#                     "maxVoltage" = float
+	#                     "maxCurrent" = float
+	
 	def readDayLog(self,date):
 		returnVal = [];
 		
@@ -189,10 +192,6 @@ class SolarDb:
 			returnVal[1]["time"].append(fields[0])
 			returnVal[2]["time"].append(fields[0])
 			returnVal[3]["time"].append(fields[0])
-			
-			
-		
-		
 		
 		fileHandle.close()
 		return returnVal;
