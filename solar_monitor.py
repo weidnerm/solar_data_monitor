@@ -97,54 +97,80 @@ class SolarDb:
 			self.m_currents.append(emptyList);
 		self.m_filenamePrefix = filenamePrefix;
 
+		averages = {}
+		averages["voltage"] = [];
+		averages["current"] = [];
+
+		for index in xrange(4):
+			averages["voltage"].append( 0.0 );
+			averages["current"].append( 0 );
+		self.averages = averages
+		self.averages_dataPoints = 0
+
 
 	def addEntry(self, date, time, data):
-
-		# if rollover, flush the old data to the file.
-		sampleWindow = int(time[3:5])/10
-		if ( self.m_prev_sampleWindow != sampleWindow ) and (self.m_date != "0000_00_00"): # the hour rolled over.
-			m_prev_sampleWindow = sampleWindow;
-
-			self.m_filename = self.m_filenamePrefix+self.m_date+".csv"
-
-			# create the file if necessary
-			if not os.path.exists(self.m_filename):
-				f = open(self.m_filename, 'w')
-				f.write("time,%s voltage,%s current,%s voltage,%s current,%s voltage,%s current,%s voltage,%s current\n" % (data["names"][0], data["names"][0], data["names"][1], data["names"][1], data["names"][2], data["names"][2], data["names"][3], data["names"][3]))
-				f.close();
-
-			# append the current data
-			f = open(self.m_filename, 'a')
-			print("length=%d" % (len(self.m_voltages[0])))
-			for index in xrange(len(self.m_voltages[0])):
-				f.write(self.m_times[index]);
-				f.write(",");
-				for sensorIndex in xrange(4):
-					f.write("%s,%s" % (self.m_voltages[sensorIndex][index],self.m_currents[sensorIndex][index] ))
-					if (sensorIndex != 3):
-						f.write(",");
-				f.write("\n");
-			f.close()
-
-
-			# clear the cached data for the next hour
-			self.m_voltages = [];
-			self.m_currents = [];
-			self.m_times = [];
-			for index in xrange(4):
-				emptyList = []
-				self.m_voltages.append(emptyList);
-				emptyList = []
-				self.m_currents.append(emptyList);
-
-		self.m_date = date;
-		self.m_prev_sampleWindow = sampleWindow
-
-		self.m_times.append(time);
+		
+		# figure the new point into the averages.
 		for index in xrange(len(data["voltage"])):
-			self.m_voltages[index].append(data["voltage"][index]);
-			self.m_currents[index].append(data["current"][index]);
-			self.m_sensorNames.append(data["names"][index] );
+			self.averages["voltage"][index] = self.averages["voltage"][index] + data["voltage"][index];
+			self.averages["current"][index] = self.averages["current"][index] + data["current"][index];
+		self.averages_dataPoints = self.averages_dataPoints +1;
+			
+		if ( self.averages_dataPoints == 10):
+			# if rollover, flush the old data to the file.
+			sampleWindow = int(time[3:5])/10
+			if ( self.m_prev_sampleWindow != sampleWindow ) and (self.m_date != "0000_00_00"): # the hour rolled over.
+				m_prev_sampleWindow = sampleWindow;
+
+				self.m_filename = self.m_filenamePrefix+self.m_date+".csv"
+
+				# create the file if necessary
+				if not os.path.exists(self.m_filename):
+					f = open(self.m_filename, 'w')
+					f.write("time,%s voltage,%s current,%s voltage,%s current,%s voltage,%s current,%s voltage,%s current\n" % (data["names"][0], data["names"][0], data["names"][1], data["names"][1], data["names"][2], data["names"][2], data["names"][3], data["names"][3]))
+					f.close();
+
+				# append the current data
+				f = open(self.m_filename, 'a')
+				print("length=%d" % (len(self.m_voltages[0])))
+				for index in xrange(len(self.m_voltages[0])):
+					f.write(self.m_times[index]);
+					f.write(",");
+					for sensorIndex in xrange(4):
+						f.write("%s,%s" % (self.m_voltages[sensorIndex][index],self.m_currents[sensorIndex][index] ))
+						if (sensorIndex != 3):
+							f.write(",");
+					f.write("\n");
+				f.close()
+
+
+				# clear the cached data for the next hour
+				self.m_voltages = [];
+				self.m_currents = [];
+				self.m_times = [];
+				for index in xrange(4):
+					emptyList = []
+					self.m_voltages.append(emptyList);
+					emptyList = []
+					self.m_currents.append(emptyList);
+
+			self.m_date = date;
+			self.m_prev_sampleWindow = sampleWindow
+
+			self.m_times.append(time);
+			for index in xrange(len(data["voltage"])):
+				voltageAvg = self.averages["voltage"][index] / self.averages_dataPoints;
+				currentAvg = self.averages["current"][index] / self.averages_dataPoints;
+
+				self.m_voltages[index].append(voltageAvg);
+				self.m_currents[index].append(currentAvg);
+				self.m_sensorNames.append(data["names"][index] );
+				print("avgV=%2.3f  avgC=%d" % (voltageAvg,currentAvg))
+
+			for index in xrange(len(data["voltage"])): # clear out the averages for next time.
+				self.averages["voltage"][index] = 0.0;
+				self.averages["current"][index] = 0;
+			self.averages_dataPoints = 0;
 
 	#
 	# retval = [0-3] = {} "name"       = [0-3] = string "panel", "load", etc."
