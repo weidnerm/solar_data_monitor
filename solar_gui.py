@@ -195,52 +195,11 @@ class Application(tk.Frame):
 		
 		self.plotData = self.mySolar.m_SolarDb.readDayLog(self.plotDate);
 		
-		self.computeNetPower(self.plotData)
+		self.mySolar.computeNetPower(self.plotData)
 		
 		self.plotGraph()
 		
 		print(self.plotDate)
-		
-	def computeNetPower(self, data):
-		results = []
-		for channelIndex in xrange(4):
-			tempVal = {}
-			tempVal["minEnergy"] = 0
-			tempVal["maxEnergy"] = 0
-			tempVal["cumulativeEnergy"] = 0
-			
-			
-			minEnergy = 0
-			maxEnergy = 0
-			cumulativeEnergy = 0
-			for index in xrange( len(data[channelIndex]["voltage"])-1 ):
-				timeDelta = self.convertTimeString( data[channelIndex]["time"][index+1]) - self.convertTimeString(data[channelIndex]["time"][index])
-				if (timeDelta <= 12 ):
-#					power=data[channelIndex]["voltage"][index] * data[channelIndex]["current"][index]
-					power=data[channelIndex]["current"][index]
-					energy = power*timeDelta
-					cumulativeEnergy = cumulativeEnergy + energy
-					
-					if cumulativeEnergy < minEnergy:
-						minEnergy = cumulativeEnergy;
-					elif cumulativeEnergy > maxEnergy:
-						maxEnergy = cumulativeEnergy
-
-			tempVal["minEnergy"] = minEnergy
-			tempVal["maxEnergy"] = maxEnergy
-			tempVal["cumulativeEnergy"] = cumulativeEnergy
-			
-			results.append(tempVal);
-			
-		for channelIndex in xrange(4):
-			print("minEnergy=%.1f mAHr   maxEnergy=%.1f mAHr  cumulative=%.1f mAHr" % ( results[channelIndex]["minEnergy"]/3600.0, results[channelIndex]["maxEnergy"]/3600.0, results[channelIndex]["cumulativeEnergy"]/3600.0))
-		
-	def convertTimeString(self, time):
-		timeSec = 0;
-		timeSec = timeSec + int(time[0:2])*60*60
-		timeSec = timeSec + int(time[3:5])*60
-		timeSec = timeSec + int(time[6:8])
-		return timeSec
 		
 	def on_resize(self, event):
 		self.plotheight = event.height;

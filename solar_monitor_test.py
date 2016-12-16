@@ -221,45 +221,43 @@ class TestSolar(unittest.TestCase):
 
 
 	def test_SolarDb_recordData_1(self):
-		self.m_TimestamperMock.setDateTime(2016,11,30,01,05,10);
-		results = self.m_solar.gatherData();
-		self.m_solar.recordData(results);
+		for index in xrange(10,30):
+			self.m_TimestamperMock.setDateTime(2016,11,30,01,05,index);
+			results = self.m_solar.gatherData();
+			self.m_solar.recordData(results);
 
-		self.m_TimestamperMock.setDateTime(2016,11,30,01,05,11);
-		results = self.m_solar.gatherData();
-		self.m_solar.recordData(results);
 
-		self.assertEqual("Panel", self.m_solar.m_SolarDb.m_sensorNames[0] )
+		#~ self.assertEqual("Panel", self.m_solar.m_SolarDb.m_sensorNames[0] )
 		self.assertEqual("Battery1", self.m_solar.m_SolarDb.m_sensorNames[1] )
 		self.assertEqual("Load", self.m_solar.m_SolarDb.m_sensorNames[2] )
 		self.assertEqual("Battery2", self.m_solar.m_SolarDb.m_sensorNames[3] )
 
-		self.assertEqual(12.1, self.m_solar.m_SolarDb.m_voltages[0][0] )
-		self.assertEqual(13.1, self.m_solar.m_SolarDb.m_voltages[1][0] )
-		self.assertEqual(14.1, self.m_solar.m_SolarDb.m_voltages[2][0] )
-		self.assertEqual(15.1, self.m_solar.m_SolarDb.m_voltages[3][0] )
+		self.assertAlmostEqual(12.55, self.m_solar.m_SolarDb.m_voltages[0][0], places=7 )
+		self.assertAlmostEqual(13.55, self.m_solar.m_SolarDb.m_voltages[1][0], places=7 )
+		self.assertAlmostEqual(14.55, self.m_solar.m_SolarDb.m_voltages[2][0], places=7 )
+		self.assertAlmostEqual(15.55, self.m_solar.m_SolarDb.m_voltages[3][0], places=7 )
 
-		self.assertEqual(500.0, self.m_solar.m_SolarDb.m_currents[0][0] )
-		self.assertEqual(400.0, self.m_solar.m_SolarDb.m_currents[1][0] )
-		self.assertEqual(300.0, self.m_solar.m_SolarDb.m_currents[2][0] )
-		self.assertEqual(200.0, self.m_solar.m_SolarDb.m_currents[3][0] )
-
-
+		self.assertAlmostEqual(950.0, self.m_solar.m_SolarDb.m_currents[0][0] )
+		self.assertAlmostEqual(850.0, self.m_solar.m_SolarDb.m_currents[1][0] )
+		self.assertAlmostEqual(750.0, self.m_solar.m_SolarDb.m_currents[2][0] )
+		self.assertAlmostEqual(650.0, self.m_solar.m_SolarDb.m_currents[3][0] )
 
 
-		self.assertEqual(12.2, self.m_solar.m_SolarDb.m_voltages[0][1] )
-		self.assertEqual(13.2, self.m_solar.m_SolarDb.m_voltages[1][1] )
-		self.assertEqual(14.2, self.m_solar.m_SolarDb.m_voltages[2][1] )
-		self.assertEqual(15.2, self.m_solar.m_SolarDb.m_voltages[3][1] )
-
-		self.assertEqual(600.0, self.m_solar.m_SolarDb.m_currents[0][1] )
-		self.assertEqual(500.0, self.m_solar.m_SolarDb.m_currents[1][1] )
-		self.assertEqual(400.0, self.m_solar.m_SolarDb.m_currents[2][1] )
-		self.assertEqual(300.0, self.m_solar.m_SolarDb.m_currents[3][1] )
 
 
-		self.assertEqual("01:05:10", self.m_solar.m_SolarDb.m_times[0] )
-		self.assertEqual("01:05:11", self.m_solar.m_SolarDb.m_times[1] )
+		self.assertAlmostEqual(13.55, self.m_solar.m_SolarDb.m_voltages[0][1], places=7 )
+		self.assertAlmostEqual(14.55, self.m_solar.m_SolarDb.m_voltages[1][1], places=7 )
+		self.assertAlmostEqual(15.55, self.m_solar.m_SolarDb.m_voltages[2][1], places=7 )
+		self.assertAlmostEqual(16.55, self.m_solar.m_SolarDb.m_voltages[3][1], places=7 )
+
+		self.assertAlmostEqual(1770.0, self.m_solar.m_SolarDb.m_currents[0][1], places=7 )
+		self.assertAlmostEqual(1760.0, self.m_solar.m_SolarDb.m_currents[1][1], places=7 )
+		self.assertAlmostEqual(1720.0, self.m_solar.m_SolarDb.m_currents[2][1], places=7 )
+		self.assertAlmostEqual(1650.0, self.m_solar.m_SolarDb.m_currents[3][1], places=7 )
+
+
+		self.assertEqual("01:05:19", self.m_solar.m_SolarDb.m_times[0] )
+		self.assertEqual("01:05:29", self.m_solar.m_SolarDb.m_times[1] )
 
 	def getFileSize(self, filename):
 		statinfo = os.stat(filename)
@@ -283,7 +281,8 @@ class TestSolar(unittest.TestCase):
 		self.m_TimestamperMock.advanceOneSec();
 		self.assertEqual("01:10:00", self.m_TimestamperMock.getTime());
 
-		self.m_solar.recordData( self.m_solar.gatherData() );
+		for index in xrange(10): # do this enough times that the averager will have enough data to do the write.
+			self.m_solar.recordData( self.m_solar.gatherData() );
 		self.assertEqual(True, os.path.exists("test_solarLog_2016_11_30.csv"));
 		size_after_3600 = self.getFileSize("test_solarLog_2016_11_30.csv");
 
@@ -339,7 +338,8 @@ class TestSolar(unittest.TestCase):
 		self.m_TimestamperMock.advanceOneSec();
 		self.assertEqual("00:10:00", self.m_TimestamperMock.getTime());
 
-		self.m_solar.recordData( self.m_solar.gatherData() );
+		for index in xrange(10): # do this enough times that the averager will have enough data to do the write.
+			self.m_solar.recordData( self.m_solar.gatherData() );
 		self.assertEqual(True, os.path.exists("test_solarLog_2016_11_31.csv"));
 
 	def test_database_file_read(self):
@@ -443,7 +443,35 @@ class TestSolar(unittest.TestCase):
 		self.assertEqual(12.772, log[1]["minVoltage"] );
 		self.assertEqual(12.792, log[2]["minVoltage"] );
 		self.assertEqual(12.756, log[3]["minVoltage"] );
+		
+class TestSolarDb(unittest.TestCase):
 
+	def setUp(self):
+		self.m_SolarDb = SolarDb("test_solarLog_");
+		self.purge();
+		self.setupFiles()
+
+	def tearDown(self):
+		self.m_SolarSensors = None;
+		self.m_TimestamperMock = None;
+		self.m_solar = None;
+
+	def purge(self):
+		dir = "."
+		for f in os.listdir(dir):
+			if ( "test_solarLog_" == f[:14]) and (".csv" == f[-4:]):
+				os.remove(os.path.join(dir, f))
+				
+	def setupFiles(self):
+		test_dates = ["2016_12_06","2016_12_07","2016_12_08","2016_12_09","2016_12_10","2016_12_11","2016_12_12","2015_12_12","2016_12_13","2016_12_14","2016_12_15","2016_12_16"]
+
+		for index in xrange(len(test_dates)):
+			f = open("test_solarLog_"+test_dates[index]+".csv", "w")
+			f.write("data and stuff");
+			f.close();
+			
+	def donttest_index_0(self):
+		self.assertEqual("test_solarLog_2016_12_16.csv", self.m_SolarDb.getFilenameFromIndex(0));
 
 
 if __name__ == '__main__':

@@ -4,6 +4,7 @@
 from Subfact_ina219 import INA219
 import time
 import os
+import glob
 
 def orig_main():
 	ina = INA219()
@@ -66,6 +67,48 @@ class Solar:
 	def recordData(self,data):
 		self.m_SolarDb.addEntry(self.m_Timestamper.getDate(), self.m_Timestamper.getTime(), data );
 
+	def computeNetPower(self, data):
+		results = []
+		for channelIndex in xrange(4):
+			tempVal = {}
+			tempVal["minEnergy"] = 0
+			tempVal["maxEnergy"] = 0
+			tempVal["cumulativeEnergy"] = 0
+			
+			
+			minEnergy = 0
+			maxEnergy = 0
+			cumulativeEnergy = 0
+			for index in xrange( len(data[channelIndex]["voltage"])-1 ):
+				timeDelta = self.convertTimeString( data[channelIndex]["time"][index+1]) - self.convertTimeString(data[channelIndex]["time"][index])
+				if (timeDelta <= 12 ):
+#					power=data[channelIndex]["voltage"][index] * data[channelIndex]["current"][index]
+					power=data[channelIndex]["current"][index]
+					energy = power*timeDelta
+					cumulativeEnergy = cumulativeEnergy + energy
+					
+					if cumulativeEnergy < minEnergy:
+						minEnergy = cumulativeEnergy;
+					elif cumulativeEnergy > maxEnergy:
+						maxEnergy = cumulativeEnergy
+
+			tempVal["minEnergy"] = minEnergy
+			tempVal["maxEnergy"] = maxEnergy
+			tempVal["cumulativeEnergy"] = cumulativeEnergy
+			
+			results.append(tempVal);
+			
+		for channelIndex in xrange(4):
+			print("minEnergy=%.1f mAHr   maxEnergy=%.1f mAHr  cumulative=%.1f mAHr" % ( results[channelIndex]["minEnergy"]/3600.0, results[channelIndex]["maxEnergy"]/3600.0, results[channelIndex]["cumulativeEnergy"]/3600.0))
+		return results
+		
+	def convertTimeString(self, time):
+		timeSec = 0;
+		timeSec = timeSec + int(time[0:2])*60*60
+		timeSec = timeSec + int(time[3:5])*60
+		timeSec = timeSec + int(time[6:8])
+		return timeSec
+		
 class TimestamperInterface:
 	def getDate(self):
 		pass;
@@ -165,7 +208,7 @@ class SolarDb:
 				self.m_voltages[index].append(voltageAvg);
 				self.m_currents[index].append(currentAvg);
 				self.m_sensorNames.append(data["names"][index] );
-				print("avgV=%2.3f  avgC=%d" % (voltageAvg,currentAvg))
+#				print("avgV=%2.3f  avgC=%d" % (voltageAvg,currentAvg))
 
 			for index in xrange(len(data["voltage"])): # clear out the averages for next time.
 				self.averages["voltage"][index] = 0.0;
@@ -192,6 +235,7 @@ class SolarDb:
 			
 			returnVal.append(tempVal);
 		filename = "solarLog_"+date+".csv"
+#		filename = self.m_filenamePrefix+date+".csv"
 
 		fileHandle = open(filename,"r");
 		rawLines = fileHandle.readlines();
@@ -233,6 +277,17 @@ class SolarDb:
 		
 		fileHandle.close()
 		return returnVal;
+		
+	def getFilenameFromIndex(self, index):
+		fileList = []
+		pattern = self.m_filenamePrefix + "*.csv"
+		print(pattern)
+		for file in glob.glob( pattern ):
+			fileList.append(file)
+		
+		fileList.sort()
+		fileList.reverse()
+		return fileList[index]
 
 def setupSolar():
 	mySolarSensors = SolarSensors()
