@@ -223,9 +223,11 @@ class SolarDb:
 	#                     "maxVoltage" = float
 	#                     "maxCurrent" = float
 	
-	def readDayLog(self,date):
+	def readDayLog(self,fileIndex):
 		returnVal = [];
 		
+		filename = self.getFilenameFromIndex(fileIndex)
+
 		for index in xrange(4):
 			tempVal = {}  # put an empty dictionary for each array entry.
 			tempVal["name"]    = []
@@ -234,8 +236,6 @@ class SolarDb:
 			tempVal["time"]    = []
 			
 			returnVal.append(tempVal);
-		filename = "solarLog_"+date+".csv"
-#		filename = self.m_filenamePrefix+date+".csv"
 
 		fileHandle = open(filename,"r");
 		rawLines = fileHandle.readlines();
@@ -276,18 +276,23 @@ class SolarDb:
 					returnVal[chanIndex]["minPower"] = float(fields[1+chanIndex*2])*int(fields[2+chanIndex*2])
 		
 		fileHandle.close()
-		return returnVal;
+		return (returnVal, filename);
 		
 	def getFilenameFromIndex(self, index):
 		fileList = []
 		pattern = self.m_filenamePrefix + "*.csv"
-		print(pattern)
+#		print(pattern)
 		for file in glob.glob( pattern ):
 			fileList.append(file)
 		
 		fileList.sort()
 		fileList.reverse()
-		return fileList[index]
+		filteredIndex = index;
+		if filteredIndex < 0:
+			filteredIndex = 0
+		elif filteredIndex >= len(fileList):
+			filteredIndex = len(fileList)-1
+		return fileList[filteredIndex]
 
 def setupSolar():
 	mySolarSensors = SolarSensors()

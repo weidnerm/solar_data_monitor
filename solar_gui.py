@@ -15,6 +15,7 @@ class Application(tk.Frame):
 		self.bottomPad = 30
 		self.rightPad = 10
 		self.currentParm = -1;
+		self.currentFileIndex = 0;  # most recent
 		
 
 	def createWidgets(self):
@@ -35,7 +36,7 @@ class Application(tk.Frame):
 			self.sensor_LabelFrame.append( tk.LabelFrame(self, text="Sensor") )
 			self.sensor_LabelFrame[sensorIndex].grid(column=sensorIndex, row=0)  
 
-		self.canvas_LabelFrame = tk.LabelFrame(self, text="Waveform for 2016_10_11")
+		self.canvas_LabelFrame = tk.LabelFrame(self, text="Waveform for None")
 		self.canvas_LabelFrame.grid(column=0, row=1, columnspan=5, sticky=tk.N+tk.S+tk.E+tk.W)  
 
 		# make virtual 5th column take stretching. and row 1 (with canvas)
@@ -126,10 +127,10 @@ class Application(tk.Frame):
 		#
 		# set up the left and right buttons
 		#
-		self.canvasLeftButton = tk.Button(self.canvas_LabelFrame, text='<', command=self.fetchAndPlot)            
+		self.canvasLeftButton = tk.Button(self.canvas_LabelFrame, text='<', command=self.clickRight)            
 		self.canvasLeftButton.grid(column=0,row=0)            
 
-		self.canvasRightButton = tk.Button(self.canvas_LabelFrame, text='>', command=self.fetchAndPlot)            
+		self.canvasRightButton = tk.Button(self.canvas_LabelFrame, text='>', command=self.clickLeft)            
 		self.canvasRightButton.grid(column=2,row=0)            
 
 
@@ -189,17 +190,27 @@ class Application(tk.Frame):
 			self.sensor_currentStringVar[sensorIndex].set("%2.3f Amps" % (solarData["current"][sensorIndex]/1000.0))
 			self.sensor_powerStringVar[sensorIndex].set("%2.3f Watts" % (solarData["voltage"][sensorIndex]*solarData["current"][sensorIndex]/1000.0))
 
+	def clickRight(self):
+		self.currentFileIndex = self.currentFileIndex +1
+		self.fetchAndPlot();
+		
+	def clickLeft(self):
+		if self.currentFileIndex > 0:
+			self.currentFileIndex = self.currentFileIndex -1
+		self.fetchAndPlot();
+		
 	def fetchAndPlot(self):
-		self.plotDate = self.mySolar.m_Timestamper.getDate()
+#		self.plotDate = self.mySolar.m_Timestamper.getDate()
 #		self.plotDate = "2016_12_09"
 		
-		self.plotData = self.mySolar.m_SolarDb.readDayLog(self.plotDate);
+		(self.plotData, filename) = self.mySolar.m_SolarDb.readDayLog(self.currentFileIndex);
 		
+		self.filename = filename
 		self.mySolar.computeNetPower(self.plotData)
 		
 		self.plotGraph()
 		
-		print(self.plotDate)
+#		print(self.plotDate)
 		
 	def on_resize(self, event):
 		self.plotheight = event.height;
@@ -219,6 +230,8 @@ class Application(tk.Frame):
 			self.canvas.create_line(self.leftPad, self.plotheight-self.bottomPad, self.plotwidth-self.rightPad,self.plotheight-self.bottomPad)
 
 #		self.canvas.create_line(0,0,self.plotwidth,self.plotheight)
+		
+		self.canvas_LabelFrame["text"] = "Waveform for " + self.filename
 		
 		# plot the data traces
 		if (not self.plotData == None) and (self.currentParm != -1 ):

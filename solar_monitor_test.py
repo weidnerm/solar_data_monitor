@@ -343,11 +343,14 @@ class TestSolar(unittest.TestCase):
 		self.assertEqual(True, os.path.exists("test_solarLog_2016_11_31.csv"));
 
 	def test_database_file_read(self):
-		log = self.m_solar.m_SolarDb.readDayLog("2099_99_99")
+		log = self.m_solar.m_SolarDb.readDayLog(-1)
 		self.assertEqual(0, len(log));
 
 	def test_database_file_read(self):
-		log = self.m_solar.m_SolarDb.readDayLog("9999_99_99")
+		self.m_solar.m_SolarDb.m_filenamePrefix = "example_solarLog_"
+		(log,filename) = self.m_solar.m_SolarDb.readDayLog(0)
+		
+		self.assertEqual("example_solarLog_9999_99_99.csv", filename);
 		self.assertEqual(4, len(log));
 		self.assertEqual(True, ("name" in log[0]) );
 		self.assertEqual(True, ("name" in log[1]) );
@@ -470,8 +473,21 @@ class TestSolarDb(unittest.TestCase):
 			f.write("data and stuff");
 			f.close();
 			
-	def donttest_index_0(self):
+	def test_index_0(self):
 		self.assertEqual("test_solarLog_2016_12_16.csv", self.m_SolarDb.getFilenameFromIndex(0));
+		self.assertEqual("test_solarLog_2016_12_15.csv", self.m_SolarDb.getFilenameFromIndex(1));
+		self.assertEqual("test_solarLog_2016_12_14.csv", self.m_SolarDb.getFilenameFromIndex(2));
+		self.assertEqual("test_solarLog_2016_12_13.csv", self.m_SolarDb.getFilenameFromIndex(3));
+		self.assertEqual("test_solarLog_2016_12_12.csv", self.m_SolarDb.getFilenameFromIndex(4));
+		self.assertEqual("test_solarLog_2016_12_11.csv", self.m_SolarDb.getFilenameFromIndex(5));
+		self.assertEqual("test_solarLog_2016_12_10.csv", self.m_SolarDb.getFilenameFromIndex(6));
+		self.assertEqual("test_solarLog_2016_12_09.csv", self.m_SolarDb.getFilenameFromIndex(7));
+		self.assertEqual("test_solarLog_2016_12_08.csv", self.m_SolarDb.getFilenameFromIndex(8));
+		self.assertEqual("test_solarLog_2016_12_07.csv", self.m_SolarDb.getFilenameFromIndex(9));
+		self.assertEqual("test_solarLog_2016_12_06.csv", self.m_SolarDb.getFilenameFromIndex(10));
+		self.assertEqual("test_solarLog_2015_12_12.csv", self.m_SolarDb.getFilenameFromIndex(11));
+		self.assertEqual("test_solarLog_2015_12_12.csv", self.m_SolarDb.getFilenameFromIndex(12)); # one past the end
+		test_dates = ["2016_12_06","2016_12_07","2016_12_08","2016_12_09","2016_12_10","2016_12_11","2016_12_12","2015_12_12","2016_12_13","2016_12_14","2016_12_15","2016_12_16"]
 
 
 if __name__ == '__main__':
