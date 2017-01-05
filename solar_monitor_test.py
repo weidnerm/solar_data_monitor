@@ -458,6 +458,7 @@ class TestSolarDb(unittest.TestCase):
 		self.m_SolarSensors = None;
 		self.m_TimestamperMock = None;
 		self.m_solar = None;
+		self.purge();
 
 	def purge(self):
 		dir = "."

@@ -337,7 +337,7 @@ class Application(tk.Frame):
 		return returnVal
 				
 	def periodicEventHandler(self):
-		self.after(1000,self.periodicEventHandler);
+#		self.after(1000,self.periodicEventHandler);
 		
 		data = self.mySolar.gatherData();
 		self.updateGuiFields(data);
@@ -352,7 +352,7 @@ def main():
 	app = Application()                       
 	app.master.title('Solar Panel Monitor')    
 	
-	app.after(0,app.periodicEventHandler);
+#	app.after(0,app.periodicEventHandler);
 	
 	app.mySolar = setupSolar()
 	app.mainloop() ;
