@@ -21,33 +21,33 @@ class Application(tk.Frame):
 	def createWidgets(self):
 		
 		#
-		# set up frames for the 4 sensors
+		# set up frames for the 6 sensors
 		#
 		top=self.winfo_toplevel()
 		top.rowconfigure(0, weight=1)
 		top.columnconfigure(0, weight=1) 
 		
 		#
-		# set up frames for the 4 sensors
+		# set up frames for the 6 sensors
 		#
 
 		self.sensor_LabelFrame = []
-		for sensorIndex in xrange(4):
+		for sensorIndex in xrange(6):
 			self.sensor_LabelFrame.append( tk.LabelFrame(self, text="Sensor") )
 			self.sensor_LabelFrame[sensorIndex].grid(column=sensorIndex, row=0)  
 
 		self.canvas_LabelFrame = tk.LabelFrame(self, text="Waveform for None")
-		self.canvas_LabelFrame.grid(column=0, row=1, columnspan=5, sticky=tk.N+tk.S+tk.E+tk.W)  
+		self.canvas_LabelFrame.grid(column=0, row=1, columnspan=7, sticky=tk.N+tk.S+tk.E+tk.W)  
 
-		# make virtual 5th column take stretching. and row 1 (with canvas)
+		# make virtual 7th column take stretching. and row 1 (with canvas)
 		self.rowconfigure(1, weight=1)
-		self.columnconfigure(4, weight=1)
+		self.columnconfigure(6, weight=1)
 
 		self.canvas_LabelFrame.rowconfigure(0, weight=1)
 		self.canvas_LabelFrame.columnconfigure(1, weight=1)
 
 		# add a bit of space left of the readings so that the field stays fixed width
-		for sensorIndex in xrange(4):
+		for sensorIndex in xrange(6):
 			self.sensor_LabelFrame[sensorIndex].columnconfigure(1, minsize=120)
 
 
@@ -57,7 +57,7 @@ class Application(tk.Frame):
 		self.sensor_voltageIntVar = []
 		self.sensor_currentIntVar = []
 		self.sensor_powerIntVar = []
-		for sensorIndex in xrange(4):
+		for sensorIndex in xrange(6):
 			self.sensor_voltageIntVar.append( tk.IntVar( ) )
 			self.sensor_currentIntVar.append( tk.IntVar( ) )
 			self.sensor_powerIntVar.append( tk.IntVar( ) )
@@ -70,7 +70,7 @@ class Application(tk.Frame):
 		self.sensor_voltageCheckbox = []
 		self.sensor_currentCheckbox = []
 		self.sensor_powerCheckbox = []
-		for sensorIndex in xrange(4):
+		for sensorIndex in xrange(6):
 			self.sensor_voltageCheckbox.append( tk.Checkbutton(self.sensor_LabelFrame[sensorIndex], text="V", variable=self.sensor_voltageIntVar[sensorIndex], command=self.checkbuttonHandler) )
 			self.sensor_voltageCheckbox[sensorIndex].grid(column=0, row=1, sticky=tk.W)   
 					 
@@ -89,7 +89,7 @@ class Application(tk.Frame):
 		self.sensor_voltageStringVar = []
 		self.sensor_currentStringVar = []
 		self.sensor_powerStringVar = []
-		for sensorIndex in xrange(4):
+		for sensorIndex in xrange(6):
 			self.sensor_voltageStringVar.append( tk.StringVar( ) )
 			self.sensor_voltageStringVar[sensorIndex].set("xx.xxx Volts")
 			
@@ -110,7 +110,7 @@ class Application(tk.Frame):
 		self.sensor_voltageLabel = []
 		self.sensor_currentLabel = []
 		self.sensor_powerLabel = []
-		for sensorIndex in xrange(4):
+		for sensorIndex in xrange(6):
 			self.sensor_voltageLabel.append( tk.Label(self.sensor_LabelFrame[sensorIndex], textvariable=self.sensor_voltageStringVar[sensorIndex]) )
 			self.sensor_voltageLabel[sensorIndex].grid(column=1, row=1, sticky=tk.E)  
 
@@ -154,8 +154,11 @@ class Application(tk.Frame):
 
 	def checkbuttonHandler(self):
 		self.currentParm = -1;
-		self.chanList = [0,0,0,0]
-		for index in xrange(4):
+		self.chanList = []
+		for index in xrange(6):
+			self.chanList.append(0)
+			
+		for index in xrange(6):
 			if ( self.sensor_voltageIntVar[index].get() == 1 ):  # a voltage is checked. uncheck the rest.
 				self.currentParm = 0;
 				self.chanList[index] = 1
@@ -170,13 +173,13 @@ class Application(tk.Frame):
 				print("Power[%d] is 1" % index);
 
 			if self.currentParm == 0:
-				for index in xrange(4):
+				for index in xrange(6):
 					self.sensor_currentCheckbox[index].deselect();
 					self.sensor_powerCheckbox[index].deselect();
 					#~ self.sensor_currentIntVar[index].set(0);
 					#~ self.sensor_powerIntVar[index].set(0);
 			elif self.currentParm == 1:
-				for index in xrange(4):
+				for index in xrange(6):
 					self.sensor_powerCheckbox[index].deselect();
 					#~ self.sensor_powerIntVar[index].set(0);			
 
@@ -184,7 +187,7 @@ class Application(tk.Frame):
 		self.plotGraph()
 
 	def updateGuiFields(self, solarData):
-		for sensorIndex in xrange(4):
+		for sensorIndex in xrange(6):
 			self.sensor_LabelFrame[sensorIndex]["text"] = solarData["names"][sensorIndex];	
 			self.sensor_voltageStringVar[sensorIndex].set("%2.3f Volts" % solarData["voltage"][sensorIndex])
 			self.sensor_currentStringVar[sensorIndex].set("%2.3f Amps" % (solarData["current"][sensorIndex]/1000.0))
@@ -235,7 +238,7 @@ class Application(tk.Frame):
 		
 		# plot the data traces
 		if (not self.plotData == None) and (self.currentParm != -1 ):
-			for channelIndex in xrange(4):
+			for channelIndex in xrange(6):
 				if self.chanList[channelIndex] == 1:
 					
 					parm = self.currentParm
@@ -318,7 +321,7 @@ class Application(tk.Frame):
 	def getMinMaxForParm(self,parm,channelIndex):
 		returnVal = [999999999.0, -999999999.0] # baseline extreme opposite numbers for min and max
 		channelMax = 0; channelMin = 0
-		for channelIndex in xrange(4):
+		for channelIndex in xrange(6):
 			if self.chanList[channelIndex] == 1:# is channel enabled. FIXME when clickers working
 				if parm == 0: # voltage
 					channelMax = self.plotData[channelIndex]["maxVoltage"];

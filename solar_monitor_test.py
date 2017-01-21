@@ -95,16 +95,22 @@ def getSensors():
 	m_SolarSensors.addSensor("Battery1",INA219_Dummy(0x41));
 	m_SolarSensors.addSensor("Load",INA219_Dummy(0x42));
 	m_SolarSensors.addSensor("Battery2",INA219_Dummy(0x43));
+	m_SolarSensors.addSensor("Battery3",INA219_Dummy(0x41));
+	m_SolarSensors.addSensor("Battery4",INA219_Dummy(0x42));
 
 	m_SolarSensors.m_sensors[0].m_voltage = 12.0;
 	m_SolarSensors.m_sensors[1].m_voltage = 13.0;
 	m_SolarSensors.m_sensors[2].m_voltage = 14.0;
 	m_SolarSensors.m_sensors[3].m_voltage = 15.0;
+	m_SolarSensors.m_sensors[4].m_voltage = 16.0;
+	m_SolarSensors.m_sensors[5].m_voltage = 17.0;
 
 	m_SolarSensors.m_sensors[0].m_current = 400.0;
 	m_SolarSensors.m_sensors[1].m_current = 300.0;
 	m_SolarSensors.m_sensors[2].m_current = 200.0;
 	m_SolarSensors.m_sensors[3].m_current = 100.0;
+	m_SolarSensors.m_sensors[4].m_current = 100.0;
+	m_SolarSensors.m_sensors[5].m_current = 100.0;
 	return m_SolarSensors;
 
 class TestSolar(unittest.TestCase):
@@ -351,7 +357,7 @@ class TestSolar(unittest.TestCase):
 		(log,filename) = self.m_solar.m_SolarDb.readDayLog(0)
 		
 		self.assertEqual("example_solarLog_9999_99_99.csv", filename);
-		self.assertEqual(4, len(log));
+		self.assertEqual(6, len(log));
 		self.assertEqual(True, ("name" in log[0]) );
 		self.assertEqual(True, ("name" in log[1]) );
 		self.assertEqual(True, ("name" in log[2]) );

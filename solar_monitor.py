@@ -52,10 +52,10 @@ class Solar:
 
 	def formatPrintData(self, results):
 		returnValue = []
-		returnValue.append( "%-20s %-20s %-20s %-20s" % (results["names"][0],results["names"][1],results["names"][2],results["names"][3]));
-		returnValue.append( "%2.3f V              %2.3f V              %2.3f V              %2.3f V" % (results["voltage"][0],results["voltage"][1],results["voltage"][2],results["voltage"][3]));
-		returnValue.append( "%5.0f mA             %5.0f mA             %5.0f mA             %5.0f mA" % (results["current"][0],results["current"][1],results["current"][2],results["current"][3]));
-		returnValue.append( "%5.0f mW             %5.0f mW             %5.0f mW             %5.0f mW" % (results["voltage"][0]*results["current"][0],results["voltage"][1]*results["current"][1],results["voltage"][2]*results["current"][2],results["voltage"][3]*results["current"][3]));
+		returnValue.append( "%-20s %-20s %-20s %-20s %-20s %-20s" % (results["names"][0],results["names"][1],results["names"][2],results["names"][4],results["names"][5],results["names"][3]));
+		returnValue.append( "%2.3f V             %2.3f V             %2.3f V             %2.3f V             %2.3f V             %2.3f V" % (results["voltage"][0],results["voltage"][1],results["voltage"][2],results["voltage"][4],results["voltage"][5],results["voltage"][3]));
+		returnValue.append( "%5.0f mA             %5.0f mA             %5.0f mA             %5.0f mA             %5.0f mA             %5.0f mA" % (results["current"][0],results["current"][1],results["current"][2],results["current"][4],results["current"][5],results["current"][3]));
+		returnValue.append( "%5.0f mW             %5.0f mW             %5.0f mW             %5.0f mW             %5.0f mW             %5.0f mW" % (results["voltage"][0]*results["current"][0],results["voltage"][1]*results["current"][1],results["voltage"][2]*results["current"][2],results["voltage"][4]*results["current"][4],results["voltage"][5]*results["current"][5],results["voltage"][3]*results["current"][3]));
 		return returnValue;
 
 	def printResults(self, results):
@@ -69,7 +69,7 @@ class Solar:
 
 	def computeNetPower(self, data):
 		results = []
-		for channelIndex in xrange(4):
+		for channelIndex in xrange(6):
 			tempVal = {}
 			tempVal["minEnergy"] = 0
 			tempVal["maxEnergy"] = 0
@@ -98,7 +98,7 @@ class Solar:
 			
 			results.append(tempVal);
 			
-		for channelIndex in xrange(4):
+		for channelIndex in xrange(6):
 			print("minEnergy=%.1f mAHr   maxEnergy=%.1f mAHr  cumulative=%.1f mAHr" % ( results[channelIndex]["minEnergy"]/3600.0, results[channelIndex]["maxEnergy"]/3600.0, results[channelIndex]["cumulativeEnergy"]/3600.0))
 		return results
 		
@@ -133,7 +133,7 @@ class SolarDb:
 		self.m_date = "0000_00_00";
 		self.m_filename = "unknown"
 		self.m_prev_sampleWindow = -1;
-		for index in xrange(4):
+		for index in xrange(6):
 			emptyList = []
 			self.m_voltages.append(emptyList);
 			emptyList = []
@@ -144,7 +144,7 @@ class SolarDb:
 		averages["voltage"] = [];
 		averages["current"] = [];
 
-		for index in xrange(4):
+		for index in xrange(6):
 			averages["voltage"].append( 0.0 );
 			averages["current"].append( 0 );
 		self.averages = averages
@@ -170,7 +170,12 @@ class SolarDb:
 				# create the file if necessary
 				if not os.path.exists(self.m_filename):
 					f = open(self.m_filename, 'w')
-					f.write("time,%s voltage,%s current,%s voltage,%s current,%s voltage,%s current,%s voltage,%s current\n" % (data["names"][0], data["names"][0], data["names"][1], data["names"][1], data["names"][2], data["names"][2], data["names"][3], data["names"][3]))
+					headerLineText = "time"
+					for index in xrange(6):
+						newSection = ",%s voltage,%s current" % (data["names"][index], data["names"][index])
+						headerLineText = headerLineText+newSection
+					f.write(headerLineText)
+					#~ f.write("time,%s voltage,%s current,%s voltage,%s current,%s voltage,%s current,%s voltage,%s current\n" % (data["names"][0], data["names"][0], data["names"][1], data["names"][1], data["names"][2], data["names"][2], data["names"][3], data["names"][3]))
 					f.close();
 
 				# append the current data
@@ -179,9 +184,9 @@ class SolarDb:
 				for index in xrange(len(self.m_voltages[0])):
 					f.write(self.m_times[index]);
 					f.write(",");
-					for sensorIndex in xrange(4):
+					for sensorIndex in xrange(6):
 						f.write("%s,%s" % (self.m_voltages[sensorIndex][index],self.m_currents[sensorIndex][index] ))
-						if (sensorIndex != 3):
+						if (sensorIndex != 5):
 							f.write(",");
 					f.write("\n");
 				f.close()
@@ -191,7 +196,7 @@ class SolarDb:
 				self.m_voltages = [];
 				self.m_currents = [];
 				self.m_times = [];
-				for index in xrange(4):
+				for index in xrange(6):
 					emptyList = []
 					self.m_voltages.append(emptyList);
 					emptyList = []
@@ -228,7 +233,7 @@ class SolarDb:
 		
 		filename = self.getFilenameFromIndex(fileIndex)
 
-		for index in xrange(4):
+		for index in xrange(6):
 			tempVal = {}  # put an empty dictionary for each array entry.
 			tempVal["name"]    = []
 			tempVal["voltage"] = []
@@ -241,12 +246,15 @@ class SolarDb:
 		rawLines = fileHandle.readlines();
 		firstLineFields = rawLines[0].split(",");
 		
-		returnVal[0]["name"] = firstLineFields[1][:-8];  # strip off " voltage" from the end for the base name.
-		returnVal[1]["name"] = firstLineFields[3][:-8];  # strip off " voltage" from the end for the base name.
-		returnVal[2]["name"] = firstLineFields[5][:-8];  # strip off " voltage" from the end for the base name.
-		returnVal[3]["name"] = firstLineFields[7][:-8];  # strip off " voltage" from the end for the base name.
+		for chanIndex in xrange(6):
+			returnVal[chanIndex]["name"] = firstLineFields[1+chanIndex*2][:-8];  # strip off " voltage" from the end for the base name.
+
+		#~ returnVal[0]["name"] = firstLineFields[1][:-8];  # strip off " voltage" from the end for the base name.
+		#~ returnVal[1]["name"] = firstLineFields[3][:-8];  # strip off " voltage" from the end for the base name.
+		#~ returnVal[2]["name"] = firstLineFields[5][:-8];  # strip off " voltage" from the end for the base name.
+		#~ returnVal[3]["name"] = firstLineFields[7][:-8];  # strip off " voltage" from the end for the base name.
 		
-		for chanIndex in xrange(4):
+		for chanIndex in xrange(6):
 			returnVal[chanIndex]["maxVoltage"] = -99999999.0 # very small.
 			returnVal[chanIndex]["minVoltage"] =  99999999.0 # very big.
 			returnVal[chanIndex]["maxCurrent"] = -99999999 # very small.
@@ -257,7 +265,7 @@ class SolarDb:
 		for index in xrange(1,len(rawLines)):
 			fields = rawLines[index].split(",");
 				
-			for chanIndex in xrange(4):
+			for chanIndex in xrange(6):
 				returnVal[chanIndex]["voltage"].append(float(fields[1+chanIndex*2]))
 				returnVal[chanIndex]["current"].append(int(fields[2+chanIndex*2]))
 				returnVal[chanIndex]["time"].append(fields[0])
@@ -307,6 +315,8 @@ def setupSolar():
 	mySolarSensors.addSensor("Battery 1 (44)", INA219(0x44) ); # A1 jumper.
 	mySolarSensors.addSensor("Battery 2 (41)", INA219(0x41) ); # A0 jumper.
 	mySolarSensors.addSensor("Load (40)", INA219(0x40) ); # no jumpers.
+	mySolarSensors.addSensor("Battery 3 (42)", INA219(0x42) ); # A0->SDA  A1=0
+	mySolarSensors.addSensor("Battery 4 (43)", INA219(0x43) ); # A0->SCL  A1=0
 
 	mySolar = Solar(mySolarSensors, Timestamper() );
 	return mySolar;
