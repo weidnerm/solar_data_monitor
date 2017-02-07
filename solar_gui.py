@@ -16,12 +16,16 @@ class Application(tk.Frame):
 		self.rightPad = 10
 		self.currentParm = -1;
 		self.currentFileIndex = 0;  # most recent
+		self.firstPoint = 0
+		self.lastPoint = 0;
 
 
 	def mouse_motion(self, event):
 
 		x, y = event.x, event.y
-		print('{}, {}'.format(x, y))
+		self.mouseX = x
+		self.mouseY = y
+		print("%d %d" % (x,y) )
 
 
 	def mouse_wheel(self, event):
@@ -282,6 +286,10 @@ class Application(tk.Frame):
 					valueCount = len(self.plotData[channelIndex]["voltage"])  # assume length of each array is the same.
 					skipCount = valueCount/(self.plotwidth-self.leftPad-self.rightPad) # how many data points get put into each horizontal pixel of the plot
 					print("voltage count=%d   plotWidth=%d   skipcount=%d" % (valueCount,self.plotwidth-self.leftPad-self.rightPad,skipCount))
+
+					if self.lastPoint == 0:
+						self.lastPoint = valueCount  # set our range of data to be the full range of data.
+
 					if skipCount <= 0:
 						skipCount = 1
 					plotXBase = self.leftPad
