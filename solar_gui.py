@@ -71,13 +71,16 @@ class Application(tk.Frame):
 		self.sensor_currentCheckbox = []
 		self.sensor_powerCheckbox = []
 		for sensorIndex in xrange(6):
-			self.sensor_voltageCheckbox.append( tk.Checkbutton(self.sensor_LabelFrame[sensorIndex], text="V", variable=self.sensor_voltageIntVar[sensorIndex], command=self.checkbuttonHandler) )
+			checkButton = tk.Checkbutton(self.sensor_LabelFrame[sensorIndex], text="V", variable=self.sensor_voltageIntVar[sensorIndex], command=lambda sensorIndex=sensorIndex: self.checkbuttonHandler(0,sensorIndex) )
+			self.sensor_voltageCheckbox.append( checkButton )
 			self.sensor_voltageCheckbox[sensorIndex].grid(column=0, row=1, sticky=tk.W)   
 					 
-			self.sensor_currentCheckbox.append( tk.Checkbutton(self.sensor_LabelFrame[sensorIndex], text="mA", variable=self.sensor_currentIntVar[sensorIndex], command=self.checkbuttonHandler))
+			checkButton = tk.Checkbutton(self.sensor_LabelFrame[sensorIndex], text="mA", variable=self.sensor_currentIntVar[sensorIndex], command=lambda sensorIndex=sensorIndex: self.checkbuttonHandler(1,sensorIndex))
+			self.sensor_currentCheckbox.append( checkButton)
 			self.sensor_currentCheckbox[sensorIndex].grid(column=0, row=2, sticky=tk.W)  
 			
-			self.sensor_powerCheckbox.append( tk.Checkbutton(self.sensor_LabelFrame[sensorIndex], text="mW", variable=self.sensor_powerIntVar[sensorIndex], command=self.checkbuttonHandler))
+			checkButton = tk.Checkbutton(self.sensor_LabelFrame[sensorIndex], text="mW", variable=self.sensor_powerIntVar[sensorIndex], command=lambda sensorIndex=sensorIndex: self.checkbuttonHandler(2,sensorIndex))
+			self.sensor_powerCheckbox.append(checkButton )
 			self.sensor_powerCheckbox[sensorIndex].grid(column=0, row=3, sticky=tk.W)            
        
        
@@ -152,7 +155,9 @@ class Application(tk.Frame):
 		self.quitButton = tk.Button(self, text='Quit', command=self.quit)            
 		self.quitButton.grid()            
 
-	def checkbuttonHandler(self):
+	def checkbuttonHandler(self,row,col):
+		
+		print("row=%d col=%d" % (row, col))
 		self.currentParm = -1;
 		self.chanList = []
 		for index in xrange(6):
