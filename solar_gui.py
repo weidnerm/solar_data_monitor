@@ -5,7 +5,7 @@ from solar_monitor import Solar, setupSolar
 class Application(tk.Frame):
 	def __init__(self, master=None):
 		tk.Frame.__init__(self, master)
-		self.grid(sticky=tk.N+tk.S+tk.E+tk.W)    
+		self.grid(sticky=tk.N+tk.S+tk.E+tk.W)
 		self.createWidgets()
 
 		self.plotData = None;
@@ -16,17 +16,36 @@ class Application(tk.Frame):
 		self.rightPad = 10
 		self.currentParm = -1;
 		self.currentFileIndex = 0;  # most recent
-		
+
+
+	def mouse_motion(self, event):
+
+		x, y = event.x, event.y
+		print('{}, {}'.format(x, y))
+
+
+	def mouse_wheel(self, event):
+		""" Mouse wheel as scroll bar """
+		direction = 0
+		# respond to Linux or Windows wheel event
+		if event.num == 5 or event.delta == -120:
+			direction = 1
+		if event.num == 4 or event.delta == 120:
+			direction = -1
+		print("direction=%d"%direction)
+		print(event)
+
+
 
 	def createWidgets(self):
-		
+
 		#
 		# set up frames for the 6 sensors
 		#
 		top=self.winfo_toplevel()
 		top.rowconfigure(0, weight=1)
-		top.columnconfigure(0, weight=1) 
-		
+		top.columnconfigure(0, weight=1)
+
 		#
 		# set up frames for the 6 sensors
 		#
@@ -34,10 +53,10 @@ class Application(tk.Frame):
 		self.sensor_LabelFrame = []
 		for sensorIndex in xrange(6):
 			self.sensor_LabelFrame.append( tk.LabelFrame(self, text="Sensor") )
-			self.sensor_LabelFrame[sensorIndex].grid(column=sensorIndex, row=0)  
+			self.sensor_LabelFrame[sensorIndex].grid(column=sensorIndex, row=0)
 
 		self.canvas_LabelFrame = tk.LabelFrame(self, text="Waveform for None")
-		self.canvas_LabelFrame.grid(column=0, row=1, columnspan=7, sticky=tk.N+tk.S+tk.E+tk.W)  
+		self.canvas_LabelFrame.grid(column=0, row=1, columnspan=7, sticky=tk.N+tk.S+tk.E+tk.W)
 
 		# make virtual 7th column take stretching. and row 1 (with canvas)
 		self.rowconfigure(1, weight=1)
@@ -73,18 +92,17 @@ class Application(tk.Frame):
 		for sensorIndex in xrange(6):
 			checkButton = tk.Checkbutton(self.sensor_LabelFrame[sensorIndex], text="V", variable=self.sensor_voltageIntVar[sensorIndex], command=lambda sensorIndex=sensorIndex: self.checkbuttonHandler(0,sensorIndex) )
 			self.sensor_voltageCheckbox.append( checkButton )
-			self.sensor_voltageCheckbox[sensorIndex].grid(column=0, row=1, sticky=tk.W)   
-					 
+			self.sensor_voltageCheckbox[sensorIndex].grid(column=0, row=1, sticky=tk.W)
+
 			checkButton = tk.Checkbutton(self.sensor_LabelFrame[sensorIndex], text="mA", variable=self.sensor_currentIntVar[sensorIndex], command=lambda sensorIndex=sensorIndex: self.checkbuttonHandler(1,sensorIndex))
 			self.sensor_currentCheckbox.append( checkButton)
-			self.sensor_currentCheckbox[sensorIndex].grid(column=0, row=2, sticky=tk.W)  
-			
+			self.sensor_currentCheckbox[sensorIndex].grid(column=0, row=2, sticky=tk.W)
+
 			checkButton = tk.Checkbutton(self.sensor_LabelFrame[sensorIndex], text="mW", variable=self.sensor_powerIntVar[sensorIndex], command=lambda sensorIndex=sensorIndex: self.checkbuttonHandler(2,sensorIndex))
 			self.sensor_powerCheckbox.append(checkButton )
-			self.sensor_powerCheckbox[sensorIndex].grid(column=0, row=3, sticky=tk.W)            
-       
-       
-       
+			self.sensor_powerCheckbox[sensorIndex].grid(column=0, row=3, sticky=tk.W)
+
+
  		#
 		# set up StringVar for data outputs
 		#
@@ -95,15 +113,12 @@ class Application(tk.Frame):
 		for sensorIndex in xrange(6):
 			self.sensor_voltageStringVar.append( tk.StringVar( ) )
 			self.sensor_voltageStringVar[sensorIndex].set("xx.xxx Volts")
-			
+
 			self.sensor_currentStringVar.append( tk.StringVar( ) )
 			self.sensor_currentStringVar[sensorIndex].set("y.yyy Amps")
-			
+
 			self.sensor_powerStringVar.append( tk.StringVar( ) )
 			self.sensor_powerStringVar[sensorIndex].set("xx.xxx Watts")
-		
-
-		
 
 
  		#
@@ -115,13 +130,13 @@ class Application(tk.Frame):
 		self.sensor_powerLabel = []
 		for sensorIndex in xrange(6):
 			self.sensor_voltageLabel.append( tk.Label(self.sensor_LabelFrame[sensorIndex], textvariable=self.sensor_voltageStringVar[sensorIndex]) )
-			self.sensor_voltageLabel[sensorIndex].grid(column=1, row=1, sticky=tk.E)  
+			self.sensor_voltageLabel[sensorIndex].grid(column=1, row=1, sticky=tk.E)
 
 			self.sensor_currentLabel.append( tk.Label(self.sensor_LabelFrame[sensorIndex], textvariable=self.sensor_currentStringVar[sensorIndex]) )
-			self.sensor_currentLabel[sensorIndex].grid(column=1, row=2, sticky=tk.E)  
+			self.sensor_currentLabel[sensorIndex].grid(column=1, row=2, sticky=tk.E)
 
 			self.sensor_powerLabel.append( tk.Label(self.sensor_LabelFrame[sensorIndex], textvariable=self.sensor_powerStringVar[sensorIndex]) )
-			self.sensor_powerLabel[sensorIndex].grid(column=1, row=3, sticky=tk.E)  
+			self.sensor_powerLabel[sensorIndex].grid(column=1, row=3, sticky=tk.E)
 
 
 
@@ -130,19 +145,23 @@ class Application(tk.Frame):
 		#
 		# set up the left and right buttons
 		#
-		self.canvasLeftButton = tk.Button(self.canvas_LabelFrame, text='<', command=self.clickRight)            
-		self.canvasLeftButton.grid(column=0,row=0)            
+		self.canvasLeftButton = tk.Button(self.canvas_LabelFrame, text='<', command=self.clickRight)
+		self.canvasLeftButton.grid(column=0,row=0)
 
-		self.canvasRightButton = tk.Button(self.canvas_LabelFrame, text='>', command=self.clickLeft)            
-		self.canvasRightButton.grid(column=2,row=0)            
+		self.canvasRightButton = tk.Button(self.canvas_LabelFrame, text='>', command=self.clickLeft)
+		self.canvasRightButton.grid(column=2,row=0)
 
 
-	
+
 		#
 		# set up the plot canvas widgets
 		#
-		self.canvas = tk.Canvas(self.canvas_LabelFrame, width=800, height=500)            
-		self.canvas.grid(column=1,row=0, sticky=tk.E + tk.W + tk.N + tk.S )            
+		self.canvas = tk.Canvas(self.canvas_LabelFrame, width=800, height=500)
+		self.canvas.grid(column=1,row=0, sticky=tk.E + tk.W + tk.N + tk.S )
+		self.canvas.bind("<Motion>", self.mouse_motion)
+		self.canvas.bind("<MouseWheel>", self.mouse_wheel) # Windows mouse wheel event
+		self.canvas.bind("<Button-4>", self.mouse_wheel) # Linux mouse wheel event (Up)
+		self.canvas.bind("<Button-5>", self.mouse_wheel) # Linux mouse wheel event (Down)
 
 		#
 		# add resize handler
@@ -152,17 +171,17 @@ class Application(tk.Frame):
 		#
 		# add quit handler
 		#
-		self.quitButton = tk.Button(self, text='Quit', command=self.quit)            
-		self.quitButton.grid()            
+		self.quitButton = tk.Button(self, text='Quit', command=self.quit)
+		self.quitButton.grid()
 
 	def checkbuttonHandler(self,row,col):
-		
+
 		print("row=%d col=%d" % (row, col))
 		self.currentParm = -1;
 		self.chanList = []
 		for index in xrange(6):
 			self.chanList.append(0)
-			
+
 		for index in xrange(6):
 			if ( self.sensor_voltageIntVar[index].get() == 1 ):  # a voltage is checked. uncheck the rest.
 				self.currentParm = 0;
@@ -186,14 +205,14 @@ class Application(tk.Frame):
 			elif self.currentParm == 1:
 				for index in xrange(6):
 					self.sensor_powerCheckbox[index].deselect();
-					#~ self.sensor_powerIntVar[index].set(0);			
+					#~ self.sensor_powerIntVar[index].set(0);
 
-			
+
 		self.plotGraph()
 
 	def updateGuiFields(self, solarData):
 		for sensorIndex in xrange(6):
-			self.sensor_LabelFrame[sensorIndex]["text"] = solarData["names"][sensorIndex];	
+			self.sensor_LabelFrame[sensorIndex]["text"] = solarData["names"][sensorIndex];
 			self.sensor_voltageStringVar[sensorIndex].set("%2.3f Volts" % solarData["voltage"][sensorIndex])
 			self.sensor_currentStringVar[sensorIndex].set("%2.3f Amps" % (solarData["current"][sensorIndex]/1000.0))
 			self.sensor_powerStringVar[sensorIndex].set("%2.3f Watts" % (solarData["voltage"][sensorIndex]*solarData["current"][sensorIndex]/1000.0))
@@ -201,25 +220,25 @@ class Application(tk.Frame):
 	def clickRight(self):
 		self.currentFileIndex = self.currentFileIndex +1
 		self.fetchAndPlot();
-		
+
 	def clickLeft(self):
 		if self.currentFileIndex > 0:
 			self.currentFileIndex = self.currentFileIndex -1
 		self.fetchAndPlot();
-		
+
 	def fetchAndPlot(self):
 #		self.plotDate = self.mySolar.m_Timestamper.getDate()
 #		self.plotDate = "2016_12_09"
-		
+
 		(self.plotData, filename) = self.mySolar.m_SolarDb.readDayLog(self.currentFileIndex);
-		
+
 		self.filename = filename
 		self.mySolar.computeNetPower(self.plotData)
-		
+
 		self.plotGraph()
-		
+
 #		print(self.plotDate)
-		
+
 	def on_resize(self, event):
 		self.plotheight = event.height;
 		self.plotwidth = event.width;
@@ -227,7 +246,7 @@ class Application(tk.Frame):
 		self.plotGraph();
 
 	def plotGraph(self):
-		
+
 		self.canvas.delete("all");
 		# draw left y axis
 		self.canvas.create_line(self.leftPad,self.topPad,self.leftPad,self.plotheight-self.bottomPad)
@@ -238,14 +257,14 @@ class Application(tk.Frame):
 			self.canvas.create_line(self.leftPad, self.plotheight-self.bottomPad, self.plotwidth-self.rightPad,self.plotheight-self.bottomPad)
 
 #		self.canvas.create_line(0,0,self.plotwidth,self.plotheight)
-		
+
 		self.canvas_LabelFrame["text"] = "Waveform for " + self.filename
-		
+
 		# plot the data traces
 		if (not self.plotData == None) and (self.currentParm != -1 ):
 			for channelIndex in xrange(6):
 				if self.chanList[channelIndex] == 1:
-					
+
 					parm = self.currentParm
 
 					tempMinMax = self.getMinMaxForParm(parm, channelIndex)
@@ -258,7 +277,7 @@ class Application(tk.Frame):
 					gridWidth = gridRight-gridLeft
 					gridHeight = gridBottom-gridTop
 					gridScaleSpan = gridScaleMax-gridScaleMin
-					
+
 
 					valueCount = len(self.plotData[channelIndex]["voltage"])  # assume length of each array is the same.
 					skipCount = valueCount/(self.plotwidth-self.leftPad-self.rightPad) # how many data points get put into each horizontal pixel of the plot
@@ -280,7 +299,7 @@ class Application(tk.Frame):
 						rightValue = self.getDataValueForParm(parm,channelIndex,index);
 						self.canvas.create_line(plotXBase+horizontalScale*(index),plotYBase-verticalScale*(leftValue-vertMin),plotXBase+horizontalScale*(index+skipCount),plotYBase-verticalScale*(rightValue-vertMin))
 						leftValue = rightValue;
-					
+
 					# draw "0" x axis line
 					if (gridScaleMin < 0) and (gridScaleMax > 0): # max is below 0 and min is above, so draw "0" line.
 						self.canvas.create_line(gridLeft,plotYBase-verticalScale*(0-vertMin),gridRight,plotYBase-verticalScale*(0-vertMin))
@@ -289,7 +308,7 @@ class Application(tk.Frame):
 					#
 					# put the scale info
 					#
-					
+
 					# axis numbers
 					# x-axis numbers - left
 					self.canvas.create_text(gridLeft, gridBottom + 2, text=self.plotData[channelIndex]["time"][0], anchor=tk.NW)
@@ -312,7 +331,7 @@ class Application(tk.Frame):
 					self.canvas.create_text( 0 , gridTop+gridHeight*3/4, text=("%2.2f" % (gridScaleMin+gridScaleSpan/4)), anchor=tk.W)
 					# y-axis numbers - bottom
 					self.canvas.create_text(0, gridBottom - 2, text=("%2.2f" % (gridScaleMin)), anchor=tk.SW)
-		
+
 	def getDataValueForParm(self,parm,channelIndex,index):
 		returnVal = 0;
 		if parm == 0:  # voltage
@@ -322,7 +341,7 @@ class Application(tk.Frame):
 		elif parm == 2: # power
 			returnVal = self.plotData[channelIndex]["voltage"][index] * self.plotData[channelIndex]["current"][index];
 		return returnVal
-		
+
 	def getMinMaxForParm(self,parm,channelIndex):
 		returnVal = [999999999.0, -999999999.0] # baseline extreme opposite numbers for min and max
 		channelMax = 0; channelMin = 0
@@ -343,10 +362,10 @@ class Application(tk.Frame):
 				if channelMin < returnVal[0]: # find new min
 					returnVal[0] = channelMin;
 		return returnVal
-				
+
 	def periodicEventHandler(self):
 #		self.after(1000,self.periodicEventHandler);
-		
+
 		data = self.mySolar.gatherData();
 		self.updateGuiFields(data);
 		self.mySolar.recordData(data);
@@ -357,18 +376,18 @@ class Application(tk.Frame):
 
 
 def main():
-	app = Application()                       
-	app.master.title('Solar Panel Monitor')    
-	
+	app = Application()
+	app.master.title('Solar Panel Monitor')
+
 #	app.after(0,app.periodicEventHandler);
-	
+
 	app.mySolar = setupSolar()
 	app.mainloop() ;
-	 
 
 
-	
-	
+
+
+
 
 if __name__ == "__main__":
 	main();
