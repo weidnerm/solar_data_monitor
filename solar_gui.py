@@ -25,7 +25,7 @@ class Application(tk.Frame):
 		x, y = event.x, event.y
 		self.mouseX = x
 		self.mouseY = y
-		print("%d %d" % (x,y) )
+		#~ print("%d %d" % (x,y) )
 
 
 	def mouse_wheel(self, event):
@@ -36,9 +36,31 @@ class Application(tk.Frame):
 			direction = 1
 		if event.num == 4 or event.delta == 120:
 			direction = -1
-		print("direction=%d"%direction)
-		print(event)
 
+		fraction = -1
+		xInGrid = self.mouseX-self.leftPad
+		gridWidth = self.plotwidth-self.leftPad-self.rightPad
+		if self.plotwidth != 0 and self.mouseX > self.leftPad and self.mouseX < self.plotwidth-self.rightPad:
+			fraction = float(xInGrid)/float(gridWidth)
+		mouseIndex = self.firstPoint + (self.lastPoint-self.firstPoint)*fraction
+		
+		# handle zooming
+		if direction == -1: # zoom in
+			self.firstPoint = int(mouseIndex - 0.9*(mouseIndex - self.firstPoint))
+			self.lastPoint = int(mouseIndex + 0.9*(self.lastPoint - mouseIndex))
+		if direction == 1:
+			self.firstPoint = int(mouseIndex - 1.1*(mouseIndex - self.firstPoint))
+			self.lastPoint = int(mouseIndex + 1.1*(self.lastPoint - mouseIndex))
+
+		# clip if necessary
+		if self.lastPoint > len(self.plotData[0]["voltage"])-1:
+			self.lastPoint = len(self.plotData[0]["voltage"])-1
+		if self.firstPoint < 0:
+			self.firstPoint = 0
+
+		# draw it if scrolling happened
+		if direction == -1 or direction == 1:
+			self.plotGraph()
 
 
 	def createWidgets(self):
@@ -282,13 +304,11 @@ class Application(tk.Frame):
 					gridHeight = gridBottom-gridTop
 					gridScaleSpan = gridScaleMax-gridScaleMin
 
-
-					valueCount = len(self.plotData[channelIndex]["voltage"])  # assume length of each array is the same.
+					if self.lastPoint == 0:     # set our range of data to be the full range of data.
+						self.lastPoint = len(self.plotData[channelIndex]["voltage"])  # assume length of each array is the same.
+					valueCount = self.lastPoint - self.firstPoint
 					skipCount = valueCount/(self.plotwidth-self.leftPad-self.rightPad) # how many data points get put into each horizontal pixel of the plot
 					print("voltage count=%d   plotWidth=%d   skipcount=%d" % (valueCount,self.plotwidth-self.leftPad-self.rightPad,skipCount))
-
-					if self.lastPoint == 0:
-						self.lastPoint = valueCount  # set our range of data to be the full range of data.
 
 					if skipCount <= 0:
 						skipCount = 1
@@ -303,9 +323,12 @@ class Application(tk.Frame):
 
 					# plot the data
 					leftValue=self.getDataValueForParm(parm,channelIndex,0)
-					for index in xrange(skipCount,valueCount-skipCount,skipCount):
-						rightValue = self.getDataValueForParm(parm,channelIndex,index);
-						self.canvas.create_line(plotXBase+horizontalScale*(index),plotYBase-verticalScale*(leftValue-vertMin),plotXBase+horizontalScale*(index+skipCount),plotYBase-verticalScale*(rightValue-vertMin))
+					for index in xrange(skipCount, valueCount-skipCount, skipCount):
+						rightValue = self.getDataValueForParm(parm,channelIndex,index+self.firstPoint);
+						self.canvas.create_line(plotXBase+horizontalScale*(index),
+						                        plotYBase-verticalScale*(leftValue-vertMin),
+						                        plotXBase+horizontalScale*(index+skipCount),
+						                        plotYBase-verticalScale*(rightValue-vertMin))
 						leftValue = rightValue;
 
 					# draw "0" x axis line
@@ -319,15 +342,15 @@ class Application(tk.Frame):
 
 					# axis numbers
 					# x-axis numbers - left
-					self.canvas.create_text(gridLeft, gridBottom + 2, text=self.plotData[channelIndex]["time"][0], anchor=tk.NW)
+					self.canvas.create_text(gridLeft, gridBottom + 2, text=self.plotData[channelIndex]["time"][self.firstPoint], anchor=tk.NW)
 					# x-axis numbers - middle-left
-					self.canvas.create_text( gridLeft+gridWidth/4 , gridBottom + 2, text=self.plotData[channelIndex]["time"][valueCount/4], anchor=tk.N)
+					self.canvas.create_text( gridLeft+gridWidth/4 , gridBottom + 2, text=self.plotData[channelIndex]["time"][self.firstPoint+valueCount/4], anchor=tk.N)
 					# x-axis numbers - middle
-					self.canvas.create_text( gridLeft+gridWidth/2 , gridBottom + 2, text=self.plotData[channelIndex]["time"][valueCount/2], anchor=tk.N)
+					self.canvas.create_text( gridLeft+gridWidth/2 , gridBottom + 2, text=self.plotData[channelIndex]["time"][self.firstPoint+valueCount/2], anchor=tk.N)
 					# x-axis numbers - middle-right
-					self.canvas.create_text( gridLeft+gridWidth*3/4 , gridBottom + 2, text=self.plotData[channelIndex]["time"][valueCount*3/4], anchor=tk.N)
+					self.canvas.create_text( gridLeft+gridWidth*3/4 , gridBottom + 2, text=self.plotData[channelIndex]["time"][self.firstPoint+valueCount*3/4], anchor=tk.N)
 					# x-axis numbers - right
-					self.canvas.create_text(gridRight, gridBottom + 2, text=self.plotData[channelIndex]["time"][valueCount-1], anchor=tk.NE)
+					self.canvas.create_text(gridRight, gridBottom + 2, text=self.plotData[channelIndex]["time"][self.firstPoint+valueCount-1], anchor=tk.NE)
 
 					# y-axis numbers - top
 					self.canvas.create_text(0, gridTop + 2, text=("%2.2f" % (gridScaleMin+gridScaleSpan)), anchor=tk.NW)
