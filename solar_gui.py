@@ -260,6 +260,10 @@ class Application(tk.Frame):
 
 		self.filename = filename
 		self.mySolar.computeNetPower(self.plotData)
+		
+		# reset the edges
+		self.lastPoint = len(self.plotData[0]["voltage"])  # assume length of each array is the same.
+		self.firstPoint = 0
 
 		self.plotGraph()
 
