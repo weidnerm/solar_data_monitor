@@ -6,6 +6,7 @@ import time
 import os
 import glob
 import Tkinter as tk
+import math
 
 def orig_main():
 	ina = INA219()
@@ -343,6 +344,17 @@ class Application(tk.Frame):
 		self.currentFileIndex = 0;  # most recent
 		self.firstPoint = 0
 		self.lastPoint = 0;
+		
+		self.currentXferPwr = 0
+		self.currentBatPwr = 0
+		self.currentPanelPwr = 0
+		self.currentLoadPwr = 0
+		self.currentBatPwrList = []
+		for index in xrange(4):
+			self.currentBatPwrList.append(0)
+
+		self.plotheight = 1; # dummy values.
+		self.plotwidth = 1; # dummy values.
 
 	def on_resize(self, event):
 		self.plotheight = event.height;
@@ -352,40 +364,91 @@ class Application(tk.Frame):
 
 	def plotGraph(self):
 		
+		graphPad = 3
+		graphTop = graphPad
+		graphBottom = self.plotheight - graphPad
+		graphLeft = graphPad
+		graphRight = self.plotwidth - graphPad
+		graphHeight = graphBottom-graphTop
+		graphWidth = self.plotwidth - graphPad*2
+
 		#
 		# plot batteries
 		#
-		for sensorIndex in xrange(6):
-			graphPad = 2
-			graphTop = graphPad
-			graphBottom = self.plotheight - graphPad
-			graphLeft = graphPad
-			graphRight = self.plotwidth - graphPad
-			graphHeight = graphBottom-graphTop
+		for sensorIndex in xrange(4):
 			
 			fraction = 0.1 + sensorIndex*0.1
 			boundary = graphTop + int(graphHeight*fraction)
 			
-			bar_1_frac = 0.1
-			bar_2_frac = 0.6 - sensorIndex*0.1
-			
-			
 			if sensorIndex <= 3:
 				bar_1_color = "#777"
-				bar_2_top = graphHeight - int(bar_2_frac*graphHeight)
-				bar_1_top = graphTop
-			elif sensorIndex == 4:
-				bar_1_color = "#ff0"
-				bar_2_top = graphHeight - int(bar_2_frac*graphHeight)
-				bar_1_top = bar_2_top - int(bar_1_frac*graphHeight)
-			else:
-				bar_1_color = "#ff0"
-				bar_2_top = graphHeight - int(bar_2_frac*graphHeight)
-				bar_1_top = bar_2_top - int(bar_1_frac*graphHeight)
+				if self.currentBatPwrList[sensorIndex] < 0:
+					bar_2_color = "#f00"
+				else:
+					bar_2_color = "#0f0"
+				bar_2_frac = 0.6 - sensorIndex*0.1
+				bar_1_frac = 1 - bar_2_frac
+			#~ elif sensorIndex == 4:
+				#~ bar_1_color = "#ff0"
+				#~ bar_2_color = "#0f0"
+				#~ bar_2_frac = 0.6 - sensorIndex*0.1
+				#~ bar_1_frac = 0.1
+			#~ else:
+				#~ bar_1_color = "#ff0"  # yellow for transfer power bar
+				#~ if self.currentBatPwr < 0:
+					#~ bar_2_color = "#f00"  # red for discharge
+				#~ else:
+					#~ bar_2_color = "#0f0"  # green for charge
+				#~ bar_2_frac = float(abs(self.currentBatPwr))/45000.0
+				#~ bar_1_frac = float(abs(self.currentXferPwr))/45000.0
+				#~ self.energy_Col_text[sensorIndex].set("%d mW" % (self.currentPanelPwr - self.currentBatPwr) )
+			
+			bar_2_top = graphHeight - int(bar_2_frac*graphHeight)
+			bar_1_top = bar_2_top - int(bar_1_frac*graphHeight)
 			
 			self.energy_Col_graph_canvas[sensorIndex].delete("all");
 			self.energy_Col_graph_canvas[sensorIndex].create_rectangle(graphLeft,bar_1_top, graphRight,bar_2_top, fill=bar_1_color)
-			self.energy_Col_graph_canvas[sensorIndex].create_rectangle(graphLeft,bar_2_top, graphRight,graphBottom, fill="#0f0")
+			self.energy_Col_graph_canvas[sensorIndex].create_rectangle(graphLeft,bar_2_top, graphRight,graphBottom, fill=bar_2_color)
+		
+		#
+		# plot load/panel stuff
+		#
+		for sensorIndex in xrange(4,6):
+			if sensorIndex == 4:
+				bar_1_color = "#ff0"
+				bar_2_color = "#ff0"
+				bar_3_color = "#ff0"
+				bar_1_frac = 0.1
+				bar_2_frac = 0.6 - sensorIndex*0.1
+				bar_3_frac = 0.1
+			else:
+				bar_1_color = "#0f0"  # yellow for transfer power bar
+				if self.currentBatPwr < 0:
+					bar_2_color = "#f00"  # red for discharge
+				else:
+					bar_2_color = "#0f0"  # green for charge
+				bar_3_color = "#ff0"  # yellow for transfer power bar
+				
+				bar_1_frac = float(abs(self.currentPanelPwr))/45000.0
+				bar_2_frac = float(abs(self.currentBatPwr))/45000.0
+				bar_3_frac = float(abs(self.currentLoadPwr))/45000.0
+				
+				#~ self.energy_Col_text[sensorIndex].set("")
+			
+			bar_3_top = graphHeight - int(bar_3_frac*graphHeight)
+			bar_2_top = graphHeight - int(bar_2_frac*graphHeight)
+			bar_1_top = graphHeight - int(bar_1_frac*graphHeight)
+			
+			self.energy_Col_graph_canvas[sensorIndex].delete("all");
+			self.energy_Col_graph_canvas[sensorIndex].create_rectangle(
+			               graphLeft+((graphWidth*0)/3), bar_1_top,
+			               graphLeft+((graphWidth*1)/3), graphHeight,  fill=bar_1_color)
+			self.energy_Col_graph_canvas[sensorIndex].create_rectangle(
+			               graphLeft+((graphWidth*1)/3), bar_2_top,
+			               graphLeft+((graphWidth*2)/3), graphHeight,  fill=bar_2_color)
+			self.energy_Col_graph_canvas[sensorIndex].create_rectangle(
+			               graphLeft+((graphWidth*2)/3), bar_3_top,
+			               graphLeft+((graphWidth*3)/3), graphHeight,  fill=bar_3_color)
 
 		
 	def createWidgets(self):
@@ -427,6 +490,8 @@ class Application(tk.Frame):
 			myField = tk.Canvas(self.energy_Col_LabelFrame[sensorIndex], width=70, height=200)
 			myField.grid(column=0,row=0, sticky=tk.E + tk.W + tk.N + tk.S )
 			self.energy_Col_graph_canvas.append( myField )
+			
+			#~ myTextField = myField.create_text(anchor=tk.SW)
 
 		#
 		# add resize handler
@@ -438,270 +503,42 @@ class Application(tk.Frame):
 		#
 
 		self.energy_Col_Label = []
+		self.energy_Col_text = []
 		for sensorIndex in xrange(6):
-			myField = tk.Label(self.energy_Col_LabelFrame[sensorIndex], text="12345 mWHr")
+			myStringVar = tk.StringVar()
+			myStringVar.set("12345 mWHr")
+			myField = tk.Label(self.energy_Col_LabelFrame[sensorIndex], textvariable=myStringVar)
 			myField.grid(column=0,row=1, sticky=tk.E + tk.W + tk.N + tk.S )
 			self.energy_Col_Label.append( myField )
+			self.energy_Col_text.append( myStringVar )
 
-
-	def notYet(self):
-
-
-		#
-		# set up IntVar variables for checkboxes
-		#
-		self.sensor_voltageIntVar = []
-		self.sensor_currentIntVar = []
-		self.sensor_powerIntVar = []
-		for sensorIndex in xrange(6):
-			self.sensor_voltageIntVar.append( tk.IntVar( ) )
-			self.sensor_currentIntVar.append( tk.IntVar( ) )
-			self.sensor_powerIntVar.append( tk.IntVar( ) )
-
-
-		#
-		# set up checkboxes for Sensors
-		#
-
-		self.sensor_voltageCheckbox = []
-		self.sensor_currentCheckbox = []
-		self.sensor_powerCheckbox = []
-		for sensorIndex in xrange(6):
-			checkButton = tk.Checkbutton(self.sensor_LabelFrame[sensorIndex], text="V", variable=self.sensor_voltageIntVar[sensorIndex], command=lambda sensorIndex=sensorIndex: self.checkbuttonHandler(0,sensorIndex) )
-			self.sensor_voltageCheckbox.append( checkButton )
-			self.sensor_voltageCheckbox[sensorIndex].grid(column=0, row=1, sticky=tk.W)
-
-			checkButton = tk.Checkbutton(self.sensor_LabelFrame[sensorIndex], text="mA", variable=self.sensor_currentIntVar[sensorIndex], command=lambda sensorIndex=sensorIndex: self.checkbuttonHandler(1,sensorIndex))
-			self.sensor_currentCheckbox.append( checkButton)
-			self.sensor_currentCheckbox[sensorIndex].grid(column=0, row=2, sticky=tk.W)
-
-			checkButton = tk.Checkbutton(self.sensor_LabelFrame[sensorIndex], text="mW", variable=self.sensor_powerIntVar[sensorIndex], command=lambda sensorIndex=sensorIndex: self.checkbuttonHandler(2,sensorIndex))
-			self.sensor_powerCheckbox.append(checkButton )
-			self.sensor_powerCheckbox[sensorIndex].grid(column=0, row=3, sticky=tk.W)
-
-
- 		#
-		# set up StringVar for data outputs
-		#
-
-		self.sensor_voltageStringVar = []
-		self.sensor_currentStringVar = []
-		self.sensor_powerStringVar = []
-		for sensorIndex in xrange(6):
-			self.sensor_voltageStringVar.append( tk.StringVar( ) )
-			self.sensor_voltageStringVar[sensorIndex].set("xx.xxx Volts")
-
-			self.sensor_currentStringVar.append( tk.StringVar( ) )
-			self.sensor_currentStringVar[sensorIndex].set("y.yyy Amps")
-
-			self.sensor_powerStringVar.append( tk.StringVar( ) )
-			self.sensor_powerStringVar[sensorIndex].set("xx.xxx Watts")
-
-
- 		#
-		# set up Label widgets for data outputs
-		#
-
-		self.sensor_voltageLabel = []
-		self.sensor_currentLabel = []
-		self.sensor_powerLabel = []
-		for sensorIndex in xrange(6):
-			self.sensor_voltageLabel.append( tk.Label(self.sensor_LabelFrame[sensorIndex], textvariable=self.sensor_voltageStringVar[sensorIndex]) )
-			self.sensor_voltageLabel[sensorIndex].grid(column=1, row=1, sticky=tk.E)
-
-			self.sensor_currentLabel.append( tk.Label(self.sensor_LabelFrame[sensorIndex], textvariable=self.sensor_currentStringVar[sensorIndex]) )
-			self.sensor_currentLabel[sensorIndex].grid(column=1, row=2, sticky=tk.E)
-
-			self.sensor_powerLabel.append( tk.Label(self.sensor_LabelFrame[sensorIndex], textvariable=self.sensor_powerStringVar[sensorIndex]) )
-			self.sensor_powerLabel[sensorIndex].grid(column=1, row=3, sticky=tk.E)
-
-
-
-
-
-		#
-		# set up the left and right buttons
-		#
-		#~ self.canvasLeftButton = tk.Button(self.canvas_LabelFrame, text='<', command=self.clickRight)
-		#~ self.canvasLeftButton.grid(column=0,row=0)
-#~ 
-		#~ self.canvasRightButton = tk.Button(self.canvas_LabelFrame, text='>', command=self.clickLeft)
-		#~ self.canvasRightButton.grid(column=2,row=0)
-
-
-
-		#
-		# set up the plot canvas widgets
-		#
-		self.canvas = tk.Canvas(self.canvas_LabelFrame, width=800, height=500)
-		self.canvas.grid(column=1,row=0, sticky=tk.E + tk.W + tk.N + tk.S )
-		#~ self.canvas.bind("<Motion>", self.mouse_motion)
-		#~ self.canvas.bind("<MouseWheel>", self.mouse_wheel) # Windows mouse wheel event
-		#~ self.canvas.bind("<Button-4>", self.mouse_wheel) # Linux mouse wheel event (Up)
-		#~ self.canvas.bind("<Button-5>", self.mouse_wheel) # Linux mouse wheel event (Down)
-
-		#
-		# add resize handler
-		#
-		#~ self.canvas.bind("<Configure>", self.on_resize)
-
-		#
-		# add quit handler
-		#
-		self.quitButton = tk.Button(self, text='Quit', command=self.quit)
-		self.quitButton.grid()
 		
 		
-		
-	def createWidgets2(self):
-
-		#
-		# set up frames for the 6 sensors
-		#
-		top=self.winfo_toplevel()
-		top.rowconfigure(0, weight=1)
-		top.columnconfigure(0, weight=1)
-
-		#
-		# set up frames for the 6 sensors
-		#
-
-		self.sensor_LabelFrame = []
-		for sensorIndex in xrange(6):
-			self.sensor_LabelFrame.append( tk.LabelFrame(self, text="Sensor") )
-			self.sensor_LabelFrame[sensorIndex].grid(column=sensorIndex, row=0)
-
-		self.canvas_LabelFrame = tk.LabelFrame(self, text="Waveform for None")
-		self.canvas_LabelFrame.grid(column=0, row=1, columnspan=7, sticky=tk.N+tk.S+tk.E+tk.W)
-
-		# make virtual 7th column take stretching. and row 1 (with canvas)
-		self.rowconfigure(1, weight=1)
-		self.columnconfigure(6, weight=1)
-
-		self.canvas_LabelFrame.rowconfigure(0, weight=1)
-		self.canvas_LabelFrame.columnconfigure(1, weight=1)
-
-		# add a bit of space left of the readings so that the field stays fixed width
-		for sensorIndex in xrange(6):
-			self.sensor_LabelFrame[sensorIndex].columnconfigure(1, minsize=120)
-
-
-		#
-		# set up IntVar variables for checkboxes
-		#
-		self.sensor_voltageIntVar = []
-		self.sensor_currentIntVar = []
-		self.sensor_powerIntVar = []
-		for sensorIndex in xrange(6):
-			self.sensor_voltageIntVar.append( tk.IntVar( ) )
-			self.sensor_currentIntVar.append( tk.IntVar( ) )
-			self.sensor_powerIntVar.append( tk.IntVar( ) )
-
-
-		#
-		# set up checkboxes for Sensors
-		#
-
-		self.sensor_voltageCheckbox = []
-		self.sensor_currentCheckbox = []
-		self.sensor_powerCheckbox = []
-		for sensorIndex in xrange(6):
-			checkButton = tk.Checkbutton(self.sensor_LabelFrame[sensorIndex], text="V", variable=self.sensor_voltageIntVar[sensorIndex], command=lambda sensorIndex=sensorIndex: self.checkbuttonHandler(0,sensorIndex) )
-			self.sensor_voltageCheckbox.append( checkButton )
-			self.sensor_voltageCheckbox[sensorIndex].grid(column=0, row=1, sticky=tk.W)
-
-			checkButton = tk.Checkbutton(self.sensor_LabelFrame[sensorIndex], text="mA", variable=self.sensor_currentIntVar[sensorIndex], command=lambda sensorIndex=sensorIndex: self.checkbuttonHandler(1,sensorIndex))
-			self.sensor_currentCheckbox.append( checkButton)
-			self.sensor_currentCheckbox[sensorIndex].grid(column=0, row=2, sticky=tk.W)
-
-			checkButton = tk.Checkbutton(self.sensor_LabelFrame[sensorIndex], text="mW", variable=self.sensor_powerIntVar[sensorIndex], command=lambda sensorIndex=sensorIndex: self.checkbuttonHandler(2,sensorIndex))
-			self.sensor_powerCheckbox.append(checkButton )
-			self.sensor_powerCheckbox[sensorIndex].grid(column=0, row=3, sticky=tk.W)
-
-
- 		#
-		# set up StringVar for data outputs
-		#
-
-		self.sensor_voltageStringVar = []
-		self.sensor_currentStringVar = []
-		self.sensor_powerStringVar = []
-		for sensorIndex in xrange(6):
-			self.sensor_voltageStringVar.append( tk.StringVar( ) )
-			self.sensor_voltageStringVar[sensorIndex].set("xx.xxx Volts")
-
-			self.sensor_currentStringVar.append( tk.StringVar( ) )
-			self.sensor_currentStringVar[sensorIndex].set("y.yyy Amps")
-
-			self.sensor_powerStringVar.append( tk.StringVar( ) )
-			self.sensor_powerStringVar[sensorIndex].set("xx.xxx Watts")
-
-
- 		#
-		# set up Label widgets for data outputs
-		#
-
-		self.sensor_voltageLabel = []
-		self.sensor_currentLabel = []
-		self.sensor_powerLabel = []
-		for sensorIndex in xrange(6):
-			self.sensor_voltageLabel.append( tk.Label(self.sensor_LabelFrame[sensorIndex], textvariable=self.sensor_voltageStringVar[sensorIndex]) )
-			self.sensor_voltageLabel[sensorIndex].grid(column=1, row=1, sticky=tk.E)
-
-			self.sensor_currentLabel.append( tk.Label(self.sensor_LabelFrame[sensorIndex], textvariable=self.sensor_currentStringVar[sensorIndex]) )
-			self.sensor_currentLabel[sensorIndex].grid(column=1, row=2, sticky=tk.E)
-
-			self.sensor_powerLabel.append( tk.Label(self.sensor_LabelFrame[sensorIndex], textvariable=self.sensor_powerStringVar[sensorIndex]) )
-			self.sensor_powerLabel[sensorIndex].grid(column=1, row=3, sticky=tk.E)
-
-
-
-
-
-		#
-		# set up the left and right buttons
-		#
-		#~ self.canvasLeftButton = tk.Button(self.canvas_LabelFrame, text='<', command=self.clickRight)
-		#~ self.canvasLeftButton.grid(column=0,row=0)
-#~ 
-		#~ self.canvasRightButton = tk.Button(self.canvas_LabelFrame, text='>', command=self.clickLeft)
-		#~ self.canvasRightButton.grid(column=2,row=0)
-
-
-
-		#
-		# set up the plot canvas widgets
-		#
-		self.canvas = tk.Canvas(self.canvas_LabelFrame, width=800, height=500)
-		self.canvas.grid(column=1,row=0, sticky=tk.E + tk.W + tk.N + tk.S )
-		#~ self.canvas.bind("<Motion>", self.mouse_motion)
-		#~ self.canvas.bind("<MouseWheel>", self.mouse_wheel) # Windows mouse wheel event
-		#~ self.canvas.bind("<Button-4>", self.mouse_wheel) # Linux mouse wheel event (Up)
-		#~ self.canvas.bind("<Button-5>", self.mouse_wheel) # Linux mouse wheel event (Down)
-
-		#
-		# add resize handler
-		#
-		#~ self.canvas.bind("<Configure>", self.on_resize)
-
-		#
-		# add quit handler
-		#
-		self.quitButton = tk.Button(self, text='Quit', command=self.quit)
-		self.quitButton.grid()
-
 	def updateGuiFields(self, solarData):
-		for sensorIndex in xrange(6):
-			self.sensor_LabelFrame[sensorIndex]["text"] = solarData["names"][sensorIndex];
-			self.sensor_voltageStringVar[sensorIndex].set("%2.3f Volts" % solarData["voltage"][sensorIndex])
-			self.sensor_currentStringVar[sensorIndex].set("%2.3f Amps" % (solarData["current"][sensorIndex]/1000.0))
-			self.sensor_powerStringVar[sensorIndex].set("%2.3f Watts" % (solarData["voltage"][sensorIndex]*solarData["current"][sensorIndex]/1000.0))
+		# 0-panel;  1-bat 1;  2-bat 2;  3-load;  4-bat 3;  5-bat 4
+		self.currentBatPwrList = []
+		self.currentBatPwrList.append( int( float(solarData["voltage"][1]) * int(solarData["current"][1]) ) )
+		self.currentBatPwrList.append( int( float(solarData["voltage"][2]) * int(solarData["current"][2]) ) )
+		self.currentBatPwrList.append( int( float(solarData["voltage"][4]) * int(solarData["current"][4]) ) )
+		self.currentBatPwrList.append( int( float(solarData["voltage"][5]) * int(solarData["current"][5]) ) )
+
+		self.currentBatPwr = 0;
+		for index in xrange(4):
+			self.currentBatPwr = self.currentBatPwr + self.currentBatPwrList[index]
+			
+		self.currentPanelPwr = int( float(solarData["voltage"][3]) * int(solarData["current"][0]) ) # use load voltage to try to ignore losses in regulator.
+		self.currentLoadPwr  = int( float(solarData["voltage"][3]) * int(solarData["current"][3]) )
+
+		self.currentXferPwr = self.currentPanelPwr - self.currentBatPwr
+
+		
+		
 
 	def periodicEventHandler(self):
 		self.after(1000,self.periodicEventHandler);
 
 		data = self.mySolar.gatherData();
-		#~ self.updateGuiFields(data);
+		self.updateGuiFields(data);
 		self.plotGraph()
 		self.mySolar.recordData(data);
 		self.mySolar.printResults(data)
