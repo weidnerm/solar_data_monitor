@@ -76,8 +76,8 @@ class Solar:
 			tempVal["minEnergy"] = 0
 			tempVal["maxEnergy"] = 0
 			tempVal["cumulativeEnergy"] = 0
-			
-			
+
+
 			minEnergy = 0
 			maxEnergy = 0
 			cumulativeEnergy = 0
@@ -85,10 +85,10 @@ class Solar:
 				timeDelta = self.convertTimeString( data[channelIndex]["time"][index+1]) - self.convertTimeString(data[channelIndex]["time"][index])
 				if (timeDelta <= 12 ):
 #					power=data[channelIndex]["voltage"][index] * data[channelIndex]["current"][index]
-					power=data[channelIndex]["current"][index]
+					power=data[channelIndex]["current"][index]  # use mAHr for power.
 					energy = power*timeDelta
 					cumulativeEnergy = cumulativeEnergy + energy
-					
+
 					if cumulativeEnergy < minEnergy:
 						minEnergy = cumulativeEnergy;
 					elif cumulativeEnergy > maxEnergy:
@@ -97,20 +97,20 @@ class Solar:
 			tempVal["minEnergy"] = minEnergy
 			tempVal["maxEnergy"] = maxEnergy
 			tempVal["cumulativeEnergy"] = cumulativeEnergy
-			
+
 			results.append(tempVal);
-			
+
 		for channelIndex in xrange(6):
 			print("minEnergy=%.1f mAHr   maxEnergy=%.1f mAHr  cumulative=%.1f mAHr" % ( results[channelIndex]["minEnergy"]/3600.0, results[channelIndex]["maxEnergy"]/3600.0, results[channelIndex]["cumulativeEnergy"]/3600.0))
 		return results
-		
+
 	def convertTimeString(self, time):
 		timeSec = 0;
 		timeSec = timeSec + int(time[0:2])*60*60
 		timeSec = timeSec + int(time[3:5])*60
 		timeSec = timeSec + int(time[6:8])
 		return timeSec
-		
+
 class TimestamperInterface:
 	def getDate(self):
 		pass;
@@ -154,13 +154,13 @@ class SolarDb:
 
 
 	def addEntry(self, date, time, data):
-		
+
 		# figure the new point into the averages.
 		for index in xrange(len(data["voltage"])):
 			self.averages["voltage"][index] = self.averages["voltage"][index] + data["voltage"][index];
 			self.averages["current"][index] = self.averages["current"][index] + data["current"][index];
 		self.averages_dataPoints = self.averages_dataPoints +1;
-			
+
 		if ( self.averages_dataPoints == 10):
 			# if rollover, flush the old data to the file.
 			sampleWindow = int(time[3:5])/10
@@ -229,10 +229,10 @@ class SolarDb:
 	#                     "time"       = [0-n] = string "hh:mm:ss"
 	#                     "maxVoltage" = float
 	#                     "maxCurrent" = float
-	
+
 	def readDayLog(self,fileIndex):
 		returnVal = [];
-		
+
 		filename = self.getFilenameFromIndex(fileIndex)
 
 		for index in xrange(6):
@@ -241,13 +241,13 @@ class SolarDb:
 			tempVal["voltage"] = []
 			tempVal["current"] = []
 			tempVal["time"]    = []
-			
+
 			returnVal.append(tempVal);
 
 		fileHandle = open(filename,"r");
 		rawLines = fileHandle.readlines();
 		firstLineFields = rawLines[0].split(",");
-		
+
 		for chanIndex in xrange(6):
 			returnVal[chanIndex]["name"] = firstLineFields[1+chanIndex*2][:-8];  # strip off " voltage" from the end for the base name.
 
@@ -255,7 +255,7 @@ class SolarDb:
 		#~ returnVal[1]["name"] = firstLineFields[3][:-8];  # strip off " voltage" from the end for the base name.
 		#~ returnVal[2]["name"] = firstLineFields[5][:-8];  # strip off " voltage" from the end for the base name.
 		#~ returnVal[3]["name"] = firstLineFields[7][:-8];  # strip off " voltage" from the end for the base name.
-		
+
 		for chanIndex in xrange(6):
 			returnVal[chanIndex]["maxVoltage"] = -99999999.0 # very small.
 			returnVal[chanIndex]["minVoltage"] =  99999999.0 # very big.
@@ -266,12 +266,12 @@ class SolarDb:
 
 		for index in xrange(1,len(rawLines)):
 			fields = rawLines[index].split(",");
-				
+
 			for chanIndex in xrange(6):
 				returnVal[chanIndex]["voltage"].append(float(fields[1+chanIndex*2]))
 				returnVal[chanIndex]["current"].append(int(fields[2+chanIndex*2]))
 				returnVal[chanIndex]["time"].append(fields[0])
-				
+
 				if (returnVal[chanIndex]["maxVoltage"] < float(fields[1+chanIndex*2])):
 					returnVal[chanIndex]["maxVoltage"] = float(fields[1+chanIndex*2])
 				if (returnVal[chanIndex]["minVoltage"] > float(fields[1+chanIndex*2])):
@@ -284,17 +284,17 @@ class SolarDb:
 					returnVal[chanIndex]["maxPower"] = float(fields[1+chanIndex*2])*int(fields[2+chanIndex*2])
 				if (returnVal[chanIndex]["minPower"] > float(fields[1+chanIndex*2])*int(fields[2+chanIndex*2])):
 					returnVal[chanIndex]["minPower"] = float(fields[1+chanIndex*2])*int(fields[2+chanIndex*2])
-		
+
 		fileHandle.close()
 		return (returnVal, filename);
-		
+
 	def getFilenameFromIndex(self, index):
 		fileList = []
 		pattern = self.m_filenamePrefix + "*.csv"
 #		print(pattern)
 		for file in glob.glob( pattern ):
 			fileList.append(file)
-		
+
 		fileList.sort()
 		fileList.reverse()
 		filteredIndex = index;
@@ -331,7 +331,7 @@ class Application(tk.Frame):
 	def __init__(self, master=None):
 		tk.Frame.__init__(self, master)
 		self.grid(sticky=tk.N+tk.S+tk.E+tk.W)
-		
+
 		self.createWidgets()
 
 		self.plotData = None;
@@ -344,7 +344,7 @@ class Application(tk.Frame):
 		self.currentFileIndex = 0;  # most recent
 		self.firstPoint = 0
 		self.lastPoint = 0;
-		
+
 		self.currentXferPwr = 0
 		self.currentBatPwr = 0
 		self.currentPanelPwr = 0
@@ -355,6 +355,14 @@ class Application(tk.Frame):
 
 		self.plotheight = 1; # dummy values.
 		self.plotwidth = 1; # dummy values.
+		self.todayStats = None
+
+
+	def setSolar(self, solar):
+		self.mySolar = solar
+		(plotData, filename) = self.mySolar.m_SolarDb.readDayLog(self.currentFileIndex);
+		self.todayStats = self.mySolar.computeNetPower(plotData)
+
 
 	def on_resize(self, event):
 		self.plotheight = event.height;
@@ -363,7 +371,7 @@ class Application(tk.Frame):
 		self.plotGraph();
 
 	def plotGraph(self):
-		
+
 		graphPad = 3
 		graphTop = graphPad
 		graphBottom = self.plotheight - graphPad
@@ -376,10 +384,10 @@ class Application(tk.Frame):
 		# plot batteries
 		#
 		for sensorIndex in xrange(4):
-			
+
 			fraction = 0.1 + sensorIndex*0.1
 			boundary = graphTop + int(graphHeight*fraction)
-			
+
 			if sensorIndex <= 3:
 				bar_1_color = "#777"
 				if self.currentBatPwrList[sensorIndex] < 0:
@@ -388,39 +396,43 @@ class Application(tk.Frame):
 					bar_2_color = "#0f0"
 				bar_2_frac = 0.6 - sensorIndex*0.1
 				bar_1_frac = 1 - bar_2_frac
-			#~ elif sensorIndex == 4:
-				#~ bar_1_color = "#ff0"
-				#~ bar_2_color = "#0f0"
-				#~ bar_2_frac = 0.6 - sensorIndex*0.1
-				#~ bar_1_frac = 0.1
-			#~ else:
-				#~ bar_1_color = "#ff0"  # yellow for transfer power bar
-				#~ if self.currentBatPwr < 0:
-					#~ bar_2_color = "#f00"  # red for discharge
-				#~ else:
-					#~ bar_2_color = "#0f0"  # green for charge
-				#~ bar_2_frac = float(abs(self.currentBatPwr))/45000.0
-				#~ bar_1_frac = float(abs(self.currentXferPwr))/45000.0
-				#~ self.energy_Col_text[sensorIndex].set("%d mW" % (self.currentPanelPwr - self.currentBatPwr) )
-			
+
 			bar_2_top = graphHeight - int(bar_2_frac*graphHeight)
 			bar_1_top = bar_2_top - int(bar_1_frac*graphHeight)
-			
+
 			self.energy_Col_graph_canvas[sensorIndex].delete("all");
 			self.energy_Col_graph_canvas[sensorIndex].create_rectangle(graphLeft,bar_1_top, graphRight,bar_2_top, fill=bar_1_color)
 			self.energy_Col_graph_canvas[sensorIndex].create_rectangle(graphLeft,bar_2_top, graphRight,graphBottom, fill=bar_2_color)
-		
+
 		#
 		# plot load/panel stuff
 		#
 		for sensorIndex in xrange(4,6):
 			if sensorIndex == 4:
-				bar_1_color = "#ff0"
+				bar_1_color = "#0f0"
 				bar_2_color = "#ff0"
 				bar_3_color = "#ff0"
-				bar_1_frac = 0.1
-				bar_2_frac = 0.6 - sensorIndex*0.1
-				bar_3_frac = 0.1
+
+				if self.todayStats == None:
+					bar_1_frac = 0.1
+					bar_2_frac = 0.6 - sensorIndex*0.1
+					bar_3_frac = 0.1
+				else:
+					bar_1_frac = self.todayStats[0]["cumulativeEnergy"]/3600.0/ 12000.0 # /3600 convert sec to hr;  /12000 to set max scale
+					bar_2_frac = ((self.todayStats[1]["cumulativeEnergy"] +
+					               self.todayStats[2]["cumulativeEnergy"] +
+					               self.todayStats[4]["cumulativeEnergy"] +
+					               self.todayStats[5]["cumulativeEnergy"] )
+					                     /3600.0/ 12000.0) # /3600 convert sec to hr;  /12000 to set max scale
+					bar_3_frac = self.todayStats[3]["cumulativeEnergy"]/3600.0/ 12000.0 # /3600 convert sec to hr;  /12000 to set max scale
+
+					if bar_2_frac < 0:
+						bar_2_frac = abs(bar_2_frac)
+						bar_2_color = "#f00"
+					else:
+						bar_2_color = "#0f0"
+						
+
 			else:
 				bar_1_color = "#0f0"  # yellow for transfer power bar
 				if self.currentBatPwr < 0:
@@ -428,17 +440,17 @@ class Application(tk.Frame):
 				else:
 					bar_2_color = "#0f0"  # green for charge
 				bar_3_color = "#ff0"  # yellow for transfer power bar
-				
-				bar_1_frac = float(abs(self.currentPanelPwr))/45000.0
-				bar_2_frac = float(abs(self.currentBatPwr))/45000.0
-				bar_3_frac = float(abs(self.currentLoadPwr))/45000.0
-				
+
+				bar_1_frac = float(abs(self.currentPanelPwr))/3200.0  # 3.2A max
+				bar_2_frac = float(abs(self.currentBatPwr))/3200.0
+				bar_3_frac = float(abs(self.currentLoadPwr))/3200.0
+
 				#~ self.energy_Col_text[sensorIndex].set("")
-			
+
 			bar_3_top = graphHeight - int(bar_3_frac*graphHeight)
 			bar_2_top = graphHeight - int(bar_2_frac*graphHeight)
 			bar_1_top = graphHeight - int(bar_1_frac*graphHeight)
-			
+
 			self.energy_Col_graph_canvas[sensorIndex].delete("all");
 			self.energy_Col_graph_canvas[sensorIndex].create_rectangle(
 			               graphLeft+((graphWidth*0)/3), bar_1_top,
@@ -450,7 +462,7 @@ class Application(tk.Frame):
 			               graphLeft+((graphWidth*2)/3), bar_3_top,
 			               graphLeft+((graphWidth*3)/3), graphHeight,  fill=bar_3_color)
 
-		
+
 	def createWidgets(self):
 		#
 		# set up frames for the 6 sensors
@@ -471,8 +483,9 @@ class Application(tk.Frame):
 		# set up frames for the 6 sensors
 		#
 		self.energy_Col_LabelFrame = []
+		labels = ["Batt 1","Batt 2","Batt 3","Batt 4","Today","Now"]
 		for sensorIndex in xrange(6):
-			myField = tk.LabelFrame(self.energy_LabelFrame, text="Sensor%d" % sensorIndex )
+			myField = tk.LabelFrame(self.energy_LabelFrame, text=labels[sensorIndex] )
 			myField.grid(column=sensorIndex, row=0, sticky=tk.N+tk.S+tk.E+tk.W)
 			myField.rowconfigure(0, weight=1)
 			myField.rowconfigure(1, weight=0)
@@ -480,7 +493,7 @@ class Application(tk.Frame):
 			self.energy_LabelFrame.rowconfigure(0, weight=1, minsize=100)
 			self.energy_LabelFrame.columnconfigure(sensorIndex, weight=1, minsize=70)
 			self.energy_Col_LabelFrame.append( myField )
-			
+
 		#
 		# set canvas for each bar graph
 		#
@@ -490,7 +503,7 @@ class Application(tk.Frame):
 			myField = tk.Canvas(self.energy_Col_LabelFrame[sensorIndex], width=70, height=200)
 			myField.grid(column=0,row=0, sticky=tk.E + tk.W + tk.N + tk.S )
 			self.energy_Col_graph_canvas.append( myField )
-			
+
 			#~ myTextField = myField.create_text(anchor=tk.SW)
 
 		#
@@ -499,7 +512,7 @@ class Application(tk.Frame):
 		self.energy_Col_graph_canvas[0].bind("<Configure>", self.on_resize)
 
 		#
-		# set text fields for each 
+		# set text fields for each
 		#
 
 		self.energy_Col_Label = []
@@ -512,27 +525,44 @@ class Application(tk.Frame):
 			self.energy_Col_Label.append( myField )
 			self.energy_Col_text.append( myStringVar )
 
-		
-		
+
+
 	def updateGuiFields(self, solarData):
 		# 0-panel;  1-bat 1;  2-bat 2;  3-load;  4-bat 3;  5-bat 4
 		self.currentBatPwrList = []
-		self.currentBatPwrList.append( int( float(solarData["voltage"][1]) * int(solarData["current"][1]) ) )
-		self.currentBatPwrList.append( int( float(solarData["voltage"][2]) * int(solarData["current"][2]) ) )
-		self.currentBatPwrList.append( int( float(solarData["voltage"][4]) * int(solarData["current"][4]) ) )
-		self.currentBatPwrList.append( int( float(solarData["voltage"][5]) * int(solarData["current"][5]) ) )
+		bat_1_pwr = int(solarData["current"][1])
+		bat_2_pwr = int(solarData["current"][2])
+		bat_3_pwr = int(solarData["current"][4])
+		bat_4_pwr = int(solarData["current"][5])
+
+		self.currentBatPwrList.append( bat_1_pwr )
+		self.currentBatPwrList.append( bat_2_pwr )
+		self.currentBatPwrList.append( bat_3_pwr )
+		self.currentBatPwrList.append( bat_4_pwr )
 
 		self.currentBatPwr = 0;
 		for index in xrange(4):
 			self.currentBatPwr = self.currentBatPwr + self.currentBatPwrList[index]
-			
-		self.currentPanelPwr = int( float(solarData["voltage"][3]) * int(solarData["current"][0]) ) # use load voltage to try to ignore losses in regulator.
-		self.currentLoadPwr  = int( float(solarData["voltage"][3]) * int(solarData["current"][3]) )
+
+		panelPwr = int(solarData["current"][0]) # use load voltage to try to ignore losses in regulator.
+		loadPwr  = int(solarData["current"][3])
+
+		self.currentPanelPwr = int( panelPwr )
+		self.currentLoadPwr  = int( loadPwr )
 
 		self.currentXferPwr = self.currentPanelPwr - self.currentBatPwr
 
-		
-		
+		oldPanelPwr = self.todayStats[0]["cumulativeEnergy"]
+		# add new readings to totals;  assume 1 second integration window
+		self.todayStats[0]["cumulativeEnergy"] = self.todayStats[0]["cumulativeEnergy"] + panelPwr
+		self.todayStats[1]["cumulativeEnergy"] = self.todayStats[1]["cumulativeEnergy"] + bat_1_pwr
+		self.todayStats[2]["cumulativeEnergy"] = self.todayStats[2]["cumulativeEnergy"] + bat_2_pwr
+		self.todayStats[3]["cumulativeEnergy"] = self.todayStats[3]["cumulativeEnergy"] + loadPwr
+		self.todayStats[4]["cumulativeEnergy"] = self.todayStats[4]["cumulativeEnergy"] + bat_3_pwr
+		self.todayStats[5]["cumulativeEnergy"] = self.todayStats[5]["cumulativeEnergy"] + bat_4_pwr
+
+		print("oldPanelPwr=%d\nnewPanelPwr=%d" % ( oldPanelPwr,self.todayStats[0]["cumulativeEnergy"]))
+
 
 	def periodicEventHandler(self):
 		self.after(1000,self.periodicEventHandler);
@@ -546,7 +576,7 @@ class Application(tk.Frame):
 def main():
 	app = Application()
 	app.master.title('Solar Panel Monitor')
-	app.mySolar = setupSolar()
+	app.setSolar( setupSolar() )
 	app.after(0,app.periodicEventHandler);
 	app.mainloop() ;
 
