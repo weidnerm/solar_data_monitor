@@ -404,7 +404,7 @@ class Application(tk.Frame):
 		data = self.mySolar.gatherData();
 		self.updateGuiFields(data);
 		self.mySolar.recordData(data);
-		self.mySolar.printResults(data);
+		self.mySolar.printResults(data);af
 
 
 
