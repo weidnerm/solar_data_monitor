@@ -362,8 +362,8 @@ class Application(tk.Frame):
 		(plotData, filename) = self.mySolar.m_SolarDb.readDayLog(self.currentFileIndex);
 		self.todayStats = self.mySolar.computeNetPower(plotData)
 
-		self.prevStats = copy.deepcopy(self.todayStats)
-		for index in xrange(1,5):
+		self.prevStats = None
+		for index in xrange(1,0,-2):
 			(plotData, filename) = self.mySolar.m_SolarDb.readDayLog(self.currentFileIndex+index);
 			self.prevStats = self.mySolar.computeNetPower(plotData, prevPwr=self.prevStats)
 
@@ -386,19 +386,24 @@ class Application(tk.Frame):
 		#
 		# plot batteries
 		#
+		batmap = [1,2,4,5] # index of batteries 1-4
 		for sensorIndex in xrange(4):
+			batActualIndex = batmap[sensorIndex]
 
-			fraction = 0.1 + sensorIndex*0.1
-			boundary = graphTop + int(graphHeight*fraction)
+			relBatLevel = (self.prevStats[batActualIndex]["maxEnergy"] - 
+			               self.todayStats[batActualIndex]["cumulativeEnergy"])
 
-			if sensorIndex <= 3:
-				bar_1_color = "#777"
-				if self.currentBatPwrList[sensorIndex] < 0:
-					bar_2_color = "#f00"
-				else:
-					bar_2_color = "#0f0"
-				bar_2_frac = 0.6 - sensorIndex*0.1
-				bar_1_frac = 1 - bar_2_frac
+			maxBatDrainAmount = 2000*3600   # 2000 mAHr max usable amp hours for now.  computed in mA*Seconds
+			if relBatLevel > maxBatDrainAmount:
+				relBatLevel = maxBatDrainAmount
+			bar_1_frac = float(relBatLevel)/float(maxBatDrainAmount)
+			bar_2_frac = 1 - bar_1_frac
+
+			bar_1_color = "#777"
+			if self.currentBatPwrList[sensorIndex] < -10:
+				bar_2_color = "#f00"
+			else:
+				bar_2_color = "#0f0"
 
 			bar_2_top = graphHeight - int(bar_2_frac*graphHeight)
 			bar_1_top = bar_2_top - int(bar_1_frac*graphHeight)
@@ -406,6 +411,9 @@ class Application(tk.Frame):
 			self.energy_Col_graph_canvas[sensorIndex].delete("all");
 			self.energy_Col_graph_canvas[sensorIndex].create_rectangle(graphLeft,bar_1_top, graphRight,bar_2_top, fill=bar_1_color)
 			self.energy_Col_graph_canvas[sensorIndex].create_rectangle(graphLeft,bar_2_top, graphRight,graphBottom, fill=bar_2_color)
+
+			# set up the battery rate of flow stuff
+			self.energy_Col_text[sensorIndex].set( "%d mA" % (self.currentBatPwrList[sensorIndex]) )
 
 		#
 		# plot load/panel stuff
@@ -515,7 +523,7 @@ class Application(tk.Frame):
 		self.energy_Col_graph_canvas[0].bind("<Configure>", self.on_resize)
 
 		#
-		# set text fields for each
+		# set text fields for each bottom
 		#
 
 		self.energy_Col_Label = []
@@ -562,7 +570,6 @@ class Application(tk.Frame):
 		self.todayStats[3]["cumulativeEnergy"] = self.todayStats[3]["cumulativeEnergy"] + loadPwr
 		self.todayStats[4]["cumulativeEnergy"] = self.todayStats[4]["cumulativeEnergy"] + bat_3_pwr
 		self.todayStats[5]["cumulativeEnergy"] = self.todayStats[5]["cumulativeEnergy"] + bat_4_pwr
-
 
 
 	def periodicEventHandler(self):
