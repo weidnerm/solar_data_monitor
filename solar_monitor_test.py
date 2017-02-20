@@ -453,6 +453,63 @@ class TestSolar(unittest.TestCase):
 		self.assertEqual(12.792, log[2]["minVoltage"] );
 		self.assertEqual(12.756, log[3]["minVoltage"] );
 		
+		
+	def test_database_file_cumulative_power(self):
+		self.m_solar.m_SolarDb.m_filenamePrefix = "example_solarLog_"
+		(log,filename) = self.m_solar.m_SolarDb.readDayLog(0)
+		todayStats = self.m_solar.computeNetPower(log)
+		
+		self.assertEqual("example_solarLog_9999_99_99.csv", filename);
+
+		self.assertEqual(  -100,todayStats[0]["minEnergy"] );
+		self.assertEqual( -1323,todayStats[1]["minEnergy"] );
+		self.assertEqual(-12905,todayStats[2]["minEnergy"] );
+		self.assertEqual(     0,todayStats[3]["minEnergy"] );
+		self.assertEqual(-12900,todayStats[4]["minEnergy"] );
+		self.assertEqual(     0,todayStats[5]["minEnergy"] );
+
+		self.assertEqual(     0, todayStats[0]["maxEnergy"] );
+		self.assertEqual(     0, todayStats[1]["maxEnergy"] );
+		self.assertEqual(     0, todayStats[2]["maxEnergy"] );
+		self.assertEqual( 13419, todayStats[3]["maxEnergy"] );
+		self.assertEqual(     0, todayStats[4]["maxEnergy"] );
+		self.assertEqual( 13500, todayStats[5]["maxEnergy"] );
+
+		self.assertEqual(  -100, todayStats[0]["cumulativeEnergy"] );
+		self.assertEqual( -1323, todayStats[1]["cumulativeEnergy"] );
+		self.assertEqual(-12905, todayStats[2]["cumulativeEnergy"] );
+		self.assertEqual( 13419, todayStats[3]["cumulativeEnergy"] );
+		self.assertEqual(-12900, todayStats[4]["cumulativeEnergy"] );
+		self.assertEqual( 13500, todayStats[5]["cumulativeEnergy"] );
+
+		(log,filename) = self.m_solar.m_SolarDb.readDayLog(0)
+		todayStats = self.m_solar.computeNetPower(log, prevPwr=todayStats)
+		
+		self.assertEqual("example_solarLog_9999_99_99.csv", filename);
+
+		self.assertEqual(  -200,todayStats[0]["minEnergy"] );
+		self.assertEqual( -2646,todayStats[1]["minEnergy"] );
+		self.assertEqual(-25810,todayStats[2]["minEnergy"] );
+		self.assertEqual(     0,todayStats[3]["minEnergy"] );
+		self.assertEqual(-25800,todayStats[4]["minEnergy"] );
+		self.assertEqual(     0,todayStats[5]["minEnergy"] );
+
+		self.assertEqual(     0, todayStats[0]["maxEnergy"] );
+		self.assertEqual(     0, todayStats[1]["maxEnergy"] );
+		self.assertEqual(     0, todayStats[2]["maxEnergy"] );
+		self.assertEqual( 26838, todayStats[3]["maxEnergy"] );
+		self.assertEqual(     0, todayStats[4]["maxEnergy"] );
+		self.assertEqual( 27000, todayStats[5]["maxEnergy"] );
+
+		self.assertEqual(  -200, todayStats[0]["cumulativeEnergy"] );
+		self.assertEqual( -2646, todayStats[1]["cumulativeEnergy"] );
+		self.assertEqual(-25810, todayStats[2]["cumulativeEnergy"] );
+		self.assertEqual( 26838, todayStats[3]["cumulativeEnergy"] );
+		self.assertEqual(-25800, todayStats[4]["cumulativeEnergy"] );
+		self.assertEqual( 27000, todayStats[5]["cumulativeEnergy"] );
+
+
+		
 class TestSolarDb(unittest.TestCase):
 
 	def setUp(self):

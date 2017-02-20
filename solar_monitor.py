@@ -7,6 +7,7 @@ import os
 import glob
 import Tkinter as tk
 import math
+import copy
 
 def orig_main():
 	ina = INA219()
@@ -69,39 +70,37 @@ class Solar:
 	def recordData(self,data):
 		self.m_SolarDb.addEntry(self.m_Timestamper.getDate(), self.m_Timestamper.getTime(), data );
 
-	def computeNetPower(self, data):
-		results = []
+	def computeNetPower(self, data, prevPwr=None):
+		
+		if prevPwr == None:
+			results = []
+			for channelIndex in xrange(6):
+				tempVal = {}
+				tempVal["minEnergy"] = 0
+				tempVal["maxEnergy"] = 0
+				tempVal["cumulativeEnergy"] = 0
+				results.append(tempVal);
+		else:
+			results = prevPwr
+
 		for channelIndex in xrange(6):
-			tempVal = {}
-			tempVal["minEnergy"] = 0
-			tempVal["maxEnergy"] = 0
-			tempVal["cumulativeEnergy"] = 0
-
-
-			minEnergy = 0
-			maxEnergy = 0
-			cumulativeEnergy = 0
 			for index in xrange( len(data[channelIndex]["voltage"])-1 ):
 				timeDelta = self.convertTimeString( data[channelIndex]["time"][index+1]) - self.convertTimeString(data[channelIndex]["time"][index])
 				if (timeDelta <= 12 ):
 #					power=data[channelIndex]["voltage"][index] * data[channelIndex]["current"][index]
 					power=data[channelIndex]["current"][index]  # use mAHr for power.
 					energy = power*timeDelta
-					cumulativeEnergy = cumulativeEnergy + energy
+					results[channelIndex]["cumulativeEnergy"] = results[channelIndex]["cumulativeEnergy"] + energy
 
-					if cumulativeEnergy < minEnergy:
-						minEnergy = cumulativeEnergy;
-					elif cumulativeEnergy > maxEnergy:
-						maxEnergy = cumulativeEnergy
+					if results[channelIndex]["cumulativeEnergy"] < results[channelIndex]["minEnergy"]:
+						results[channelIndex]["minEnergy"] = results[channelIndex]["cumulativeEnergy"];
+					elif results[channelIndex]["cumulativeEnergy"] > results[channelIndex]["maxEnergy"]:
+						results[channelIndex]["maxEnergy"] = results[channelIndex]["cumulativeEnergy"]
 
-			tempVal["minEnergy"] = minEnergy
-			tempVal["maxEnergy"] = maxEnergy
-			tempVal["cumulativeEnergy"] = cumulativeEnergy
-
-			results.append(tempVal);
 
 		for channelIndex in xrange(6):
 			print("minEnergy=%.1f mAHr   maxEnergy=%.1f mAHr  cumulative=%.1f mAHr" % ( results[channelIndex]["minEnergy"]/3600.0, results[channelIndex]["maxEnergy"]/3600.0, results[channelIndex]["cumulativeEnergy"]/3600.0))
+		print
 		return results
 
 	def convertTimeString(self, time):
@@ -363,6 +362,10 @@ class Application(tk.Frame):
 		(plotData, filename) = self.mySolar.m_SolarDb.readDayLog(self.currentFileIndex);
 		self.todayStats = self.mySolar.computeNetPower(plotData)
 
+		self.prevStats = copy.deepcopy(self.todayStats)
+		for index in xrange(1,5):
+			(plotData, filename) = self.mySolar.m_SolarDb.readDayLog(self.currentFileIndex+index);
+			self.prevStats = self.mySolar.computeNetPower(plotData, prevPwr=self.prevStats)
 
 	def on_resize(self, event):
 		self.plotheight = event.height;
@@ -418,7 +421,7 @@ class Application(tk.Frame):
 					bar_2_frac = 0.6 - sensorIndex*0.1
 					bar_3_frac = 0.1
 				else:
-					bar_1_frac = self.todayStats[0]["cumulativeEnergy"]/3600.0/ 12000.0 # /3600 convert sec to hr;  /12000 to set max scale
+					bar_1_frac = self.todayStats[0]["cumulativeEnergy"]/3600.0/ 12000.0 # /3600 convert sec to hr;  /12000 to set max scale to 12000mAHr
 					bar_2_frac = ((self.todayStats[1]["cumulativeEnergy"] +
 					               self.todayStats[2]["cumulativeEnergy"] +
 					               self.todayStats[4]["cumulativeEnergy"] +
@@ -519,7 +522,7 @@ class Application(tk.Frame):
 		self.energy_Col_text = []
 		for sensorIndex in xrange(6):
 			myStringVar = tk.StringVar()
-			myStringVar.set("12345 mWHr")
+			myStringVar.set("12345 mAHr")
 			myField = tk.Label(self.energy_Col_LabelFrame[sensorIndex], textvariable=myStringVar)
 			myField.grid(column=0,row=1, sticky=tk.E + tk.W + tk.N + tk.S )
 			self.energy_Col_Label.append( myField )
@@ -552,7 +555,6 @@ class Application(tk.Frame):
 
 		self.currentXferPwr = self.currentPanelPwr - self.currentBatPwr
 
-		oldPanelPwr = self.todayStats[0]["cumulativeEnergy"]
 		# add new readings to totals;  assume 1 second integration window
 		self.todayStats[0]["cumulativeEnergy"] = self.todayStats[0]["cumulativeEnergy"] + panelPwr
 		self.todayStats[1]["cumulativeEnergy"] = self.todayStats[1]["cumulativeEnergy"] + bat_1_pwr
@@ -561,7 +563,6 @@ class Application(tk.Frame):
 		self.todayStats[4]["cumulativeEnergy"] = self.todayStats[4]["cumulativeEnergy"] + bat_3_pwr
 		self.todayStats[5]["cumulativeEnergy"] = self.todayStats[5]["cumulativeEnergy"] + bat_4_pwr
 
-		print("oldPanelPwr=%d\nnewPanelPwr=%d" % ( oldPanelPwr,self.todayStats[0]["cumulativeEnergy"]))
 
 
 	def periodicEventHandler(self):
