@@ -344,7 +344,6 @@ class Application(tk.Frame):
 		self.firstPoint = 0
 		self.lastPoint = 0;
 
-		self.currentXferPwr = 0
 		self.currentBatPwr = 0
 		self.currentPanelPwr = 0
 		self.currentLoadPwr = 0
@@ -355,6 +354,8 @@ class Application(tk.Frame):
 		self.plotheight = 1; # dummy values.
 		self.plotwidth = 1; # dummy values.
 		self.todayStats = None
+		
+		self.batmap = [1,2,4,5] # list of channels that are batteries
 
 
 	def setSolar(self, solar):
@@ -363,8 +364,9 @@ class Application(tk.Frame):
 		self.todayStats = self.mySolar.computeNetPower(plotData)
 
 		self.prevStats = None
-		for index in xrange(1,0,-2):
+		for index in xrange(4,-1,-1):
 			(plotData, filename) = self.mySolar.m_SolarDb.readDayLog(self.currentFileIndex+index);
+			print("processing %s" % filename)
 			self.prevStats = self.mySolar.computeNetPower(plotData, prevPwr=self.prevStats)
 
 	def on_resize(self, event):
@@ -386,12 +388,11 @@ class Application(tk.Frame):
 		#
 		# plot batteries
 		#
-		batmap = [1,2,4,5] # index of batteries 1-4
 		for sensorIndex in xrange(4):
-			batActualIndex = batmap[sensorIndex]
+			batActualIndex = self.batmap[sensorIndex]
 
 			relBatLevel = (self.prevStats[batActualIndex]["maxEnergy"] - 
-			               self.todayStats[batActualIndex]["cumulativeEnergy"])
+			               self.prevStats[batActualIndex]["cumulativeEnergy"])
 
 			maxBatDrainAmount = 2000*3600   # 2000 mAHr max usable amp hours for now.  computed in mA*Seconds
 			if relBatLevel > maxBatDrainAmount:
@@ -402,8 +403,10 @@ class Application(tk.Frame):
 			bar_1_color = "#777"
 			if self.currentBatPwrList[sensorIndex] < -10:
 				bar_2_color = "#f00"
-			else:
+			elif self.currentBatPwrList[sensorIndex] > 10:
 				bar_2_color = "#0f0"
+			else:
+				bar_2_color = "#ff0"
 
 			bar_2_top = graphHeight - int(bar_2_frac*graphHeight)
 			bar_1_top = bar_2_top - int(bar_1_frac*graphHeight)
@@ -530,7 +533,7 @@ class Application(tk.Frame):
 		self.energy_Col_text = []
 		for sensorIndex in xrange(6):
 			myStringVar = tk.StringVar()
-			myStringVar.set("12345 mAHr")
+			myStringVar.set("0 mA")
 			myField = tk.Label(self.energy_Col_LabelFrame[sensorIndex], textvariable=myStringVar)
 			myField.grid(column=0,row=1, sticky=tk.E + tk.W + tk.N + tk.S )
 			self.energy_Col_Label.append( myField )
@@ -540,37 +543,43 @@ class Application(tk.Frame):
 
 	def updateGuiFields(self, solarData):
 		# 0-panel;  1-bat 1;  2-bat 2;  3-load;  4-bat 3;  5-bat 4
-		self.currentBatPwrList = []
-		bat_1_pwr = int(solarData["current"][1])
-		bat_2_pwr = int(solarData["current"][2])
-		bat_3_pwr = int(solarData["current"][4])
-		bat_4_pwr = int(solarData["current"][5])
+		
+		powerInts = []
+		for index in xrange(6):
+			value = int(solarData["current"][index])
+			powerInts.append(value)
+			
+		#~ bat_1_pwr = int(solarData["current"][1])
+		#~ bat_2_pwr = int(solarData["current"][2])
+		#~ bat_3_pwr = int(solarData["current"][4])
+		#~ bat_4_pwr = int(solarData["current"][5])
 
-		self.currentBatPwrList.append( bat_1_pwr )
-		self.currentBatPwrList.append( bat_2_pwr )
-		self.currentBatPwrList.append( bat_3_pwr )
-		self.currentBatPwrList.append( bat_4_pwr )
+		#~ self.currentBatPwrList.append( bat_1_pwr )
+		#~ self.currentBatPwrList.append( bat_2_pwr )
+		#~ self.currentBatPwrList.append( bat_3_pwr )
+		#~ self.currentBatPwrList.append( bat_4_pwr )
 
 		self.currentBatPwr = 0;
+		#~ self.currentBatPwrList = []
 		for index in xrange(4):
+			self.currentBatPwrList[index] = powerInts[self.batmap[index]]
 			self.currentBatPwr = self.currentBatPwr + self.currentBatPwrList[index]
 
-		panelPwr = int(solarData["current"][0]) # use load voltage to try to ignore losses in regulator.
-		loadPwr  = int(solarData["current"][3])
+		panelPwr = powerInts[0] 
+		loadPwr  = powerInts[3]
 
 		self.currentPanelPwr = int( panelPwr )
 		self.currentLoadPwr  = int( loadPwr )
 
-		self.currentXferPwr = self.currentPanelPwr - self.currentBatPwr
-
 		# add new readings to totals;  assume 1 second integration window
-		self.todayStats[0]["cumulativeEnergy"] = self.todayStats[0]["cumulativeEnergy"] + panelPwr
-		self.todayStats[1]["cumulativeEnergy"] = self.todayStats[1]["cumulativeEnergy"] + bat_1_pwr
-		self.todayStats[2]["cumulativeEnergy"] = self.todayStats[2]["cumulativeEnergy"] + bat_2_pwr
-		self.todayStats[3]["cumulativeEnergy"] = self.todayStats[3]["cumulativeEnergy"] + loadPwr
-		self.todayStats[4]["cumulativeEnergy"] = self.todayStats[4]["cumulativeEnergy"] + bat_3_pwr
-		self.todayStats[5]["cumulativeEnergy"] = self.todayStats[5]["cumulativeEnergy"] + bat_4_pwr
-
+		for index in xrange(6):
+			self.todayStats[index]["cumulativeEnergy"] = self.todayStats[index]["cumulativeEnergy"] + powerInts[index]
+			self.prevStats[index]["cumulativeEnergy"] = self.prevStats[index]["cumulativeEnergy"] + powerInts[index]
+			
+			if self.prevStats[index]["cumulativeEnergy"] < self.prevStats[index]["minEnergy"]:
+				self.prevStats[index]["minEnergy"] = self.prevStats[index]["cumulativeEnergy"];
+			elif self.prevStats[index]["cumulativeEnergy"] > self.prevStats[index]["maxEnergy"]:
+				self.prevStats[index]["maxEnergy"] = self.prevStats[index]["cumulativeEnergy"]
 
 	def periodicEventHandler(self):
 		self.after(1000,self.periodicEventHandler);
