@@ -8,6 +8,7 @@ import glob
 import Tkinter as tk
 import math
 import copy
+from OneFifo import OneFifo
 
 def orig_main():
 	ina = INA219()
@@ -598,13 +599,7 @@ def main():
 	app.mainloop() ;
 
 
-	#~ mySolar = setupSolar()
-	#~ while(True):
-		#~ data = mySolar.gatherData();
-		#~ mySolar.recordData(data);
-		#~ mySolar.printResults(data);
-		#~ # update gui
-		#~ time.sleep(1.0)
+
 
 
 

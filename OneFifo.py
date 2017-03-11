@@ -89,12 +89,12 @@ def parse_argument():
 if __name__ == '__main__':
     args = parse_argument()
     if not args.client:
-        with OneFifo('/tmp/fifotest.fifo') as one_fifo:
+        with OneFifo('/tmp/solar_data.fifo') as one_fifo:
             while True:
                 one_fifo.write('one line')
                 time.sleep(0.1)
     else:
-        one_fifo = OneFifo('/tmp/fifotest.fifo')
+        one_fifo = OneFifo('/tmp/solar_data.fifo')
         while True:
             if args.non_blocking:
                 result = one_fifo.read_nonblocking()
