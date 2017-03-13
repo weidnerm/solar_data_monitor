@@ -591,7 +591,7 @@ class Application(tk.Frame):
         self.mySolar.recordData(data);
         self.mySolar.printResults(data)
         
-        self.mySolarServer.sendUpdate(data)
+        self.mySolarServer.sendUpdate(data, self)
 
 class SolarServer():
     def __init__(self):
@@ -604,15 +604,19 @@ class SolarServer():
     def sendToClients(self,msg):
         self.one_fifo.write(msg)
         
-    def sendUpdate(self,data):
+    def sendUpdate(self,liveData, cumulativeData):
         
-        outputString = "%d" % len(data["names"])
+        outputString = "%d" % len(liveData["names"])
         
         # add channel names and current values
-        for index in xrange(len(data["names"])):
-            outputString = outputString + ",%s,%s,%s" % (data["names"][index],
-                                                         data["voltage"][index],
-                                                         data["current"][index])
+        for index in xrange(len(liveData["names"])):
+            outputString = outputString + ",%s,%s,%s,%f,%f,%f" % (liveData["names"][index],
+                                                         liveData["voltage"][index],
+                                                         liveData["current"][index],
+                                                         cumulativeData.todayStats[index]["cumulativeEnergy"],
+                                                         cumulativeData.prevStats[index]["cumulativeEnergy"],
+                                                         cumulativeData.prevStats[index]["maxEnergy"])
+                                                         
                                                          
         # send message through the pipe
         self.sendToClients(outputString);
