@@ -149,17 +149,18 @@ class Application(tk.Frame):
 
      
             else:
+                batCurrent = 0
+                for index in xrange(4):
+                    batActualIndex = self.batmap[index]
+                    batCurrent = batCurrent + data["current"][batActualIndex]
+
                 bar_1_color = "#0f0"  # yellow for transfer power bar
-                if self.currentBatPwr < 0:
+                if batCurrent < 0:
                     bar_2_color = "#f00"  # red for discharge
                 else:
                     bar_2_color = "#0f0"  # green for charge
                 bar_3_color = "#ff0"  # yellow for transfer power bar
 
-                batCurrent = 0
-                for index in xrange(4):
-                    batActualIndex = self.batmap[index]
-                    batCurrent = batCurrent + data["current"][batActualIndex]
                 bar_1_frac = float(abs(data["current"][0]))/3200.0  # 3.2A max
                 bar_2_frac = float(abs(batCurrent))/3200.0
                 bar_3_frac = float(abs(data["current"][3]))/3200.0
