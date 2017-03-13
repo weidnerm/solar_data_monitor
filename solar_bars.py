@@ -12,44 +12,6 @@ from OneFifo import OneFifo
 
 
 
-class TimestamperInterface:
-    def getDate(self):
-        pass;
-
-    def getTime(self):
-        pass
-
-class Timestamper(TimestamperInterface):
-    def getDate(self):
-        return (time.strftime("%Y_%m_%d"))
-
-    def getTime(self):
-        return (time.strftime("%H:%M:%S"))
-
-
-def setupSolar():
-    mySolarSensors = SolarSensors()
-
-#   ina = INA219(0x40);
-#   mySolarSensors.addSensor("Panel", ina ); # no jumpers.
-#   mySolarSensors.addSensor("Battery1", ina ); # A0 jumper.
-#   mySolarSensors.addSensor("Battery2", ina ); # A1 jumper.
-#   mySolarSensors.addSensor("Load", ina ); # A0 and A1 jumpers.
-
-    mySolarSensors.addSensor("Solar Panel (45)", INA219(0x45) ); # A0 and A1 jumpers.
-    mySolarSensors.addSensor("Battery 1 (44)", INA219(0x44) ); # A1 jumper.
-    mySolarSensors.addSensor("Battery 2 (41)", INA219(0x41) ); # A0 jumper.
-    mySolarSensors.addSensor("Load (40)", INA219(0x40) ); # no jumpers.
-    mySolarSensors.addSensor("Battery 3 (42)", INA219(0x42) ); # A0->SDA  A1=0
-    mySolarSensors.addSensor("Battery 4 (43)", INA219(0x43) ); # A0->SCL  A1=0
-
-    mySolar = Solar(mySolarSensors, Timestamper() );
-    return mySolar;
-
-
-
-
-
 class Application(tk.Frame):
     def __init__(self, master=None):
         tk.Frame.__init__(self, master)
@@ -97,10 +59,17 @@ class Application(tk.Frame):
         self.plotheight = event.height;
         self.plotwidth = event.width;
         print("resized to %d %d" %(self.plotwidth,self.plotheight))
-        self.plotGraph();
+        self.plotGraph(self.parsedData);
 
     def plotGraph(self, data):
 
+        #~ data["names"] = []
+        #~ data["voltage"] = []
+        #~ data["current"] = []
+        #~ data["todayCumulativeEnergy"] = []
+        #~ data["cumulativeEnergy"] = []
+        #~ data["maxEnergy"] = []
+        
         graphPad = 3
         graphTop = graphPad
         graphBottom = self.plotheight - graphPad
@@ -143,6 +112,15 @@ class Application(tk.Frame):
 
             # set up the battery rate of flow stuff
             self.energy_Col_text[sensorIndex].set( "%d mA" % (data["current"][batActualIndex]) )
+            # set up the battery rate of flow stuff
+            self.voltage_Col_text[sensorIndex].set( "%2.3f V" % (data["voltage"][batActualIndex]) )
+
+        # show the panel current and load current values
+        self.energy_Col_text[4].set( "%d mA" % (data["current"][0]) )
+        self.energy_Col_text[5].set( "%d mA" % (data["current"][3]) )
+        # show the panel current and load voltage values
+        self.voltage_Col_text[4].set( "%2.3f V" % (data["voltage"][0]) )
+        self.voltage_Col_text[5].set( "%2.3f V" % (data["voltage"][3]) )
 
         #
         # plot load/panel stuff
@@ -169,13 +147,7 @@ class Application(tk.Frame):
                     bar_2_color = "#0f0"
                         
 
-#~ data["names"] = []
-#~ data["voltage"] = []
-#~ data["current"] = []
-#~ data["todayCumulativeEnergy"] = []
-#~ data["cumulativeEnergy"] = []
-#~ data["maxEnergy"] = []
-        
+     
             else:
                 bar_1_color = "#0f0"  # yellow for transfer power bar
                 if self.currentBatPwr < 0:
@@ -262,13 +234,23 @@ class Application(tk.Frame):
         # set text fields for each bottom
         #
 
+        self.voltage_Col_Label = []
+        self.voltage_Col_text = []
+        for sensorIndex in xrange(6):
+            myStringVar = tk.StringVar()
+            myStringVar.set("0 V")
+            myField = tk.Label(self.energy_Col_LabelFrame[sensorIndex], textvariable=myStringVar)
+            myField.grid(column=0,row=1, sticky=tk.E + tk.W + tk.N + tk.S )
+            self.voltage_Col_Label.append( myField )
+            self.voltage_Col_text.append( myStringVar )
+
         self.energy_Col_Label = []
         self.energy_Col_text = []
         for sensorIndex in xrange(6):
             myStringVar = tk.StringVar()
             myStringVar.set("0 mA")
             myField = tk.Label(self.energy_Col_LabelFrame[sensorIndex], textvariable=myStringVar)
-            myField.grid(column=0,row=1, sticky=tk.E + tk.W + tk.N + tk.S )
+            myField.grid(column=0,row=2, sticky=tk.E + tk.W + tk.N + tk.S )
             self.energy_Col_Label.append( myField )
             self.energy_Col_text.append( myStringVar )
 
@@ -318,9 +300,9 @@ class Application(tk.Frame):
         self.after(1000,self.periodicEventHandler);
 
         textData = self.mySolarClient.retrieveData()
-        parsedData = self.mySolarClient.parseResult(textData)
+        self.parsedData = self.mySolarClient.parseResult(textData)
         
-        self.plotGraph(parsedData)
+        self.plotGraph(self.parsedData)
 
 
 class SolarClient():
