@@ -327,12 +327,13 @@ def setupSolar():
 
 
 
-class Application(tk.Frame):
+#class Application(tk.Frame):
+class Application():
     def __init__(self, master=None):
-        tk.Frame.__init__(self, master)
-        self.grid(sticky=tk.N+tk.S+tk.E+tk.W)
+        #tk.Frame.__init__(self, master)
+        #self.grid(sticky=tk.N+tk.S+tk.E+tk.W)
 
-        self.createWidgets()
+        #self.createWidgets()
 
         self.plotData = None;
 
@@ -370,112 +371,111 @@ class Application(tk.Frame):
             print("processing %s" % filename)
             self.prevStats = self.mySolar.computeNetPower(plotData, prevPwr=self.prevStats)
 
-    def on_resize(self, event):
-        self.plotheight = event.height;
-        self.plotwidth = event.width;
-        print("resized to %d %d" %(self.plotwidth,self.plotheight))
-        self.plotGraph();
+    #~ def on_resize(self, event):
+        #~ self.plotheight = event.height;
+        #~ self.plotwidth = event.width;
+        #~ print("resized to %d %d" %(self.plotwidth,self.plotheight))
+        #~ self.plotGraph();
 
-    def plotGraph(self):
-
-        graphPad = 3
-        graphTop = graphPad
-        graphBottom = self.plotheight - graphPad
-        graphLeft = graphPad
-        graphRight = self.plotwidth - graphPad
-        graphHeight = graphBottom-graphTop
-        graphWidth = self.plotwidth - graphPad*2
-
-        #
-        # plot batteries
-        #
-        for sensorIndex in xrange(4):
-            batActualIndex = self.batmap[sensorIndex]
-
-            relBatLevel = (self.prevStats[batActualIndex]["maxEnergy"] - 
-                           self.prevStats[batActualIndex]["cumulativeEnergy"])
-
-            maxBatDrainAmount = 2000*3600   # 2000 mAHr max usable amp hours for now.  computed in mA*Seconds
-            if relBatLevel > maxBatDrainAmount:
-                relBatLevel = maxBatDrainAmount
-            bar_1_frac = float(relBatLevel)/float(maxBatDrainAmount)
-            bar_2_frac = 1 - bar_1_frac
-
-            bar_1_color = "#777"
-            if self.currentBatPwrList[sensorIndex] < -10:
-                bar_2_color = "#f00"
-            elif self.currentBatPwrList[sensorIndex] > 10:
-                bar_2_color = "#0f0"
-            else:
-                bar_2_color = "#ff0"
-
-            bar_2_top = graphHeight - int(bar_2_frac*graphHeight)
-            bar_1_top = bar_2_top - int(bar_1_frac*graphHeight)
-
-            self.energy_Col_graph_canvas[sensorIndex].delete("all");
-            self.energy_Col_graph_canvas[sensorIndex].create_rectangle(graphLeft,bar_1_top, graphRight,bar_2_top, fill=bar_1_color)
-            self.energy_Col_graph_canvas[sensorIndex].create_rectangle(graphLeft,bar_2_top, graphRight,graphBottom, fill=bar_2_color)
-
-            # set up the battery rate of flow stuff
-            self.energy_Col_text[sensorIndex].set( "%d mA" % (self.currentBatPwrList[sensorIndex]) )
-
-        #
-        # plot load/panel stuff
-        #
-        for sensorIndex in xrange(4,6):
-            if sensorIndex == 4:
-                bar_1_color = "#0f0"
-                bar_2_color = "#ff0"
-                bar_3_color = "#ff0"
-
-                if self.todayStats == None:
-                    bar_1_frac = 0.1
-                    bar_2_frac = 0.6 - sensorIndex*0.1
-                    bar_3_frac = 0.1
-                else:
-                    bar_1_frac = self.todayStats[0]["cumulativeEnergy"]/3600.0/ 12000.0 # /3600 convert sec to hr;  /12000 to set max scale to 12000mAHr
-                    bar_2_frac = ((self.todayStats[1]["cumulativeEnergy"] +
-                                   self.todayStats[2]["cumulativeEnergy"] +
-                                   self.todayStats[4]["cumulativeEnergy"] +
-                                   self.todayStats[5]["cumulativeEnergy"] )
-                                         /3600.0/ 12000.0) # /3600 convert sec to hr;  /12000 to set max scale
-                    bar_3_frac = self.todayStats[3]["cumulativeEnergy"]/3600.0/ 12000.0 # /3600 convert sec to hr;  /12000 to set max scale
-
-                    if bar_2_frac < 0:
-                        bar_2_frac = abs(bar_2_frac)
-                        bar_2_color = "#f00"
-                    else:
-                        bar_2_color = "#0f0"
-                        
-
-            else:
-                bar_1_color = "#0f0"  # yellow for transfer power bar
-                if self.currentBatPwr < 0:
-                    bar_2_color = "#f00"  # red for discharge
-                else:
-                    bar_2_color = "#0f0"  # green for charge
-                bar_3_color = "#ff0"  # yellow for transfer power bar
-
-                bar_1_frac = float(abs(self.currentPanelPwr))/3200.0  # 3.2A max
-                bar_2_frac = float(abs(self.currentBatPwr))/3200.0
-                bar_3_frac = float(abs(self.currentLoadPwr))/3200.0
-
-                #~ self.energy_Col_text[sensorIndex].set("")
-
-            bar_3_top = graphHeight - int(bar_3_frac*graphHeight)
-            bar_2_top = graphHeight - int(bar_2_frac*graphHeight)
-            bar_1_top = graphHeight - int(bar_1_frac*graphHeight)
-
-            self.energy_Col_graph_canvas[sensorIndex].delete("all");
-            self.energy_Col_graph_canvas[sensorIndex].create_rectangle(
-                           graphLeft+((graphWidth*0)/3), bar_1_top,
-                           graphLeft+((graphWidth*1)/3), graphHeight,  fill=bar_1_color)
-            self.energy_Col_graph_canvas[sensorIndex].create_rectangle(
-                           graphLeft+((graphWidth*1)/3), bar_2_top,
-                           graphLeft+((graphWidth*2)/3), graphHeight,  fill=bar_2_color)
-            self.energy_Col_graph_canvas[sensorIndex].create_rectangle(
-                           graphLeft+((graphWidth*2)/3), bar_3_top,
-                           graphLeft+((graphWidth*3)/3), graphHeight,  fill=bar_3_color)
+    #~ def plotGraph(self):
+#~ 
+        #~ graphPad = 3
+        #~ graphTop = graphPad
+        #~ graphBottom = self.plotheight - graphPad
+        #~ graphLeft = graphPad
+        #~ graphRight = self.plotwidth - graphPad
+        #~ graphHeight = graphBottom-graphTop
+        #~ graphWidth = self.plotwidth - graphPad*2
+#~ 
+        #~ #
+        #~ # plot batteries
+        #~ #
+        #~ for sensorIndex in xrange(4):
+            #~ batActualIndex = self.batmap[sensorIndex]
+#~ 
+            #~ relBatLevel = (self.prevStats[batActualIndex]["maxEnergy"] - 
+                           #~ self.prevStats[batActualIndex]["cumulativeEnergy"])
+#~ 
+            #~ maxBatDrainAmount = 2000*3600   # 2000 mAHr max usable amp hours for now.  computed in mA*Seconds
+            #~ if relBatLevel > maxBatDrainAmount:
+                #~ relBatLevel = maxBatDrainAmount
+            #~ bar_1_frac = float(relBatLevel)/float(maxBatDrainAmount)
+            #~ bar_2_frac = 1 - bar_1_frac
+#~ 
+            #~ bar_1_color = "#777"
+            #~ if self.currentBatPwrList[sensorIndex] < -10:
+                #~ bar_2_color = "#f00"
+            #~ elif self.currentBatPwrList[sensorIndex] > 10:
+                #~ bar_2_color = "#0f0"
+            #~ else:
+                #~ bar_2_color = "#ff0"
+#~ 
+            #~ bar_2_top = graphHeight - int(bar_2_frac*graphHeight)
+            #~ bar_1_top = bar_2_top - int(bar_1_frac*graphHeight)
+#~ 
+            #~ self.energy_Col_graph_canvas[sensorIndex].delete("all");
+            #~ self.energy_Col_graph_canvas[sensorIndex].create_rectangle(graphLeft,bar_1_top, graphRight,bar_2_top, fill=bar_1_color)
+            #~ self.energy_Col_graph_canvas[sensorIndex].create_rectangle(graphLeft,bar_2_top, graphRight,graphBottom, fill=bar_2_color)
+#~ 
+            #~ # set up the battery rate of flow stuff
+            #~ self.energy_Col_text[sensorIndex].set( "%d mA" % (self.currentBatPwrList[sensorIndex]) )
+#~ 
+        #~ #
+        #~ # plot load/panel stuff
+        #~ #
+        #~ for sensorIndex in xrange(4,6):
+            #~ if sensorIndex == 4:
+                #~ bar_1_color = "#0f0"
+                #~ bar_2_color = "#ff0"
+                #~ bar_3_color = "#ff0"
+#~ 
+                #~ if self.todayStats == None:
+                    #~ bar_1_frac = 0.1
+                    #~ bar_2_frac = 0.6 - sensorIndex*0.1
+                    #~ bar_3_frac = 0.1
+                #~ else:
+                    #~ bar_1_frac = self.todayStats[0]["cumulativeEnergy"]/3600.0/ 12000.0 # /3600 convert sec to hr;  /12000 to set max scale to 12000mAHr
+                    #~ bar_2_frac = ((self.todayStats[1]["cumulativeEnergy"] +
+                                   #~ self.todayStats[2]["cumulativeEnergy"] +
+                                   #~ self.todayStats[4]["cumulativeEnergy"] +
+                                   #~ self.todayStats[5]["cumulativeEnergy"] )
+                                         #~ /3600.0/ 12000.0) # /3600 convert sec to hr;  /12000 to set max scale
+                    #~ bar_3_frac = self.todayStats[3]["cumulativeEnergy"]/3600.0/ 12000.0 # /3600 convert sec to hr;  /12000 to set max scale
+#~ 
+                    #~ if bar_2_frac < 0:
+                        #~ bar_2_frac = abs(bar_2_frac)
+                        #~ bar_2_color = "#f00"
+                    #~ else:
+                        #~ bar_2_color = "#0f0"
+                        #~ 
+#~ 
+            #~ else:
+                #~ bar_1_color = "#0f0"  # yellow for transfer power bar
+                #~ if self.currentBatPwr < 0:
+                    #~ bar_2_color = "#f00"  # red for discharge
+                #~ else:
+                    #~ bar_2_color = "#0f0"  # green for charge
+                #~ bar_3_color = "#ff0"  # yellow for transfer power bar
+#~ 
+                #~ bar_1_frac = float(abs(self.currentPanelPwr))/3200.0  # 3.2A max
+                #~ bar_2_frac = float(abs(self.currentBatPwr))/3200.0
+                #~ bar_3_frac = float(abs(self.currentLoadPwr))/3200.0
+#~ 
+#~ 
+            #~ bar_3_top = graphHeight - int(bar_3_frac*graphHeight)
+            #~ bar_2_top = graphHeight - int(bar_2_frac*graphHeight)
+            #~ bar_1_top = graphHeight - int(bar_1_frac*graphHeight)
+#~ 
+            #~ self.energy_Col_graph_canvas[sensorIndex].delete("all");
+            #~ self.energy_Col_graph_canvas[sensorIndex].create_rectangle(
+                           #~ graphLeft+((graphWidth*0)/3), bar_1_top,
+                           #~ graphLeft+((graphWidth*1)/3), graphHeight,  fill=bar_1_color)
+            #~ self.energy_Col_graph_canvas[sensorIndex].create_rectangle(
+                           #~ graphLeft+((graphWidth*1)/3), bar_2_top,
+                           #~ graphLeft+((graphWidth*2)/3), graphHeight,  fill=bar_2_color)
+            #~ self.energy_Col_graph_canvas[sensorIndex].create_rectangle(
+                           #~ graphLeft+((graphWidth*2)/3), bar_3_top,
+                           #~ graphLeft+((graphWidth*3)/3), graphHeight,  fill=bar_3_color)
 
 
     def createWidgets(self):
@@ -524,7 +524,7 @@ class Application(tk.Frame):
         #
         # add resize handler
         #
-        self.energy_Col_graph_canvas[0].bind("<Configure>", self.on_resize)
+        #self.energy_Col_graph_canvas[0].bind("<Configure>", self.on_resize)
 
         #
         # set text fields for each bottom
@@ -583,11 +583,11 @@ class Application(tk.Frame):
                 self.prevStats[index]["maxEnergy"] = self.prevStats[index]["cumulativeEnergy"]
 
     def periodicEventHandler(self):
-        self.after(1000,self.periodicEventHandler);
+        #self.after(1000,self.periodicEventHandler);
 
         data = self.mySolar.gatherData();
         self.updateGuiFields(data);
-        self.plotGraph()
+        #~ self.plotGraph()
         self.mySolar.recordData(data);
         self.mySolar.printResults(data)
         
@@ -625,15 +625,17 @@ class SolarServer():
 
 def main():
     app = Application()
-    app.master.title('Solar Panel Monitor')
+    #app.master.title('Solar Panel Monitor')
     app.setSolar( setupSolar() )
 
     app.mySolarServer = SolarServer()
 
-    app.after(0,app.periodicEventHandler);
-    app.mainloop() ;
+    #app.after(0,app.periodicEventHandler);
+    #app.mainloop() ;
 
-
+    while True:
+        app.periodicEventHandler()
+        time.sleep(1.0)
 
 
 

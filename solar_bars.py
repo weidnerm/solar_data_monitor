@@ -114,6 +114,8 @@ class Application(tk.Frame):
             self.energy_Col_text[sensorIndex].set( "%d mA" % (data["current"][batActualIndex]) )
             # set up the battery rate of flow stuff
             self.voltage_Col_text[sensorIndex].set( "%2.3f V" % (data["voltage"][batActualIndex]) )
+            # set up the battery rate of flow stuff
+            self.wattage_Col_text[sensorIndex].set( "%2.3f W" % (data["voltage"][batActualIndex]*data["current"][batActualIndex]/1000) )
 
         # show the panel current and load current values
         self.energy_Col_text[4].set( "%d mA" % (data["current"][0]) )
@@ -121,6 +123,9 @@ class Application(tk.Frame):
         # show the panel current and load voltage values
         self.voltage_Col_text[4].set( "%2.3f V" % (data["voltage"][0]) )
         self.voltage_Col_text[5].set( "%2.3f V" % (data["voltage"][3]) )
+        # show the panel current and load wattage values
+        self.wattage_Col_text[4].set( "%2.3f W" % (data["voltage"][0]*data["current"][0]/1000) )
+        self.wattage_Col_text[5].set( "%2.3f W" % (data["voltage"][3]*data["current"][3]/1000) )
 
         #
         # plot load/panel stuff
@@ -181,7 +186,7 @@ class Application(tk.Frame):
             self.energy_Col_graph_canvas[sensorIndex].create_rectangle(
                            graphLeft+((graphWidth*2)/3), bar_3_top,
                            graphLeft+((graphWidth*3)/3), graphHeight,  fill=bar_3_color)
-
+        print("plotGraph done")
 
     def createWidgets(self):
         #
@@ -255,6 +260,16 @@ class Application(tk.Frame):
             self.energy_Col_Label.append( myField )
             self.energy_Col_text.append( myStringVar )
 
+        self.wattage_Col_Label = []
+        self.wattage_Col_text = []
+        for sensorIndex in xrange(6):
+            myStringVar = tk.StringVar()
+            myStringVar.set("0 W")
+            myField = tk.Label(self.energy_Col_LabelFrame[sensorIndex], textvariable=myStringVar)
+            myField.grid(column=0,row=3, sticky=tk.E + tk.W + tk.N + tk.S )
+            self.wattage_Col_Label.append( myField )
+            self.wattage_Col_text.append( myStringVar )
+
 
 
     def updateGuiFields(self, solarData):
@@ -298,11 +313,11 @@ class Application(tk.Frame):
                 self.prevStats[index]["maxEnergy"] = self.prevStats[index]["cumulativeEnergy"]
 
     def periodicEventHandler(self):
-        self.after(1000,self.periodicEventHandler);
 
         textData = self.mySolarClient.retrieveData()
         self.parsedData = self.mySolarClient.parseResult(textData)
         
+        self.after(900,self.periodicEventHandler);
         self.plotGraph(self.parsedData)
 
 
