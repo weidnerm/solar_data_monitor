@@ -69,18 +69,23 @@ class Solar:
             print(text[index]);
 
     def recordData(self,data):
-        self.m_SolarDb.addEntry(self.m_Timestamper.getDate(), self.m_Timestamper.getTime(), data );
+        rollOver = self.m_SolarDb.addEntry(self.m_Timestamper.getDate(), self.m_Timestamper.getTime(), data );
+        return rollOver
+
+    def getEmptyStatsDB(self):
+        results = []
+        for channelIndex in xrange(6):
+            tempVal = {}
+            tempVal["minEnergy"] = 0
+            tempVal["maxEnergy"] = 0
+            tempVal["cumulativeEnergy"] = 0
+            results.append(tempVal);
+        return results
 
     def computeNetPower(self, data, prevPwr=None):
         
         if prevPwr == None:
-            results = []
-            for channelIndex in xrange(6):
-                tempVal = {}
-                tempVal["minEnergy"] = 0
-                tempVal["maxEnergy"] = 0
-                tempVal["cumulativeEnergy"] = 0
-                results.append(tempVal);
+            results = self.getEmptyStatsDB()
         else:
             results = prevPwr
 
@@ -155,6 +160,7 @@ class SolarDb:
 
     def addEntry(self, date, time, data):
 
+        rolledOverToNewDay = False
         # figure the new point into the averages.
         for index in xrange(len(data["voltage"])):
             self.averages["voltage"][index] = self.averages["voltage"][index] + data["voltage"][index];
@@ -179,6 +185,7 @@ class SolarDb:
                     f.write(headerLineText)
                     #~ f.write("time,%s voltage,%s current,%s voltage,%s current,%s voltage,%s current,%s voltage,%s current\n" % (data["names"][0], data["names"][0], data["names"][1], data["names"][1], data["names"][2], data["names"][2], data["names"][3], data["names"][3]))
                     f.close();
+                    rolledOverToNewDay = True
 
                 # append the current data
                 f = open(self.m_filename, 'a')
@@ -222,13 +229,8 @@ class SolarDb:
                 self.averages["current"][index] = 0;
             self.averages_dataPoints = 0;
 
-    #
-    # retval = [0-3] = {} "name"       = [0-3] = string "panel", "load", etc."
-    #                     "voltage"    = [0-n] = float Volts
-    #                     "current"    = [0-n] = int  mAmps
-    #                     "time"       = [0-n] = string "hh:mm:ss"
-    #                     "maxVoltage" = float
-    #                     "maxCurrent" = float
+        return rolledOverToNewDay;
+
 
     def readDayLog(self,fileIndex):
         returnVal = [];
@@ -366,116 +368,11 @@ class Application():
         self.todayStats = self.mySolar.computeNetPower(plotData)
 
         self.prevStats = None
-        for index in xrange(1,-1,-1): # fixme put back to 4,-1,-1
+        for index in xrange(4,-1,-1): # fixme put back to 4,-1,-1
             (plotData, filename) = self.mySolar.m_SolarDb.readDayLog(self.currentFileIndex+index);
             print("processing %s" % filename)
             self.prevStats = self.mySolar.computeNetPower(plotData, prevPwr=self.prevStats)
 
-    #~ def on_resize(self, event):
-        #~ self.plotheight = event.height;
-        #~ self.plotwidth = event.width;
-        #~ print("resized to %d %d" %(self.plotwidth,self.plotheight))
-        #~ self.plotGraph();
-
-    #~ def plotGraph(self):
-#~ 
-        #~ graphPad = 3
-        #~ graphTop = graphPad
-        #~ graphBottom = self.plotheight - graphPad
-        #~ graphLeft = graphPad
-        #~ graphRight = self.plotwidth - graphPad
-        #~ graphHeight = graphBottom-graphTop
-        #~ graphWidth = self.plotwidth - graphPad*2
-#~ 
-        #~ #
-        #~ # plot batteries
-        #~ #
-        #~ for sensorIndex in xrange(4):
-            #~ batActualIndex = self.batmap[sensorIndex]
-#~ 
-            #~ relBatLevel = (self.prevStats[batActualIndex]["maxEnergy"] - 
-                           #~ self.prevStats[batActualIndex]["cumulativeEnergy"])
-#~ 
-            #~ maxBatDrainAmount = 2000*3600   # 2000 mAHr max usable amp hours for now.  computed in mA*Seconds
-            #~ if relBatLevel > maxBatDrainAmount:
-                #~ relBatLevel = maxBatDrainAmount
-            #~ bar_1_frac = float(relBatLevel)/float(maxBatDrainAmount)
-            #~ bar_2_frac = 1 - bar_1_frac
-#~ 
-            #~ bar_1_color = "#777"
-            #~ if self.currentBatPwrList[sensorIndex] < -10:
-                #~ bar_2_color = "#f00"
-            #~ elif self.currentBatPwrList[sensorIndex] > 10:
-                #~ bar_2_color = "#0f0"
-            #~ else:
-                #~ bar_2_color = "#ff0"
-#~ 
-            #~ bar_2_top = graphHeight - int(bar_2_frac*graphHeight)
-            #~ bar_1_top = bar_2_top - int(bar_1_frac*graphHeight)
-#~ 
-            #~ self.energy_Col_graph_canvas[sensorIndex].delete("all");
-            #~ self.energy_Col_graph_canvas[sensorIndex].create_rectangle(graphLeft,bar_1_top, graphRight,bar_2_top, fill=bar_1_color)
-            #~ self.energy_Col_graph_canvas[sensorIndex].create_rectangle(graphLeft,bar_2_top, graphRight,graphBottom, fill=bar_2_color)
-#~ 
-            #~ # set up the battery rate of flow stuff
-            #~ self.energy_Col_text[sensorIndex].set( "%d mA" % (self.currentBatPwrList[sensorIndex]) )
-#~ 
-        #~ #
-        #~ # plot load/panel stuff
-        #~ #
-        #~ for sensorIndex in xrange(4,6):
-            #~ if sensorIndex == 4:
-                #~ bar_1_color = "#0f0"
-                #~ bar_2_color = "#ff0"
-                #~ bar_3_color = "#ff0"
-#~ 
-                #~ if self.todayStats == None:
-                    #~ bar_1_frac = 0.1
-                    #~ bar_2_frac = 0.6 - sensorIndex*0.1
-                    #~ bar_3_frac = 0.1
-                #~ else:
-                    #~ bar_1_frac = self.todayStats[0]["cumulativeEnergy"]/3600.0/ 12000.0 # /3600 convert sec to hr;  /12000 to set max scale to 12000mAHr
-                    #~ bar_2_frac = ((self.todayStats[1]["cumulativeEnergy"] +
-                                   #~ self.todayStats[2]["cumulativeEnergy"] +
-                                   #~ self.todayStats[4]["cumulativeEnergy"] +
-                                   #~ self.todayStats[5]["cumulativeEnergy"] )
-                                         #~ /3600.0/ 12000.0) # /3600 convert sec to hr;  /12000 to set max scale
-                    #~ bar_3_frac = self.todayStats[3]["cumulativeEnergy"]/3600.0/ 12000.0 # /3600 convert sec to hr;  /12000 to set max scale
-#~ 
-                    #~ if bar_2_frac < 0:
-                        #~ bar_2_frac = abs(bar_2_frac)
-                        #~ bar_2_color = "#f00"
-                    #~ else:
-                        #~ bar_2_color = "#0f0"
-                        #~ 
-#~ 
-            #~ else:
-                #~ bar_1_color = "#0f0"  # yellow for transfer power bar
-                #~ if self.currentBatPwr < 0:
-                    #~ bar_2_color = "#f00"  # red for discharge
-                #~ else:
-                    #~ bar_2_color = "#0f0"  # green for charge
-                #~ bar_3_color = "#ff0"  # yellow for transfer power bar
-#~ 
-                #~ bar_1_frac = float(abs(self.currentPanelPwr))/3200.0  # 3.2A max
-                #~ bar_2_frac = float(abs(self.currentBatPwr))/3200.0
-                #~ bar_3_frac = float(abs(self.currentLoadPwr))/3200.0
-#~ 
-#~ 
-            #~ bar_3_top = graphHeight - int(bar_3_frac*graphHeight)
-            #~ bar_2_top = graphHeight - int(bar_2_frac*graphHeight)
-            #~ bar_1_top = graphHeight - int(bar_1_frac*graphHeight)
-#~ 
-            #~ self.energy_Col_graph_canvas[sensorIndex].delete("all");
-            #~ self.energy_Col_graph_canvas[sensorIndex].create_rectangle(
-                           #~ graphLeft+((graphWidth*0)/3), bar_1_top,
-                           #~ graphLeft+((graphWidth*1)/3), graphHeight,  fill=bar_1_color)
-            #~ self.energy_Col_graph_canvas[sensorIndex].create_rectangle(
-                           #~ graphLeft+((graphWidth*1)/3), bar_2_top,
-                           #~ graphLeft+((graphWidth*2)/3), graphHeight,  fill=bar_2_color)
-            #~ self.energy_Col_graph_canvas[sensorIndex].create_rectangle(
-                           #~ graphLeft+((graphWidth*2)/3), bar_3_top,
-                           #~ graphLeft+((graphWidth*3)/3), graphHeight,  fill=bar_3_color)
 
 
     def createWidgets(self):
@@ -588,7 +485,9 @@ class Application():
         data = self.mySolar.gatherData();
         self.updateGuiFields(data);
         #~ self.plotGraph()
-        self.mySolar.recordData(data);
+        rollOver = self.mySolar.recordData(data);
+        if rollOver:
+            self.todayStats = self.mySolar.getEmptyStatsDB()  # we had a day rollover. reset the daily stats
         self.mySolar.printResults(data)
         
         self.mySolarServer.sendUpdate(data, self)
