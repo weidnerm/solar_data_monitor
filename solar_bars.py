@@ -116,6 +116,8 @@ class Application(tk.Frame):
             self.voltage_Col_text[sensorIndex].set( "%2.3f V" % (data["voltage"][batActualIndex]) )
             # set up the battery rate of flow stuff
             self.wattage_Col_text[sensorIndex].set( "%2.3f W" % (data["voltage"][batActualIndex]*data["current"][batActualIndex]/1000) )
+            # display percentage
+            self.percent_Col_text[sensorIndex].set( "%.1f %%" % (bar_2_frac*100.0) )
 
         # show the panel current and load current values
         self.energy_Col_text[4].set( "%d mA" % (data["current"][0]) )
@@ -226,7 +228,7 @@ class Application(tk.Frame):
         self.energy_Col_graph_canvas = []
         for sensorIndex in xrange(6):
             myField = tk.Canvas(self.energy_Col_LabelFrame[sensorIndex], width=70, height=200)
-            myField.grid(column=0,row=0, sticky=tk.E + tk.W + tk.N + tk.S )
+            myField.grid(column=0,row=1, sticky=tk.E + tk.W + tk.N + tk.S )
             self.energy_Col_graph_canvas.append( myField )
 
             #~ myTextField = myField.create_text(anchor=tk.SW)
@@ -246,7 +248,7 @@ class Application(tk.Frame):
             myStringVar = tk.StringVar()
             myStringVar.set("0 V")
             myField = tk.Label(self.energy_Col_LabelFrame[sensorIndex], textvariable=myStringVar)
-            myField.grid(column=0,row=1, sticky=tk.E + tk.W + tk.N + tk.S )
+            myField.grid(column=0,row=2, sticky=tk.E + tk.W + tk.N + tk.S )
             self.voltage_Col_Label.append( myField )
             self.voltage_Col_text.append( myStringVar )
 
@@ -256,7 +258,7 @@ class Application(tk.Frame):
             myStringVar = tk.StringVar()
             myStringVar.set("0 mA")
             myField = tk.Label(self.energy_Col_LabelFrame[sensorIndex], textvariable=myStringVar)
-            myField.grid(column=0,row=2, sticky=tk.E + tk.W + tk.N + tk.S )
+            myField.grid(column=0,row=3, sticky=tk.E + tk.W + tk.N + tk.S )
             self.energy_Col_Label.append( myField )
             self.energy_Col_text.append( myStringVar )
 
@@ -266,10 +268,19 @@ class Application(tk.Frame):
             myStringVar = tk.StringVar()
             myStringVar.set("0 W")
             myField = tk.Label(self.energy_Col_LabelFrame[sensorIndex], textvariable=myStringVar)
-            myField.grid(column=0,row=3, sticky=tk.E + tk.W + tk.N + tk.S )
+            myField.grid(column=0,row=4, sticky=tk.E + tk.W + tk.N + tk.S )
             self.wattage_Col_Label.append( myField )
             self.wattage_Col_text.append( myStringVar )
 
+        self.percent_Col_Label = []
+        self.percent_Col_text = []
+        for sensorIndex in xrange(6):
+            myStringVar = tk.StringVar()
+            myStringVar.set("")
+            myField = tk.Label(self.energy_Col_LabelFrame[sensorIndex], textvariable=myStringVar)
+            myField.grid(column=0,row=0, sticky=tk.E + tk.W + tk.N + tk.S )
+            self.percent_Col_Label.append( myField )
+            self.percent_Col_text.append( myStringVar )
 
 
     def updateGuiFields(self, solarData):
