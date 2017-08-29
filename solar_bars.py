@@ -90,10 +90,14 @@ class Application(tk.Frame):
                            data["cumulativeEnergy"][batActualIndex])
 
             maxBatDrainAmount = 2000*3600   # 2000 mAHr max usable amp hours for now.  computed in mA*Seconds
+
+            actualBatFracMaxDrainRelative = 1.0 - float(relBatLevel)/float(maxBatDrainAmount)
+
             if relBatLevel > maxBatDrainAmount:
                 relBatLevel = maxBatDrainAmount
             bar_1_frac = float(relBatLevel)/float(maxBatDrainAmount)
             bar_2_frac = 1 - bar_1_frac
+            
 
             bar_1_color = "#777"
             if data["current"][batActualIndex] < -10:
@@ -117,7 +121,7 @@ class Application(tk.Frame):
             # set up the battery rate of flow stuff
             self.wattage_Col_text[sensorIndex].set( "%2.3f W" % (data["voltage"][batActualIndex]*data["current"][batActualIndex]/1000) )
             # display percentage
-            self.percent_Col_text[sensorIndex].set( "%.1f %%" % (bar_2_frac*100.0) )
+            self.percent_Col_text[sensorIndex].set( "%.1f %%" % (actualBatFracMaxDrainRelative*100.0) )
 
         # show the panel current and load current values
         self.energy_Col_text[4].set( "%d mA" % (data["current"][0]) )
