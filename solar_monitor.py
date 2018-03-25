@@ -9,6 +9,9 @@ import Tkinter as tk
 import math
 import copy
 from OneFifo import OneFifo
+import json
+import socket
+import select
 
 def orig_main():
     ina = INA219()
@@ -83,7 +86,7 @@ class Solar:
         return results
 
     def computeNetPower(self, data, prevPwr=None):
-        
+
         if prevPwr == None:
             results = self.getEmptyStatsDB()
         else:
@@ -358,7 +361,7 @@ class Application():
         self.plotheight = 1; # dummy values.
         self.plotwidth = 1; # dummy values.
         self.todayStats = None
-        
+
         self.batmap = [1,2,4,5] # list of channels that are batteries
 
 
@@ -441,12 +444,12 @@ class Application():
 
     def updateGuiFields(self, solarData):
         # 0-panel;  1-bat 1;  2-bat 2;  3-load;  4-bat 3;  5-bat 4
-        
+
         powerInts = []
         for index in xrange(6):
             value = int(solarData["current"][index])
             powerInts.append(value)
-            
+
         #~ bat_1_pwr = int(solarData["current"][1])
         #~ bat_2_pwr = int(solarData["current"][2])
         #~ bat_3_pwr = int(solarData["current"][4])
@@ -463,7 +466,7 @@ class Application():
             self.currentBatPwrList[index] = powerInts[self.batmap[index]]
             self.currentBatPwr = self.currentBatPwr + self.currentBatPwrList[index]
 
-        panelPwr = powerInts[0] 
+        panelPwr = powerInts[0]
         loadPwr  = powerInts[3]
 
         self.currentPanelPwr = int( panelPwr )
@@ -473,7 +476,7 @@ class Application():
         for index in xrange(6):
             self.todayStats[index]["cumulativeEnergy"] = self.todayStats[index]["cumulativeEnergy"] + powerInts[index]
             self.prevStats[index]["cumulativeEnergy"] = self.prevStats[index]["cumulativeEnergy"] + powerInts[index]
-            
+
             if self.prevStats[index]["cumulativeEnergy"] < self.prevStats[index]["minEnergy"]:
                 self.prevStats[index]["minEnergy"] = self.prevStats[index]["cumulativeEnergy"];
             elif self.prevStats[index]["cumulativeEnergy"] > self.prevStats[index]["maxEnergy"]:
@@ -489,24 +492,32 @@ class Application():
         if rollOver:
             self.todayStats = self.mySolar.getEmptyStatsDB()  # we had a day rollover. reset the daily stats
         self.mySolar.printResults(data)
-        
+
         self.mySolarServer.sendUpdate(data, self)
 
 class SolarServer():
     def __init__(self):
-        
+
         self.one_fifo = None
-        
+
         self.one_fifo = OneFifo('/tmp/solar_data.fifo')
         self.one_fifo.__enter__()
-            
+
+        self.listner_address = None
+
+        self.socket = socket.socket(socket.AF_INET, #internet,
+                                    socket.SOCK_DGRAM) #UDP
+        self.socket.setblocking(False)
+        self.socket.bind( ('127.0.0.1', 29551) )  # port = 's'*256 + 'o'
+
+
     def sendToClients(self,msg):
         self.one_fifo.write(msg)
-        
+
     def sendUpdate(self,liveData, cumulativeData):
-        
+
         outputString = "%d" % len(liveData["names"])
-        
+
         # add channel names and current values
         for index in xrange(len(liveData["names"])):
             outputString = outputString + ",%s,%s,%s,%f,%f,%f" % (liveData["names"][index],
@@ -515,12 +526,60 @@ class SolarServer():
                                                          cumulativeData.todayStats[index]["cumulativeEnergy"],
                                                          cumulativeData.prevStats[index]["cumulativeEnergy"],
                                                          cumulativeData.prevStats[index]["maxEnergy"])
-                                                         
-                                                         
+
         # send message through the pipe
         self.sendToClients(outputString);
 
+        #~ print("liveData=")
+        #~ print(liveData)
+        #~ print("cumulativeData.todayStats=")
+        #~ print(cumulativeData.todayStats)
+        #~ print("cumulativeData.prevStats=")
+        #~ print(cumulativeData.prevStats)
 
+        #
+        # Json Output
+        #
+
+        outputDict = {}
+        outputDict["names"] = []
+        outputDict["voltage"] = []
+        outputDict["current"] = []
+        outputDict["todayCumulativeEnergy"] = []
+        outputDict["cumulativeEnergy"] = []
+        outputDict["maxEnergy"] = []
+
+        # add channel names and current values
+        for index in xrange(len(liveData["names"])):
+            outputDict["names"].append( liveData["names"][index] )
+            outputDict["voltage"].append( liveData["voltage"][index] )
+            outputDict["current"].append( liveData["current"][index] )
+            outputDict["todayCumulativeEnergy"].append( cumulativeData.todayStats[index]["cumulativeEnergy"] )
+            outputDict["cumulativeEnergy"].append( cumulativeData.prevStats[index]["cumulativeEnergy"] )
+            outputDict["maxEnergy"].append( cumulativeData.prevStats[index]["maxEnergy"] )
+
+        jsonOutput = json.dumps(outputDict)
+
+        self.handleNewAttachments()
+        self.sendUdpToListeners(jsonOutput)
+        return jsonOutput
+
+    def handleNewAttachments(self):
+        queue_empty = False
+        while queue_empty == False:
+            ready_to_read, ready_to_write, in_error = select.select( [self.socket], [], [], 0.001) # only wait 1 msec
+
+            if len(ready_to_read) == 0:
+                queue_empty = True
+            else:
+                data, address = ready_to_read[0].recvfrom(4096)
+                self.listner_address = address
+                print('got sub msg from %s:%s' % (self.listner_address[0], self.listner_address[1]))
+
+    def sendUdpToListeners(self, json):
+        if self.listner_address != None:
+            print('sending to %s:%s msg %s' % (self.listner_address[0], self.listner_address[1], json))
+            self.socket.sendto(json, self.listner_address)
 
 def main():
     app = Application()

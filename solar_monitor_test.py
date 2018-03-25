@@ -1,11 +1,14 @@
 
-import unittest
+from unittest import TestCase, main, skip
+from mock import patch, call, MagicMock
+
 import os
 
 from solar_monitor import SolarSensors;
 from solar_monitor import Solar;
 from solar_monitor import SolarDb;
 from solar_monitor import TimestamperInterface;
+from solar_monitor import SolarServer;
 
 
 
@@ -113,7 +116,7 @@ def getSensors():
     m_SolarSensors.m_sensors[5].m_current = 100.0;
     return m_SolarSensors;
 
-class TestSolar(unittest.TestCase):
+class TestSolar(TestCase):
 
     def setUp(self):
         self.m_SolarSensors = getSensors();
@@ -522,7 +525,7 @@ class TestSolar(unittest.TestCase):
 
 
         
-class TestSolarDb(unittest.TestCase):
+class TestSolarDb(TestCase):
 
     def setUp(self):
         self.m_SolarDb = SolarDb("test_solarLog_");
@@ -565,8 +568,22 @@ class TestSolarDb(unittest.TestCase):
         self.assertEqual("test_solarLog_2015_12_12.csv", self.m_SolarDb.getFilenameFromIndex(12)); # one past the end
         test_dates = ["2016_12_06","2016_12_07","2016_12_08","2016_12_09","2016_12_10","2016_12_11","2016_12_12","2015_12_12","2016_12_13","2016_12_14","2016_12_15","2016_12_16"]
 
+class TestSolarServer(TestCase):
+
+    @patch('solar_monitor.OneFifo')
+    def test_json_encoding(self, MockFifo):
+        mySolarServer = SolarServer()
+        
+        self.liveData= {'current': [481, -9, -9, 508, -10, -7], 'names': ['Solar Panel (45)', 'Battery 1 (44)', 'Battery 2 (41)', 'Load (40)', 'Battery 3 (42)', 'Battery 4 (43)'], 'voltage': [12.8, 12.784, 12.788, 12.72, 12.788, 12.784]}
+        self.todayStats=[{'minEnergy': -40835, 'maxEnergy': 464254, 'cumulativeEnergy': 1023527}, {'minEnergy': -2548584, 'maxEnergy': 0, 'cumulativeEnergy': -2555061}, {'minEnergy': -2910363, 'maxEnergy': 0, 'cumulativeEnergy': -2917287}, {'minEnergy': 0, 'maxEnergy': 9375894, 'cumulativeEnergy': 9950640}, {'minEnergy': -1150545, 'maxEnergy': 0, 'cumulativeEnergy': -1161193}, {'minEnergy': -2515585, 'maxEnergy': 0, 'cumulativeEnergy': -2518135}]
+        self.prevStats=[{'minEnergy': -145671, 'maxEnergy': 50765078, 'cumulativeEnergy': 50765078}, {'minEnergy': -1538480, 'maxEnergy': 5126758, 'cumulativeEnergy': 1609841}, {'minEnergy': -1377283, 'maxEnergy': 6316718, 'cumulativeEnergy': 1839852}, {'minEnergy': -32, 'maxEnergy': 50865501, 'cumulativeEnergy': 50865501}, {'minEnergy': -1246506, 'maxEnergy': 3054705, 'cumulativeEnergy': 1764099}, {'minEnergy': -1549819, 'maxEnergy': 4751085, 'cumulativeEnergy': 1633581}]
+
+        result = mySolarServer.sendUpdate(self.liveData, self)
+        #~ print(result)
+        self.assertEqual('{"cumulativeEnergy": ["50765078.000000", "1609841.000000", "1839852.000000", "50865501.000000", "1764099.000000", "1633581.000000"], "maxEnergy": ["50765078.000000", "5126758.000000", "6316718.000000", "50865501.000000", "3054705.000000", "4751085.000000"], "current": ["481", "-9", "-9", "508", "-10", "-7"], "names": ["Solar Panel (45)", "Battery 1 (44)", "Battery 2 (41)", "Load (40)", "Battery 3 (42)", "Battery 4 (43)"], "todayCumulativeEnergy": ["1023527.000000", "-2555061.000000", "-2917287.000000", "9950640.000000", "-1161193.000000", "-2518135.000000"], "voltage": ["12.8", "12.784", "12.788", "12.72", "12.788", "12.784"]}'
+            , result)
 
 if __name__ == '__main__':
-    unittest.main()
+    main()
 
 

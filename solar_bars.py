@@ -9,7 +9,9 @@ import Tkinter as tk
 import math
 import copy
 from OneFifo import OneFifo
-
+import json
+import socket
+import select
 
 
 class Application(tk.Frame):
@@ -40,7 +42,7 @@ class Application(tk.Frame):
         self.plotheight = 1; # dummy values.
         self.plotwidth = 1; # dummy values.
         self.todayStats = None
-        
+
         self.batmap = [1,2,4,5] # list of channels that are batteries
 
 
@@ -69,7 +71,7 @@ class Application(tk.Frame):
         #~ data["todayCumulativeEnergy"] = []
         #~ data["cumulativeEnergy"] = []
         #~ data["maxEnergy"] = []
-        
+
         graphPad = 3
         graphTop = graphPad
         graphBottom = self.plotheight - graphPad
@@ -81,12 +83,12 @@ class Application(tk.Frame):
         #
         # plot batteries
         #
-        
-        
+
+
         for sensorIndex in xrange(4):
             batActualIndex = self.batmap[sensorIndex]
 
-            relBatLevel = (data["maxEnergy"][batActualIndex] - 
+            relBatLevel = (data["maxEnergy"][batActualIndex] -
                            data["cumulativeEnergy"][batActualIndex])
 
             maxBatDrainAmount = 2000*3600   # 2000 mAHr max usable amp hours for now.  computed in mA*Seconds
@@ -97,7 +99,7 @@ class Application(tk.Frame):
                 relBatLevel = maxBatDrainAmount
             bar_1_frac = float(relBatLevel)/float(maxBatDrainAmount)
             bar_2_frac = 1 - bar_1_frac
-            
+
 
             bar_1_color = "#777"
             if data["current"][batActualIndex] < -10:
@@ -156,9 +158,9 @@ class Application(tk.Frame):
                     bar_2_color = "#f00"
                 else:
                     bar_2_color = "#0f0"
-                        
 
-     
+
+
             else:
                 batCurrent = 0
                 for index in xrange(4):
@@ -289,12 +291,12 @@ class Application(tk.Frame):
 
     def updateGuiFields(self, solarData):
         # 0-panel;  1-bat 1;  2-bat 2;  3-load;  4-bat 3;  5-bat 4
-        
+
         powerInts = []
         for index in xrange(6):
             value = int(solarData["current"][index])
             powerInts.append(value)
-            
+
         #~ bat_1_pwr = int(solarData["current"][1])
         #~ bat_2_pwr = int(solarData["current"][2])
         #~ bat_3_pwr = int(solarData["current"][4])
@@ -311,7 +313,7 @@ class Application(tk.Frame):
             self.currentBatPwrList[index] = powerInts[self.batmap[index]]
             self.currentBatPwr = self.currentBatPwr + self.currentBatPwrList[index]
 
-        panelPwr = powerInts[0] 
+        panelPwr = powerInts[0]
         loadPwr  = powerInts[3]
 
         self.currentPanelPwr = int( panelPwr )
@@ -321,7 +323,7 @@ class Application(tk.Frame):
         for index in xrange(6):
             self.todayStats[index]["cumulativeEnergy"] = self.todayStats[index]["cumulativeEnergy"] + powerInts[index]
             self.prevStats[index]["cumulativeEnergy"] = self.prevStats[index]["cumulativeEnergy"] + powerInts[index]
-            
+
             if self.prevStats[index]["cumulativeEnergy"] < self.prevStats[index]["minEnergy"]:
                 self.prevStats[index]["minEnergy"] = self.prevStats[index]["cumulativeEnergy"];
             elif self.prevStats[index]["cumulativeEnergy"] > self.prevStats[index]["maxEnergy"]:
@@ -329,25 +331,57 @@ class Application(tk.Frame):
 
     def periodicEventHandler(self):
 
-        textData = self.mySolarClient.retrieveData()
-        self.parsedData = self.mySolarClient.parseResult(textData)
-        
+        #~ textData = self.mySolarClient.retrieveData()
+        #~ self.parsedData = self.mySolarClient.parseResult(textData)
+
+        newData = self.mySolarClient.retrieveDataUdp()
+        if newData != None:
+            #~ print(newData)
+            self.plotGraph(newData)
+
         self.after(900,self.periodicEventHandler);
-        self.plotGraph(self.parsedData)
+        #~ self.plotGraph(self.parsedData)
 
 
 class SolarClient():
     def __init__(self):
         self.one_fifo = OneFifo('/tmp/solar_data.fifo')
         self.one_fifo.__enter__()
-    
+
+
+        self.socket = socket.socket(socket.AF_INET, #internet,
+                                    socket.SOCK_DGRAM) #UDP
+        self.socket.setblocking(False)
+        #~ self.socket.bind( ('127.0.0.1', 29551) )  # port = 's'*256 + 'o'
+        self.socket.sendto( 'sub', ('127.0.0.1', 29551))
+
     def retrieveData(self):
         result = self.one_fifo.read()
         if result is not None:
             print result
-            
+
         return result
-        
+
+    def retrieveDataUdp(self):
+        queue_empty = False
+        returnData = None
+        while queue_empty == False:
+            ready_to_read, ready_to_write, in_error = select.select( [self.socket], [], [], 0.001) # only wait 1 msec
+
+            if len(ready_to_read) == 0:
+                queue_empty = True
+            else:
+                data, address = ready_to_read[0].recvfrom(4096)
+                self.listner_address = address
+                print('got data msg from %s:%s = %s' % (self.listner_address[0], self.listner_address[1], data))
+
+                returnData = json.loads(data)
+
+        return returnData
+
+
+
+
     def parseResult(self,dataLine):
         fields = dataLine.split(',')
 
@@ -362,12 +396,12 @@ class SolarClient():
         if len(fields) < 6*6+1:
             print("Too few fields (%d) in input line" % (len(fields)) )
         else:
-            
+
             numChannels = fields[0]
-            
+
             for index in xrange(int(numChannels)):
                 inputFieldIndexBase = 1 + index*6
-                
+
                 parsedData["names"].append(fields[inputFieldIndexBase+0])
                 parsedData["voltage"].append(float(fields[inputFieldIndexBase+1]))
                 parsedData["current"].append(int(fields[inputFieldIndexBase+2]))
@@ -377,7 +411,7 @@ class SolarClient():
 
             #print(parsedData)
         return parsedData
-                                                       
+
 
 def main():
     app = Application()
