@@ -84,7 +84,7 @@ class Application(tk.Frame):
         # plot batteries
         #
 
-
+        accumActualBatFracMaxDrainRelative = 0
         for sensorIndex in xrange(4):
             batActualIndex = self.batmap[sensorIndex]
 
@@ -94,6 +94,7 @@ class Application(tk.Frame):
             maxBatDrainAmount = 2000*3600   # 2000 mAHr max usable amp hours for now.  computed in mA*Seconds
 
             actualBatFracMaxDrainRelative = 1.0 - float(relBatLevel)/float(maxBatDrainAmount)
+            accumActualBatFracMaxDrainRelative = accumActualBatFracMaxDrainRelative + actualBatFracMaxDrainRelative
 
             if relBatLevel > maxBatDrainAmount:
                 relBatLevel = maxBatDrainAmount
@@ -126,74 +127,88 @@ class Application(tk.Frame):
             self.percent_Col_text[sensorIndex].set( "%.1f %%" % (actualBatFracMaxDrainRelative*100.0) )
 
         # show the panel current and load current values
-        self.energy_Col_text[4].set( "%d mA" % (data["current"][0]) )
-        self.energy_Col_text[5].set( "%d mA" % (data["current"][3]) )
+        self.energy_Col_text[7].set( "%d mA" % (data["current"][0]) )
+        self.energy_Col_text[9].set( "%d mA" % (data["current"][3]) )
         # show the panel current and load voltage values
-        self.voltage_Col_text[4].set( "%2.3f V" % (data["voltage"][0]) )
-        self.voltage_Col_text[5].set( "%2.3f V" % (data["voltage"][3]) )
+        self.voltage_Col_text[7].set( "%2.3f V" % (data["voltage"][0]) )
+        self.voltage_Col_text[9].set( "%2.3f V" % (data["voltage"][3]) )
         # show the panel current and load wattage values
-        self.wattage_Col_text[4].set( "%2.3f W" % (data["voltage"][0]*data["current"][0]/1000) )
-        self.wattage_Col_text[5].set( "%2.3f W" % (data["voltage"][3]*data["current"][3]/1000) )
+        self.wattage_Col_text[7].set( "%2.3f W" % (data["voltage"][0]*data["current"][0]/1000) )
+        self.wattage_Col_text[9].set( "%2.3f W" % (data["voltage"][3]*data["current"][3]/1000) )
 
         #
         # plot load/panel stuff
         #
-        for sensorIndex in xrange(4,6):
+        for sensorIndex in xrange(4,10):
             if sensorIndex == 4:
-                bar_1_color = "#0f0"
-                bar_2_color = "#ff0"
-                bar_3_color = "#ff0"
+                bar_color = "#0f0"
+                mA_hours = data["todayCumulativeEnergy"][0]/3600.0# /3600 convert sec to hr; 
+                bar_frac = mA_hours/ 12000.0 # /3600 convert sec to hr;  /12000 to set max scale to 12000mAHr
 
-                bar_1_frac = data["todayCumulativeEnergy"][0]/3600.0/ 12000.0 # /3600 convert sec to hr;  /12000 to set max scale to 12000mAHr
+                self.wattage_Col_text[sensorIndex].set( "%2.1f AH" % (mA_hours/1000.0) )
+                #~ self.wattage_Col_text[sensorIndex].set( "%2.1f WH" % (mA_hours/1000.0*12.0) )
 
-                bar_2_frac = 0
+            elif sensorIndex == 5:
+                bar_color = "#ff0"
+                mA_sec = 0
                 for index in xrange(4):
                     batActualIndex = self.batmap[index]
-                    bar_2_frac = bar_2_frac + data["todayCumulativeEnergy"][batActualIndex]
-                bar_2_frac = bar_2_frac /3600.0/ 12000.0 # /3600 convert sec to hr;  /12000 to set max scale
-                bar_3_frac = data["todayCumulativeEnergy"][3]/3600.0/ 12000.0 # /3600 convert sec to hr;  /12000 to set max scale
+                    mA_sec = mA_sec + data["todayCumulativeEnergy"][batActualIndex]
+                mA_hours = mA_sec/3600.0
+                bar_frac = mA_hours/ 12000.0 # /3600 convert sec to hr;  /12000 to set max scale
+                self.wattage_Col_text[sensorIndex].set( "%2.1f AH" % (mA_hours/1000.0) )
+                #~ self.wattage_Col_text[sensorIndex].set( "%2.1f WH" % (mA_hours/1000.0*12.0) )
 
-                if bar_2_frac < 0:
-                    bar_2_frac = abs(bar_2_frac)
-                    bar_2_color = "#f00"
+                if bar_frac < 0:
+                    bar_frac = abs(bar_frac)
+                    bar_color = "#f00"
                 else:
-                    bar_2_color = "#0f0"
+                    bar_color = "#0f0"
+
+                self.percent_Col_text[sensorIndex].set( "%.1f %%" % (accumActualBatFracMaxDrainRelative*100.0/4.0) )
+
+            elif sensorIndex == 6:
+                bar_color = "#ff0"
+                mA_hours = data["todayCumulativeEnergy"][3]/3600.0
+                bar_frac = mA_hours/ 12000.0 # /3600 convert sec to hr;  /12000 to set max scale
+                self.wattage_Col_text[sensorIndex].set( "%2.1f AH" % (mA_hours/1000.0) )
+                #~ self.wattage_Col_text[sensorIndex].set( "%2.1f WH" % (mA_hours/1000.0*12.0) )
 
 
 
-            else:
+
+            elif sensorIndex == 7:
+                bar_color = "#0f0"  # yellow for transfer power bar
+                bar_frac = float(abs(data["current"][0]))/3200.0  # 3.2A max
+
+            elif sensorIndex == 8:
                 batCurrent = 0
                 for index in xrange(4):
                     batActualIndex = self.batmap[index]
                     batCurrent = batCurrent + data["current"][batActualIndex]
 
-                bar_1_color = "#0f0"  # yellow for transfer power bar
                 if batCurrent < 0:
-                    bar_2_color = "#f00"  # red for discharge
+                    bar_color = "#f00"  # red for discharge
                 else:
-                    bar_2_color = "#0f0"  # green for charge
-                bar_3_color = "#ff0"  # yellow for transfer power bar
+                    bar_color = "#0f0"  # green for charge
+                bar_frac = float(abs(batCurrent))/3200.0
 
-                bar_1_frac = float(abs(data["current"][0]))/3200.0  # 3.2A max
-                bar_2_frac = float(abs(batCurrent))/3200.0
-                bar_3_frac = float(abs(data["current"][3]))/3200.0
 
-                #~ self.energy_Col_text[sensorIndex].set("")
+                # show the values
+                self.energy_Col_text[sensorIndex].set( "%d mA" % (batCurrent) )
+                self.wattage_Col_text[sensorIndex].set( "%2.3f W" % (data["voltage"][3]*batCurrent/1000) )
+                
 
-            bar_3_top = graphHeight - int(bar_3_frac*graphHeight)
-            bar_2_top = graphHeight - int(bar_2_frac*graphHeight)
-            bar_1_top = graphHeight - int(bar_1_frac*graphHeight)
+            elif sensorIndex == 9:
+                bar_color = "#ff0"  # yellow for transfer power bar
+                bar_frac = float(abs(data["current"][3]))/3200.0
+
+            bar_1_top = graphHeight - int(bar_frac*graphHeight)
 
             self.energy_Col_graph_canvas[sensorIndex].delete("all");
-            self.energy_Col_graph_canvas[sensorIndex].create_rectangle(
-                           graphLeft+((graphWidth*0)/3), bar_1_top,
-                           graphLeft+((graphWidth*1)/3), graphHeight,  fill=bar_1_color)
-            self.energy_Col_graph_canvas[sensorIndex].create_rectangle(
-                           graphLeft+((graphWidth*1)/3), bar_2_top,
-                           graphLeft+((graphWidth*2)/3), graphHeight,  fill=bar_2_color)
-            self.energy_Col_graph_canvas[sensorIndex].create_rectangle(
-                           graphLeft+((graphWidth*2)/3), bar_3_top,
-                           graphLeft+((graphWidth*3)/3), graphHeight,  fill=bar_3_color)
+            self.energy_Col_graph_canvas[sensorIndex].create_rectangle(graphLeft,bar_1_top, graphRight,graphHeight, fill=bar_color)
+
+
         print("plotGraph done")
 
     def createWidgets(self):
@@ -208,23 +223,43 @@ class Application(tk.Frame):
         # set up overall window frame
         #
 
-        self.energy_LabelFrame = tk.LabelFrame(top, text="System Summary")
-        self.energy_LabelFrame.grid(column=0, row=0, sticky=tk.N+tk.S+tk.E+tk.W)
-
+        self.system_summary_LabelFrame = tk.LabelFrame(top, text="System Summary")
+        self.system_summary_LabelFrame.grid(column=0, row=0, sticky=tk.N+tk.S+tk.E+tk.W)
 
         #
-        # set up frames for the 6 sensors
+        # set up frames for the 3 regions
         #
-        self.energy_Col_LabelFrame = []
-        labels = ["Batt 1","Batt 2","Batt 3","Batt 4","Today","Now"]
-        for sensorIndex in xrange(6):
-            myField = tk.LabelFrame(self.energy_LabelFrame, text=labels[sensorIndex] )
+        self.subsection_LabelFrame = []
+        subsection_labels = ["Battery State", "Panel/Batt/Load Energy", "Panel/Batt/Load Power"]
+        for sensorIndex in xrange(len(subsection_labels)):
+            myField = tk.LabelFrame(self.system_summary_LabelFrame, text=subsection_labels[sensorIndex] )
             myField.grid(column=sensorIndex, row=0, sticky=tk.N+tk.S+tk.E+tk.W)
             myField.rowconfigure(0, weight=1)
             myField.rowconfigure(1, weight=0)
             myField.columnconfigure(0, weight=1)
-            self.energy_LabelFrame.rowconfigure(0, weight=1, minsize=100)
-            self.energy_LabelFrame.columnconfigure(sensorIndex, weight=1, minsize=70)
+            self.system_summary_LabelFrame.rowconfigure(0, weight=1, minsize=100)
+            self.system_summary_LabelFrame.columnconfigure(sensorIndex, weight=1, minsize=70)
+            self.subsection_LabelFrame.append( myField )
+        
+        #
+        # set up frames for the 4 batteries
+        #
+        self.energy_Col_LabelFrame = []
+        column_labels = ["Batt 1","Batt 2","Batt 3","Batt 4","Panel","Batt","Load","Panel","Batt","Load"]
+        for sensorIndex in xrange(len(column_labels)):
+            if sensorIndex < 4:
+                frameIndex = 0
+            elif sensorIndex < 7:
+                frameIndex = 1
+            else:
+                frameIndex = 2
+            myField = tk.LabelFrame(self.subsection_LabelFrame[frameIndex], text=column_labels[sensorIndex] )
+            myField.grid(column=sensorIndex, row=0, sticky=tk.N+tk.S+tk.E+tk.W)
+            myField.rowconfigure(0, weight=1)
+            myField.rowconfigure(1, weight=0)
+            myField.columnconfigure(0, weight=1)
+            self.subsection_LabelFrame[frameIndex].rowconfigure(0, weight=1, minsize=100)
+            self.subsection_LabelFrame[frameIndex].columnconfigure(sensorIndex, weight=1, minsize=70)
             self.energy_Col_LabelFrame.append( myField )
 
         #
@@ -232,7 +267,7 @@ class Application(tk.Frame):
         #
 
         self.energy_Col_graph_canvas = []
-        for sensorIndex in xrange(6):
+        for sensorIndex in xrange(len(column_labels)):
             myField = tk.Canvas(self.energy_Col_LabelFrame[sensorIndex], width=70, height=200)
             myField.grid(column=0,row=1, sticky=tk.E + tk.W + tk.N + tk.S )
             self.energy_Col_graph_canvas.append( myField )
@@ -250,9 +285,9 @@ class Application(tk.Frame):
 
         self.voltage_Col_Label = []
         self.voltage_Col_text = []
-        for sensorIndex in xrange(6):
+        for sensorIndex in xrange(len(column_labels)):
             myStringVar = tk.StringVar()
-            myStringVar.set("0 V")
+            myStringVar.set("")
             myField = tk.Label(self.energy_Col_LabelFrame[sensorIndex], textvariable=myStringVar)
             myField.grid(column=0,row=2, sticky=tk.E + tk.W + tk.N + tk.S )
             self.voltage_Col_Label.append( myField )
@@ -260,9 +295,9 @@ class Application(tk.Frame):
 
         self.energy_Col_Label = []
         self.energy_Col_text = []
-        for sensorIndex in xrange(6):
+        for sensorIndex in xrange(len(column_labels)):
             myStringVar = tk.StringVar()
-            myStringVar.set("0 mA")
+            myStringVar.set("")
             myField = tk.Label(self.energy_Col_LabelFrame[sensorIndex], textvariable=myStringVar)
             myField.grid(column=0,row=3, sticky=tk.E + tk.W + tk.N + tk.S )
             self.energy_Col_Label.append( myField )
@@ -270,9 +305,9 @@ class Application(tk.Frame):
 
         self.wattage_Col_Label = []
         self.wattage_Col_text = []
-        for sensorIndex in xrange(6):
+        for sensorIndex in xrange(len(column_labels)):
             myStringVar = tk.StringVar()
-            myStringVar.set("0 W")
+            myStringVar.set("")
             myField = tk.Label(self.energy_Col_LabelFrame[sensorIndex], textvariable=myStringVar)
             myField.grid(column=0,row=4, sticky=tk.E + tk.W + tk.N + tk.S )
             self.wattage_Col_Label.append( myField )
@@ -280,7 +315,7 @@ class Application(tk.Frame):
 
         self.percent_Col_Label = []
         self.percent_Col_text = []
-        for sensorIndex in xrange(6):
+        for sensorIndex in xrange(len(column_labels)):
             myStringVar = tk.StringVar()
             myStringVar.set("")
             myField = tk.Label(self.energy_Col_LabelFrame[sensorIndex], textvariable=myStringVar)
