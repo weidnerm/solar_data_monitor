@@ -179,7 +179,7 @@ class Application(tk.Frame):
 
             elif sensorIndex == 7:
                 bar_color = "#0f0"  # yellow for transfer power bar
-                bar_frac = float(abs(data["current"][0]))/3200.0  # 3.2A max
+                bar_frac = float(abs(data["current"][0]))/6400.0  # 6.4A max
 
             elif sensorIndex == 8:
                 batCurrent = 0
@@ -191,7 +191,7 @@ class Application(tk.Frame):
                     bar_color = "#f00"  # red for discharge
                 else:
                     bar_color = "#0f0"  # green for charge
-                bar_frac = float(abs(batCurrent))/3200.0
+                bar_frac = float(abs(batCurrent))/6400.0
 
 
                 # show the values
@@ -201,7 +201,7 @@ class Application(tk.Frame):
 
             elif sensorIndex == 9:
                 bar_color = "#ff0"  # yellow for transfer power bar
-                bar_frac = float(abs(data["current"][3]))/3200.0
+                bar_frac = float(abs(data["current"][3]))/6400.0
 
             bar_1_top = graphHeight - int(bar_frac*graphHeight)
 

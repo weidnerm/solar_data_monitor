@@ -25,10 +25,12 @@ class SolarSensors:
     def __init__(self):
         self.m_sensors = [];
         self.m_sensorNames = [];
+        self.m_scale_factors = []
 
-    def addSensor(self,name,sensor):
+    def addSensor(self,name,sensor, scale=1.0):
         self.m_sensors.append(sensor);
         self.m_sensorNames.append(name);
+        self.m_scale_factors.append(scale)
 
     def getData(self):
         returnVal = {};
@@ -41,7 +43,7 @@ class SolarSensors:
             returnVal["names"].append(self.m_sensorNames[index]);
 
             voltage = self.m_sensors[index].getBusVoltage_V()
-            current = self.m_sensors[index].getCurrent_mA()
+            current = self.m_sensors[index].getCurrent_mA() * self.m_scale_factors[index]
             returnVal["voltage"].append( voltage );
             returnVal["current"].append( current );
 
@@ -318,10 +320,10 @@ def setupSolar():
 #   mySolarSensors.addSensor("Battery2", ina ); # A1 jumper.
 #   mySolarSensors.addSensor("Load", ina ); # A0 and A1 jumpers.
 
-    mySolarSensors.addSensor("Solar Panel (45)", INA219(0x45) ); # A0 and A1 jumpers.
+    mySolarSensors.addSensor("Solar Panel (45)", INA219(0x45), scale=2.0 ); # A0 and A1 jumpers.
     mySolarSensors.addSensor("Battery 1 (44)", INA219(0x44) ); # A1 jumper.
     mySolarSensors.addSensor("Battery 2 (41)", INA219(0x41) ); # A0 jumper.
-    mySolarSensors.addSensor("Load (40)", INA219(0x40) ); # no jumpers.
+    mySolarSensors.addSensor("Load (40)", INA219(0x40), scale=2.0); # no jumpers.
     mySolarSensors.addSensor("Battery 3 (42)", INA219(0x42) ); # A0->SDA  A1=0
     mySolarSensors.addSensor("Battery 4 (43)", INA219(0x43) ); # A0->SCL  A1=0
 
