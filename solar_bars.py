@@ -255,8 +255,8 @@ class Application(tk.Frame):
                 frameIndex = 2
             myField = tk.LabelFrame(self.subsection_LabelFrame[frameIndex], text=column_labels[sensorIndex] )
             myField.grid(column=sensorIndex, row=0, sticky=tk.N+tk.S+tk.E+tk.W)
-            myField.rowconfigure(0, weight=1)
-            myField.rowconfigure(1, weight=0)
+            myField.rowconfigure(0, weight=0)
+            myField.rowconfigure(1, weight=1)
             myField.columnconfigure(0, weight=1)
             self.subsection_LabelFrame[frameIndex].rowconfigure(0, weight=1, minsize=100)
             self.subsection_LabelFrame[frameIndex].columnconfigure(sensorIndex, weight=1, minsize=70)

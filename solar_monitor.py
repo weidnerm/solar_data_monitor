@@ -43,7 +43,7 @@ class SolarSensors:
             returnVal["names"].append(self.m_sensorNames[index]);
 
             voltage = self.m_sensors[index].getBusVoltage_V()
-            current = self.m_sensors[index].getCurrent_mA() * self.m_scale_factors[index]
+            current = int(self.m_sensors[index].getCurrent_mA() * self.m_scale_factors[index])
             returnVal["voltage"].append( voltage );
             returnVal["current"].append( current );
 
