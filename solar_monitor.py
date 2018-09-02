@@ -12,7 +12,11 @@ from OneFifo import OneFifo
 import json
 import socket
 import select
-import json
+
+from SolarMonitor import SolarMonitor
+from SolarSensors import SolarSensors
+from SolarServer import SolarServer
+from SolarDb import SolarDb
 
 def orig_main():
     ina = INA219()
@@ -22,36 +26,6 @@ def orig_main():
     print "Bus     : %.3f V" % ina.getBusVoltage_V()
     print "Current : %.3f mA" % ina.getCurrent_mA()
 
-class SolarSensors:
-    def __init__(self, config):
-        self.config = config
-
-        self.m_sensors = [];
-        self.m_sensorNames = [];
-        self.m_scale_factors = []
-        
-        for index in range(len(config)):
-            addr = int(config[index]['address'], 16)
-            self.m_sensors.append( INA219(addr) );
-            self.m_sensorNames.append(config[index]['name']);
-            self.m_scale_factors.append(config[index]['scale'])
-
-    def getData(self):
-        returnVal = {};
-
-        returnVal["names"] = [];
-        returnVal["voltage"] = [];
-        returnVal["current"] = [];
-
-        for index in range(len(self.m_sensors)):
-            returnVal["names"].append(self.m_sensorNames[index]);
-
-            voltage = self.m_sensors[index].getBusVoltage_V()
-            current = int(self.m_sensors[index].getCurrent_mA() * self.m_scale_factors[index])
-            returnVal["voltage"].append( voltage );
-            returnVal["current"].append( current );
-
-        return returnVal;
 
 class Solar:
     def __init__(self, sensors, timestamper, filenamePrefix="solarLog_"):
@@ -138,208 +112,6 @@ class Timestamper(TimestamperInterface):
 
     def getTime(self):
         return (time.strftime("%H:%M:%S"))
-
-class SolarDb:
-    def __init__(self, filenamePrefix):
-        self.totalEnergy = 0.0;
-        self.m_sensorNames = [];
-        self.m_voltages = [];
-        self.m_currents = [];
-        self.m_times = [];
-        self.m_date = "0000_00_00";
-        self.m_filename = "unknown"
-        self.m_prev_sampleWindow = -1;
-        for index in xrange(6):
-            emptyList = []
-            self.m_voltages.append(emptyList);
-            emptyList = []
-            self.m_currents.append(emptyList);
-        self.m_filenamePrefix = filenamePrefix;
-
-        averages = {}
-        averages["voltage"] = [];
-        averages["current"] = [];
-
-        for index in xrange(6):
-            averages["voltage"].append( 0.0 );
-            averages["current"].append( 0 );
-        self.averages = averages
-        self.averages_dataPoints = 0
-
-
-    def addEntry(self, date, time, data):
-
-        rolledOverToNewDay = False
-        # figure the new point into the averages.
-        for index in xrange(len(data["voltage"])):
-            self.averages["voltage"][index] = self.averages["voltage"][index] + data["voltage"][index];
-            self.averages["current"][index] = self.averages["current"][index] + data["current"][index];
-        self.averages_dataPoints = self.averages_dataPoints +1;
-
-        if ( self.averages_dataPoints == 10):
-            # if rollover, flush the old data to the file.
-            sampleWindow = int(time[3:5])/10
-            if ( self.m_prev_sampleWindow != sampleWindow ) and (self.m_date != "0000_00_00"): # the hour rolled over.
-                m_prev_sampleWindow = sampleWindow;
-
-                self.m_filename = self.m_filenamePrefix+self.m_date+".csv"
-
-                # create the file if necessary
-                if not os.path.exists(self.m_filename):
-                    f = open(self.m_filename, 'w')
-                    headerLineText = "time"
-                    for index in xrange(6):
-                        newSection = ",%s voltage,%s current" % (data["names"][index], data["names"][index])
-                        headerLineText = headerLineText+newSection
-                    f.write(headerLineText)
-                    #~ f.write("time,%s voltage,%s current,%s voltage,%s current,%s voltage,%s current,%s voltage,%s current\n" % (data["names"][0], data["names"][0], data["names"][1], data["names"][1], data["names"][2], data["names"][2], data["names"][3], data["names"][3]))
-                    f.close();
-                    rolledOverToNewDay = True
-
-                # append the current data
-                f = open(self.m_filename, 'a')
-                print("length=%d" % (len(self.m_voltages[0])))
-                for index in xrange(len(self.m_voltages[0])):
-                    f.write(self.m_times[index]);
-                    f.write(",");
-                    for sensorIndex in xrange(6):
-                        f.write("%s,%s" % (self.m_voltages[sensorIndex][index],self.m_currents[sensorIndex][index] ))
-                        if (sensorIndex != 5):
-                            f.write(",");
-                    f.write("\n");
-                f.close()
-
-
-                # clear the cached data for the next hour
-                self.m_voltages = [];
-                self.m_currents = [];
-                self.m_times = [];
-                for index in xrange(6):
-                    emptyList = []
-                    self.m_voltages.append(emptyList);
-                    emptyList = []
-                    self.m_currents.append(emptyList);
-
-            self.m_date = date;
-            self.m_prev_sampleWindow = sampleWindow
-
-            self.m_times.append(time);
-            for index in xrange(len(data["voltage"])):
-                voltageAvg = self.averages["voltage"][index] / self.averages_dataPoints;
-                currentAvg = self.averages["current"][index] / self.averages_dataPoints;
-
-                self.m_voltages[index].append(voltageAvg);
-                self.m_currents[index].append(currentAvg);
-                self.m_sensorNames.append(data["names"][index] );
-#               print("avgV=%2.3f  avgC=%d" % (voltageAvg,currentAvg))
-
-            for index in xrange(len(data["voltage"])): # clear out the averages for next time.
-                self.averages["voltage"][index] = 0.0;
-                self.averages["current"][index] = 0;
-            self.averages_dataPoints = 0;
-
-        return rolledOverToNewDay;
-
-
-    def readDayLog(self,fileIndex):
-        returnVal = [];
-
-        filename = self.getFilenameFromIndex(fileIndex)
-
-        for index in xrange(6):
-            tempVal = {}  # put an empty dictionary for each array entry.
-            tempVal["name"]    = []
-            tempVal["voltage"] = []
-            tempVal["current"] = []
-            tempVal["time"]    = []
-
-            returnVal.append(tempVal);
-
-        fileHandle = open(filename,"r");
-        rawLines = fileHandle.readlines();
-        firstLineFields = rawLines[0].split(",");
-
-        for chanIndex in xrange(6):
-            returnVal[chanIndex]["name"] = firstLineFields[1+chanIndex*2][:-8];  # strip off " voltage" from the end for the base name.
-
-        #~ returnVal[0]["name"] = firstLineFields[1][:-8];  # strip off " voltage" from the end for the base name.
-        #~ returnVal[1]["name"] = firstLineFields[3][:-8];  # strip off " voltage" from the end for the base name.
-        #~ returnVal[2]["name"] = firstLineFields[5][:-8];  # strip off " voltage" from the end for the base name.
-        #~ returnVal[3]["name"] = firstLineFields[7][:-8];  # strip off " voltage" from the end for the base name.
-
-        for chanIndex in xrange(6):
-            returnVal[chanIndex]["maxVoltage"] = -99999999.0 # very small.
-            returnVal[chanIndex]["minVoltage"] =  99999999.0 # very big.
-            returnVal[chanIndex]["maxCurrent"] = -99999999 # very small.
-            returnVal[chanIndex]["minCurrent"] =  99999999 # very big.
-            returnVal[chanIndex]["maxPower"] = -99999999 # very small.
-            returnVal[chanIndex]["minPower"] =  99999999 # very big.
-
-        for index in xrange(1,len(rawLines)):
-            fields = rawLines[index].split(",");
-
-            for chanIndex in xrange(6):
-                returnVal[chanIndex]["voltage"].append(float(fields[1+chanIndex*2]))
-                returnVal[chanIndex]["current"].append(int(fields[2+chanIndex*2]))
-                returnVal[chanIndex]["time"].append(fields[0])
-
-                if (returnVal[chanIndex]["maxVoltage"] < float(fields[1+chanIndex*2])):
-                    returnVal[chanIndex]["maxVoltage"] = float(fields[1+chanIndex*2])
-                if (returnVal[chanIndex]["minVoltage"] > float(fields[1+chanIndex*2])):
-                    returnVal[chanIndex]["minVoltage"] = float(fields[1+chanIndex*2])
-                if (returnVal[chanIndex]["maxCurrent"] < int(fields[2+chanIndex*2])):
-                    returnVal[chanIndex]["maxCurrent"] = int(fields[2+chanIndex*2])
-                if (returnVal[chanIndex]["minCurrent"] > int(fields[2+chanIndex*2])):
-                    returnVal[chanIndex]["minCurrent"] = int(fields[2+chanIndex*2])
-                if (returnVal[chanIndex]["maxPower"] < float(fields[1+chanIndex*2])*int(fields[2+chanIndex*2])):
-                    returnVal[chanIndex]["maxPower"] = float(fields[1+chanIndex*2])*int(fields[2+chanIndex*2])
-                if (returnVal[chanIndex]["minPower"] > float(fields[1+chanIndex*2])*int(fields[2+chanIndex*2])):
-                    returnVal[chanIndex]["minPower"] = float(fields[1+chanIndex*2])*int(fields[2+chanIndex*2])
-
-        fileHandle.close()
-        return (returnVal, filename);
-
-    def getFilenameFromIndex(self, index):
-        fileList = []
-        pattern = self.m_filenamePrefix + "*.csv"
-#       print(pattern)
-        for file in glob.glob( pattern ):
-            fileList.append(file)
-
-        fileList.sort()
-        fileList.reverse()
-        filteredIndex = index;
-        if filteredIndex < 0:
-            filteredIndex = 0
-        elif filteredIndex >= len(fileList):
-            filteredIndex = len(fileList)-1
-        return fileList[filteredIndex]
-
-def setupSolar():
-    mySolarSensors = SolarSensors()
-
-#   ina = INA219(0x40);
-#   mySolarSensors.addSensor("Panel", ina ); # no jumpers.
-#   mySolarSensors.addSensor("Battery1", ina ); # A0 jumper.
-#   mySolarSensors.addSensor("Battery2", ina ); # A1 jumper.
-#   mySolarSensors.addSensor("Load", ina ); # A0 and A1 jumpers.
-
-    mySolarSensors.addSensor("Panel",  INA219(0x45), scale=2.0 ); # A0 and A1 jumpers.
-    # mySolarSensors.addSensor("Dead",   INA219(0x43) );
-    mySolarSensors.addSensor("Batt 5", INA219(0x49) );
-    mySolarSensors.addSensor("Batt 6", INA219(0x41) );
-    mySolarSensors.addSensor("Load",   INA219(0x40), scale=2.0);
-    mySolarSensors.addSensor("Batt 7", INA219(0x42) );
-    mySolarSensors.addSensor("Batt 8", INA219(0x43) );
-
-    mySolarSensors.addSensor("Batt 4", INA219(0x48) );
-    mySolarSensors.addSensor("Batt 3", INA219(0x47) );
-    mySolarSensors.addSensor("Batt 2", INA219(0x4a) );
-    mySolarSensors.addSensor("Batt 1", INA219(0x46) );
-
-    mySolar = Solar(mySolarSensors, Timestamper() );
-    return mySolar;
-
 
 
     
@@ -455,7 +227,7 @@ class Application():
 
 
 
-    def updateGuiFields(self, solarData):
+    def accumulateEnergy(self, solarData):
         # 0-panel;  1-bat 1;  2-bat 2;  3-load;  4-bat 3;  5-bat 4
 
         powerInts = []
@@ -499,7 +271,7 @@ class Application():
         #self.after(1000,self.periodicEventHandler);
 
         data = self.mySolar.gatherData();
-        self.updateGuiFields(data);
+        self.accumulateEnergy(data);
         #~ self.plotGraph()
         rollOver = self.mySolar.recordData(data);
         if rollOver:
@@ -508,91 +280,7 @@ class Application():
 
         self.mySolarServer.sendUpdate(data, self)
 
-class SolarServer():
-    def __init__(self):
 
-        self.one_fifo = None
-
-        self.one_fifo = OneFifo('/tmp/solar_data.fifo')
-        self.one_fifo.__enter__()
-
-        self.listner_address = None
-
-        self.socket = socket.socket(socket.AF_INET, #internet,
-                                    socket.SOCK_DGRAM) #UDP
-        self.socket.setblocking(False)
-        self.socket.bind( ('127.0.0.1', 29551) )  # port = 's'*256 + 'o'
-
-
-    def sendToClients(self,msg):
-        self.one_fifo.write(msg)
-
-    def sendUpdate(self,liveData, cumulativeData):
-
-        outputString = "%d" % len(liveData["names"])
-
-        # add channel names and current values
-        for index in xrange(len(liveData["names"])):
-            outputString = outputString + ",%s,%s,%s,%f,%f,%f" % (liveData["names"][index],
-                                                         liveData["voltage"][index],
-                                                         liveData["current"][index],
-                                                         cumulativeData.todayStats[index]["cumulativeEnergy"],
-                                                         cumulativeData.prevStats[index]["cumulativeEnergy"],
-                                                         cumulativeData.prevStats[index]["maxEnergy"])
-
-        # send message through the pipe
-        self.sendToClients(outputString);
-
-        #~ print("liveData=")
-        #~ print(liveData)
-        #~ print("cumulativeData.todayStats=")
-        #~ print(cumulativeData.todayStats)
-        #~ print("cumulativeData.prevStats=")
-        #~ print(cumulativeData.prevStats)
-
-        #
-        # Json Output
-        #
-
-        outputDict = {}
-        outputDict["names"] = []
-        outputDict["voltage"] = []
-        outputDict["current"] = []
-        outputDict["todayCumulativeEnergy"] = []
-        outputDict["cumulativeEnergy"] = []
-        outputDict["maxEnergy"] = []
-
-        # add channel names and current values
-        for index in xrange(len(liveData["names"])):
-            outputDict["names"].append( liveData["names"][index] )
-            outputDict["voltage"].append( liveData["voltage"][index] )
-            outputDict["current"].append( liveData["current"][index] )
-            outputDict["todayCumulativeEnergy"].append( cumulativeData.todayStats[index]["cumulativeEnergy"] )
-            outputDict["cumulativeEnergy"].append( cumulativeData.prevStats[index]["cumulativeEnergy"] )
-            outputDict["maxEnergy"].append( cumulativeData.prevStats[index]["maxEnergy"] )
-
-        jsonOutput = json.dumps(outputDict)
-
-        self.handleNewAttachments()
-        self.sendUdpToListeners(jsonOutput)
-        return jsonOutput
-
-    def handleNewAttachments(self):
-        queue_empty = False
-        while queue_empty == False:
-            ready_to_read, ready_to_write, in_error = select.select( [self.socket], [], [], 0.001) # only wait 1 msec
-
-            if len(ready_to_read) == 0:
-                queue_empty = True
-            else:
-                data, address = ready_to_read[0].recvfrom(4096)
-                self.listner_address = address
-                print('got sub msg from %s:%s' % (self.listner_address[0], self.listner_address[1]))
-
-    def sendUdpToListeners(self, json):
-        if self.listner_address != None:
-            print('sending to %s:%s msg %s' % (self.listner_address[0], self.listner_address[1], json))
-            self.socket.sendto(json, self.listner_address)
 
 def main(config):
     #~ app = Application()
@@ -600,14 +288,25 @@ def main(config):
 
     #~ app.mySolarServer = SolarServer()
 
-    mySolarSensors = SolarSensors(config)
+    #~ mySolarSensors = SolarSensors(config)
+    #~ mySolarServer = SolarServer()
+    mySolarMonitor = SolarMonitor(config)
+    
+    mySolarMonitor.run()
 
-    while True:
-        #~ app.periodicEventHandler()
-        data = mySolarSensors.getData()
-        print(data)
-        time.sleep(1.0)
+    #~ while True:
+        #~ # app.periodicEventHandler()
+        #~ live_data = mySolarSensors.getData()
+        #~ mySolarServer.sendUpdate(live_data, cumulative_data)
+        
+        #~ print(live_data)
+        #~ time.sleep(1.0)
 
+#    {
+#        "address": "0x46", 
+#        "name": "Batt 2", 
+#        "scale": 1.0
+#    },
 
 
 
