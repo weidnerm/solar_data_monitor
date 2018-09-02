@@ -12,6 +12,7 @@ from OneFifo import OneFifo
 import json
 import socket
 import select
+import json
 
 def orig_main():
     ina = INA219()
@@ -22,15 +23,18 @@ def orig_main():
     print "Current : %.3f mA" % ina.getCurrent_mA()
 
 class SolarSensors:
-    def __init__(self):
+    def __init__(self, config):
+        self.config = config
+
         self.m_sensors = [];
         self.m_sensorNames = [];
         self.m_scale_factors = []
-
-    def addSensor(self,name,sensor, scale=1.0):
-        self.m_sensors.append(sensor);
-        self.m_sensorNames.append(name);
-        self.m_scale_factors.append(scale)
+        
+        for index in range(len(config)):
+            addr = int(config[index]['address'], 16)
+            self.m_sensors.append( INA219(addr) );
+            self.m_sensorNames.append(config[index]['name']);
+            self.m_scale_factors.append(config[index]['scale'])
 
     def getData(self):
         returnVal = {};
@@ -39,7 +43,7 @@ class SolarSensors:
         returnVal["voltage"] = [];
         returnVal["current"] = [];
 
-        for index in xrange(len(self.m_sensors)):
+        for index in range(len(self.m_sensors)):
             returnVal["names"].append(self.m_sensorNames[index]);
 
             voltage = self.m_sensors[index].getBusVoltage_V()
@@ -320,18 +324,25 @@ def setupSolar():
 #   mySolarSensors.addSensor("Battery2", ina ); # A1 jumper.
 #   mySolarSensors.addSensor("Load", ina ); # A0 and A1 jumpers.
 
-    mySolarSensors.addSensor("Solar Panel (45)", INA219(0x45), scale=2.0 ); # A0 and A1 jumpers.
-    mySolarSensors.addSensor("Battery 1 (44)", INA219(0x44) ); # A1 jumper.
-    mySolarSensors.addSensor("Battery 2 (41)", INA219(0x41) ); # A0 jumper.
-    mySolarSensors.addSensor("Load (40)", INA219(0x40), scale=2.0); # no jumpers.
-    mySolarSensors.addSensor("Battery 3 (42)", INA219(0x42) ); # A0->SDA  A1=0
-    mySolarSensors.addSensor("Battery 4 (43)", INA219(0x43) ); # A0->SCL  A1=0
+    mySolarSensors.addSensor("Panel",  INA219(0x45), scale=2.0 ); # A0 and A1 jumpers.
+    # mySolarSensors.addSensor("Dead",   INA219(0x43) );
+    mySolarSensors.addSensor("Batt 5", INA219(0x49) );
+    mySolarSensors.addSensor("Batt 6", INA219(0x41) );
+    mySolarSensors.addSensor("Load",   INA219(0x40), scale=2.0);
+    mySolarSensors.addSensor("Batt 7", INA219(0x42) );
+    mySolarSensors.addSensor("Batt 8", INA219(0x43) );
+
+    mySolarSensors.addSensor("Batt 4", INA219(0x48) );
+    mySolarSensors.addSensor("Batt 3", INA219(0x47) );
+    mySolarSensors.addSensor("Batt 2", INA219(0x4a) );
+    mySolarSensors.addSensor("Batt 1", INA219(0x46) );
 
     mySolar = Solar(mySolarSensors, Timestamper() );
     return mySolar;
 
 
 
+    
 
 
 #class Application(tk.Frame):
@@ -373,74 +384,74 @@ class Application():
         self.todayStats = self.mySolar.computeNetPower(plotData)
 
         self.prevStats = None
-        for index in xrange(4,-1,-1): # fixme put back to 4,-1,-1
+        for index in xrange(1,-1,-1): # fixme put back to 4,-1,-1
             (plotData, filename) = self.mySolar.m_SolarDb.readDayLog(self.currentFileIndex+index);
             print("processing %s" % filename)
             self.prevStats = self.mySolar.computeNetPower(plotData, prevPwr=self.prevStats)
 
 
 
-    def createWidgets(self):
-        #
-        # set up frames for the 6 sensors
-        #
-        top=self.winfo_toplevel()
-        top.rowconfigure(0, weight=1)
-        top.columnconfigure(0, weight=1)
+    #~ def createWidgets(self):
+        #~ #
+        #~ # set up frames for the 6 sensors
+        #~ #
+        #~ top=self.winfo_toplevel()
+        #~ top.rowconfigure(0, weight=1)
+        #~ top.columnconfigure(0, weight=1)
 
-        #
-        # set up overall window frame
-        #
+        #~ #
+        #~ # set up overall window frame
+        #~ #
 
-        self.energy_LabelFrame = tk.LabelFrame(top, text="System Summary")
-        self.energy_LabelFrame.grid(column=0, row=0, sticky=tk.N+tk.S+tk.E+tk.W)
+        #~ self.energy_LabelFrame = tk.LabelFrame(top, text="System Summary")
+        #~ self.energy_LabelFrame.grid(column=0, row=0, sticky=tk.N+tk.S+tk.E+tk.W)
 
 
-        #
-        # set up frames for the 6 sensors
-        #
-        self.energy_Col_LabelFrame = []
-        labels = ["Batt 1","Batt 2","Batt 3","Batt 4","Today","Now"]
-        for sensorIndex in xrange(6):
-            myField = tk.LabelFrame(self.energy_LabelFrame, text=labels[sensorIndex] )
-            myField.grid(column=sensorIndex, row=0, sticky=tk.N+tk.S+tk.E+tk.W)
-            myField.rowconfigure(0, weight=1)
-            myField.rowconfigure(1, weight=0)
-            myField.columnconfigure(0, weight=1)
-            self.energy_LabelFrame.rowconfigure(0, weight=1, minsize=100)
-            self.energy_LabelFrame.columnconfigure(sensorIndex, weight=1, minsize=70)
-            self.energy_Col_LabelFrame.append( myField )
+        #~ #
+        #~ # set up frames for the 6 sensors
+        #~ #
+        #~ self.energy_Col_LabelFrame = []
+        #~ labels = ["Batt 1","Batt 2","Batt 3","Batt 4","Today","Now"]
+        #~ for sensorIndex in xrange(6):
+            #~ myField = tk.LabelFrame(self.energy_LabelFrame, text=labels[sensorIndex] )
+            #~ myField.grid(column=sensorIndex, row=0, sticky=tk.N+tk.S+tk.E+tk.W)
+            #~ myField.rowconfigure(0, weight=1)
+            #~ myField.rowconfigure(1, weight=0)
+            #~ myField.columnconfigure(0, weight=1)
+            #~ self.energy_LabelFrame.rowconfigure(0, weight=1, minsize=100)
+            #~ self.energy_LabelFrame.columnconfigure(sensorIndex, weight=1, minsize=70)
+            #~ self.energy_Col_LabelFrame.append( myField )
 
-        #
-        # set canvas for each bar graph
-        #
+        #~ #
+        #~ # set canvas for each bar graph
+        #~ #
 
-        self.energy_Col_graph_canvas = []
-        for sensorIndex in xrange(6):
-            myField = tk.Canvas(self.energy_Col_LabelFrame[sensorIndex], width=70, height=200)
-            myField.grid(column=0,row=0, sticky=tk.E + tk.W + tk.N + tk.S )
-            self.energy_Col_graph_canvas.append( myField )
+        #~ self.energy_Col_graph_canvas = []
+        #~ for sensorIndex in xrange(6):
+            #~ myField = tk.Canvas(self.energy_Col_LabelFrame[sensorIndex], width=70, height=200)
+            #~ myField.grid(column=0,row=0, sticky=tk.E + tk.W + tk.N + tk.S )
+            #~ self.energy_Col_graph_canvas.append( myField )
 
-            #~ myTextField = myField.create_text(anchor=tk.SW)
+           #~ # myTextField = myField.create_text(anchor=tk.SW)
 
-        #
-        # add resize handler
-        #
-        #self.energy_Col_graph_canvas[0].bind("<Configure>", self.on_resize)
+        #~ #
+        #~ # add resize handler
+        #~ #
+        #~ #self.energy_Col_graph_canvas[0].bind("<Configure>", self.on_resize)
 
-        #
-        # set text fields for each bottom
-        #
+        #~ #
+        #~ # set text fields for each bottom
+        #~ #
 
-        self.energy_Col_Label = []
-        self.energy_Col_text = []
-        for sensorIndex in xrange(6):
-            myStringVar = tk.StringVar()
-            myStringVar.set("0 mA")
-            myField = tk.Label(self.energy_Col_LabelFrame[sensorIndex], textvariable=myStringVar)
-            myField.grid(column=0,row=1, sticky=tk.E + tk.W + tk.N + tk.S )
-            self.energy_Col_Label.append( myField )
-            self.energy_Col_text.append( myStringVar )
+        #~ self.energy_Col_Label = []
+        #~ self.energy_Col_text = []
+        #~ for sensorIndex in xrange(6):
+            #~ myStringVar = tk.StringVar()
+            #~ myStringVar.set("0 mA")
+            #~ myField = tk.Label(self.energy_Col_LabelFrame[sensorIndex], textvariable=myStringVar)
+            #~ myField.grid(column=0,row=1, sticky=tk.E + tk.W + tk.N + tk.S )
+            #~ self.energy_Col_Label.append( myField )
+            #~ self.energy_Col_text.append( myStringVar )
 
 
 
@@ -583,18 +594,18 @@ class SolarServer():
             print('sending to %s:%s msg %s' % (self.listner_address[0], self.listner_address[1], json))
             self.socket.sendto(json, self.listner_address)
 
-def main():
-    app = Application()
-    #app.master.title('Solar Panel Monitor')
-    app.setSolar( setupSolar() )
+def main(config):
+    #~ app = Application()
+    #~ app.setSolar( setupSolar() )
 
-    app.mySolarServer = SolarServer()
+    #~ app.mySolarServer = SolarServer()
 
-    #app.after(0,app.periodicEventHandler);
-    #app.mainloop() ;
+    mySolarSensors = SolarSensors(config)
 
     while True:
-        app.periodicEventHandler()
+        #~ app.periodicEventHandler()
+        data = mySolarSensors.getData()
+        print(data)
         time.sleep(1.0)
 
 
@@ -602,4 +613,9 @@ def main():
 
 
 if __name__ == "__main__":
-    main();
+    fp = open("config.json", "r")
+    config_string = fp.read()
+    fp.close()
+    config = json.loads(config_string)
+
+    main(config)

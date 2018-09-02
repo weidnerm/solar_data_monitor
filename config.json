@@ -1,0 +1,52 @@
+[
+    {
+        "address": "0x45", 
+        "name": "Panel", 
+        "scale": 2.0
+    }, 
+    {
+        "address": "0x49", 
+        "name": "Batt 5", 
+        "scale": 1.0
+    }, 
+    {
+        "address": "0x41", 
+        "name": "Batt 6", 
+        "scale": 1.0
+    }, 
+    {
+        "address": "0x40", 
+        "name": "Load", 
+        "scale": 2.0
+    }, 
+    {
+        "address": "0x42", 
+        "name": "Batt 7", 
+        "scale": 1.0
+    }, 
+    {
+        "address": "0x43", 
+        "name": "Batt 8", 
+        "scale": 1.0
+    }, 
+    {
+        "address": "0x48", 
+        "name": "Batt 4", 
+        "scale": 1.0
+    }, 
+    {
+        "address": "0x47", 
+        "name": "Batt 3", 
+        "scale": 1.0
+    }, 
+    {
+        "address": "0x4a", 
+        "name": "Batt 2", 
+        "scale": 1.0
+    }, 
+    {
+        "address": "0x46", 
+        "name": "Batt 1", 
+        "scale": 1.0
+    }
+]
