@@ -5,7 +5,7 @@ from mock import patch, call, MagicMock
 from SolarDb import SolarDb
 
 import os
-
+import time
 
 class SolarDb_test(TestCase):
 
@@ -146,6 +146,55 @@ class SolarDb_test(TestCase):
         self.assertEqual(-34, int(mySolarDb.data['Batt 5']['prev_cumulativeEnergy']))
 
 
+    def test__is_write_to_file_needed__no_elapsed(self):
+        mySolarDb = SolarDb("myprefix", self.get_default_config() )
+        mySolarDb.last_10_min_block = (19*60+21)/10
+
+        result = mySolarDb.is_write_to_file_needed( 
+                    time.mktime((2018,9,4, 19,21,8, 1,247, 1 )) )
+        
+        self.assertEqual(False, result)
+        self.assertEqual((19*60+21)/10, mySolarDb.last_10_min_block)
+
+    def test__is_write_to_file_needed__lastSecondOfWindow(self):
+        mySolarDb = SolarDb("myprefix", self.get_default_config() )
+        mySolarDb.last_10_min_block = (19*60+21)/10
+
+        result = mySolarDb.is_write_to_file_needed( 
+                    time.mktime((2018,9,4, 19,29,59, 1,247, 1 )) )
+        
+        self.assertEqual(False, result)
+        self.assertEqual((19*60+29)/10, mySolarDb.last_10_min_block)
+
+    def test__is_write_to_file_needed__firstSecondOfNextWindow(self):
+        mySolarDb = SolarDb("myprefix", self.get_default_config() )
+        mySolarDb.last_10_min_block = (19*60+21)/10
+
+        print "mySolarDb.last_10_min_block=%d" %(mySolarDb.last_10_min_block)
+
+        result = mySolarDb.is_write_to_file_needed( 
+                    time.mktime((2018,9,4, 19,30,00, 1,247, 1 )) )
+        
+        self.assertEqual(True, result)
+        self.assertEqual((19*60+30)/10, mySolarDb.last_10_min_block)
+                
+
+
+    #~ def test_time_formatting(self):
+        
+        #~ cur_time_full = time.time()
+        #~ cur_date = time.strftime("%Y_%m_%d", time.localtime(cur_time_full))
+        #~ cur_time = time.strftime("%H:%M:%S", time.localtime(cur_time_full))
+        
+        #~ print(cur_time_full)
+        #~ print(cur_date)
+        #~ print(cur_time)
+        #~ print(time.localtime(cur_time_full))
+        #~ print(time.localtime(cur_time_full).tm_hour)
+        #~ print(time.localtime(cur_time_full).tm_min)
+        #~ print(time.localtime(cur_time_full).tm_sec)
+        
+        
 if __name__ == '__main__':
     main()
 

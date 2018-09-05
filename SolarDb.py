@@ -24,9 +24,13 @@ class SolarDb:
             tempVal["prev_maxEnergy"] = 0
             tempVal["prev_cumulativeEnergy"] = 0
             self.data[entry["name"]] = tempVal
+        self.fileUpdateInterval = 10 # minutes
 
-
-
+        cur_time_full = time.time()
+        cur_time_full_struct = time.localtime(cur_time_full)
+        cur_10_min_block = int((cur_time_full_struct.tm_hour*60 + cur_time_full_struct.tm_min)/self.fileUpdateInterval)
+        self.last_10_min_block = cur_10_min_block
+            
 
 
         # original config stuff
@@ -92,22 +96,25 @@ class SolarDb:
 
 
     def addEntry(self, data):
-        cur_date = time.strftime("%Y_%m_%d")
-        cur_time = time.strftime("%H:%M:%S")
-
         # solarData = {} ['names'] = [index] = strings
         #                ['voltage'] = [index] = float
         #                ['current'] = [index] = int
+
+        cur_time_secs = time.time()
+        cur_date_str = time.strftime("%Y_%m_%d", time.localtime(cur_time_secs))
+        cur_time_str = time.strftime("%H:%M:%S", time.localtime(cur_time_secs))
 
         for index in xrange(len(data["voltage"])):
             name = data['names'][index]
 
             power_mA = data['current'][index] 
 
+            # accumulate mA hours
             entry = self.data[name]
             entry['today_cumulativeEnergy'] = entry['today_cumulativeEnergy'] + power_mA
             entry['prev_cumulativeEnergy'] = entry['prev_cumulativeEnergy'] + power_mA
 
+            # update min/max values
             if entry['today_minEnergy'] > entry['today_cumulativeEnergy']:
                 entry['today_minEnergy'] = entry['today_cumulativeEnergy']
             if entry['today_maxEnergy'] < entry['today_cumulativeEnergy']:
@@ -118,8 +125,29 @@ class SolarDb:
             if entry['prev_maxEnergy'] < entry['prev_cumulativeEnergy']:
                 entry['prev_maxEnergy'] = entry['prev_cumulativeEnergy']
 
-            
+            # update file if needed
+            if self.is_write_to_file_needed(cur_time_secs):
+                #~ self.write_data_to_file()
+                #~ self.reset_10_min_data()
+                pass
 
+
+
+    def is_write_to_file_needed(self, cur_time_secs):
+        write_needed = False
+
+        cur_time_full_struct = time.localtime(cur_time_secs)
+        cur_10_min_block = int((cur_time_full_struct.tm_hour*60 + cur_time_full_struct.tm_min)/self.fileUpdateInterval)
+        
+        print "cur_10_min_block=%d" %(cur_10_min_block)
+        
+        # write data to a file if its time
+        if cur_10_min_block != self.last_10_min_block:
+            
+            self.last_10_min_block = cur_10_min_block
+            write_needed = True
+
+        return write_needed
 
 
 
