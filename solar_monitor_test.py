@@ -3,7 +3,6 @@ from unittest import TestCase, main, skip
 from mock import patch, call, MagicMock
 
 import os
-
 from solar_monitor import SolarSensors;
 from solar_monitor import Solar;
 from solar_monitor import SolarDb;
@@ -370,7 +369,7 @@ class TestSolar(TestCase):
     def test_database_file_read(self):
         self.m_solar.m_SolarDb.m_filenamePrefix = "example_solarLog_"
         (log,filename) = self.m_solar.m_SolarDb.readDayLog(0)
-        
+
         self.assertEqual("example_solarLog_9999_99_99.csv", filename);
         self.assertEqual(6, len(log));
         self.assertEqual(True, ("name" in log[0]) );
@@ -409,7 +408,7 @@ class TestSolar(TestCase):
         self.assertEqual(100, len(log[1]["time"]) );
         self.assertEqual(100, len(log[2]["time"]) );
         self.assertEqual(100, len(log[3]["time"]) );
-        
+
         # check first actual values
         self.assertEqual(0.388, log[0]["voltage"][0] );
         self.assertEqual(12.776, log[1]["voltage"][0] );
@@ -467,13 +466,13 @@ class TestSolar(TestCase):
         self.assertEqual(12.772, log[1]["minVoltage"] );
         self.assertEqual(12.792, log[2]["minVoltage"] );
         self.assertEqual(12.756, log[3]["minVoltage"] );
-        
-        
+
+
     def test_database_file_cumulative_power(self):
         self.m_solar.m_SolarDb.m_filenamePrefix = "example_solarLog_"
         (log,filename) = self.m_solar.m_SolarDb.readDayLog(0)
         todayStats = self.m_solar.computeNetPower(log)
-        
+
         self.assertEqual("example_solarLog_9999_99_99.csv", filename);
 
         self.assertEqual(  -100,todayStats[0]["minEnergy"] );
@@ -499,7 +498,7 @@ class TestSolar(TestCase):
 
         (log,filename) = self.m_solar.m_SolarDb.readDayLog(0)
         todayStats = self.m_solar.computeNetPower(log, prevPwr=todayStats)
-        
+
         self.assertEqual("example_solarLog_9999_99_99.csv", filename);
 
         self.assertEqual(  -200,todayStats[0]["minEnergy"] );
@@ -524,7 +523,7 @@ class TestSolar(TestCase):
         self.assertEqual( 27000, todayStats[5]["cumulativeEnergy"] );
 
 
-        
+
 class TestSolarDb(TestCase):
 
     def setUp(self):
@@ -543,7 +542,7 @@ class TestSolarDb(TestCase):
         for f in os.listdir(dir):
             if ( "test_solarLog_" == f[:14]) and (".csv" == f[-4:]):
                 os.remove(os.path.join(dir, f))
-                
+
     def setupFiles(self):
         test_dates = ["2016_12_06","2016_12_07","2016_12_08","2016_12_09","2016_12_10","2016_12_11","2016_12_12","2015_12_12","2016_12_13","2016_12_14","2016_12_15","2016_12_16"]
 
@@ -551,7 +550,7 @@ class TestSolarDb(TestCase):
             f = open("test_solarLog_"+test_dates[index]+".csv", "w")
             f.write("data and stuff");
             f.close();
-            
+
     def test_index_0(self):
         self.assertEqual("test_solarLog_2016_12_16.csv", self.m_SolarDb.getFilenameFromIndex(0));
         self.assertEqual("test_solarLog_2016_12_15.csv", self.m_SolarDb.getFilenameFromIndex(1));
@@ -573,7 +572,7 @@ class TestSolarServer(TestCase):
     @patch('solar_monitor.OneFifo')
     def test_json_encoding(self, MockFifo):
         mySolarServer = SolarServer()
-        
+
         self.liveData= {'current': [481, -9, -9, 508, -10, -7], 'names': ['Solar Panel (45)', 'Battery 1 (44)', 'Battery 2 (41)', 'Load (40)', 'Battery 3 (42)', 'Battery 4 (43)'], 'voltage': [12.8, 12.784, 12.788, 12.72, 12.788, 12.784]}
         self.todayStats=[{'minEnergy': -40835, 'maxEnergy': 464254, 'cumulativeEnergy': 1023527}, {'minEnergy': -2548584, 'maxEnergy': 0, 'cumulativeEnergy': -2555061}, {'minEnergy': -2910363, 'maxEnergy': 0, 'cumulativeEnergy': -2917287}, {'minEnergy': 0, 'maxEnergy': 9375894, 'cumulativeEnergy': 9950640}, {'minEnergy': -1150545, 'maxEnergy': 0, 'cumulativeEnergy': -1161193}, {'minEnergy': -2515585, 'maxEnergy': 0, 'cumulativeEnergy': -2518135}]
         self.prevStats=[{'minEnergy': -145671, 'maxEnergy': 50765078, 'cumulativeEnergy': 50765078}, {'minEnergy': -1538480, 'maxEnergy': 5126758, 'cumulativeEnergy': 1609841}, {'minEnergy': -1377283, 'maxEnergy': 6316718, 'cumulativeEnergy': 1839852}, {'minEnergy': -32, 'maxEnergy': 50865501, 'cumulativeEnergy': 50865501}, {'minEnergy': -1246506, 'maxEnergy': 3054705, 'cumulativeEnergy': 1764099}, {'minEnergy': -1549819, 'maxEnergy': 4751085, 'cumulativeEnergy': 1633581}]

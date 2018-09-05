@@ -91,18 +91,16 @@ class SolarDb_test(TestCase):
         mySolarDb = SolarDb("myprefix", self.get_default_config() )
 
         self.assertEqual("myprefix", mySolarDb.m_filenamePrefix)
-        self.assertEqual({
-            'Panel':  {'today_minEnergy': 0, 'today_maxEnergy': 0, 'today_cumulativeEnergy': 0, 'prev_minEnergy': 0, 'prev_maxEnergy': 0, 'prev_cumulativeEnergy': 0},
-            'Load':   {'today_minEnergy': 0, 'today_maxEnergy': 0, 'today_cumulativeEnergy': 0, 'prev_minEnergy': 0, 'prev_maxEnergy': 0, 'prev_cumulativeEnergy': 0},
-            'Batt 1': {'today_minEnergy': 0, 'today_maxEnergy': 0, 'today_cumulativeEnergy': 0, 'prev_minEnergy': 0, 'prev_maxEnergy': 0, 'prev_cumulativeEnergy': 0},
-            'Batt 2': {'today_minEnergy': 0, 'today_maxEnergy': 0, 'today_cumulativeEnergy': 0, 'prev_minEnergy': 0, 'prev_maxEnergy': 0, 'prev_cumulativeEnergy': 0},
-            'Batt 3': {'today_minEnergy': 0, 'today_maxEnergy': 0, 'today_cumulativeEnergy': 0, 'prev_minEnergy': 0, 'prev_maxEnergy': 0, 'prev_cumulativeEnergy': 0},
-            'Batt 4': {'today_minEnergy': 0, 'today_maxEnergy': 0, 'today_cumulativeEnergy': 0, 'prev_minEnergy': 0, 'prev_maxEnergy': 0, 'prev_cumulativeEnergy': 0},
-            'Batt 5': {'today_minEnergy': 0, 'today_maxEnergy': 0, 'today_cumulativeEnergy': 0, 'prev_minEnergy': 0, 'prev_maxEnergy': 0, 'prev_cumulativeEnergy': 0},
-            'Batt 6': {'today_minEnergy': 0, 'today_maxEnergy': 0, 'today_cumulativeEnergy': 0, 'prev_minEnergy': 0, 'prev_maxEnergy': 0, 'prev_cumulativeEnergy': 0},
-            'Batt 7': {'today_minEnergy': 0, 'today_maxEnergy': 0, 'today_cumulativeEnergy': 0, 'prev_minEnergy': 0, 'prev_maxEnergy': 0, 'prev_cumulativeEnergy': 0},
-            'Batt 8': {'today_minEnergy': 0, 'today_maxEnergy': 0, 'today_cumulativeEnergy': 0, 'prev_minEnergy': 0, 'prev_maxEnergy': 0, 'prev_cumulativeEnergy': 0},
-            }, mySolarDb.data)
+        self.assertEqual(mySolarDb.data['Panel'] , {'10minute_mAsec': 0, 'today_minEnergy': 0, 'today_maxEnergy': 0, 'today_cumulativeEnergy': 0, 'prev_minEnergy': 999999999, 'prev_maxEnergy': -999999999, 'prev_cumulativeEnergy': 0})
+        self.assertEqual(mySolarDb.data['Load']  , {'10minute_mAsec': 0, 'today_minEnergy': 0, 'today_maxEnergy': 0, 'today_cumulativeEnergy': 0, 'prev_minEnergy': 999999999, 'prev_maxEnergy': -999999999, 'prev_cumulativeEnergy': 0})
+        self.assertEqual(mySolarDb.data['Batt 1'], {'10minute_mAsec': 0, 'today_minEnergy': 0, 'today_maxEnergy': 0, 'today_cumulativeEnergy': 0, 'prev_minEnergy': 999999999, 'prev_maxEnergy': -999999999, 'prev_cumulativeEnergy': 0})
+        self.assertEqual(mySolarDb.data['Batt 2'], {'10minute_mAsec': 0, 'today_minEnergy': 0, 'today_maxEnergy': 0, 'today_cumulativeEnergy': 0, 'prev_minEnergy': 999999999, 'prev_maxEnergy': -999999999, 'prev_cumulativeEnergy': 0})
+        self.assertEqual(mySolarDb.data['Batt 3'], {'10minute_mAsec': 0, 'today_minEnergy': 0, 'today_maxEnergy': 0, 'today_cumulativeEnergy': 0, 'prev_minEnergy': 999999999, 'prev_maxEnergy': -999999999, 'prev_cumulativeEnergy': 0})
+        self.assertEqual(mySolarDb.data['Batt 4'], {'10minute_mAsec': 0, 'today_minEnergy': 0, 'today_maxEnergy': 0, 'today_cumulativeEnergy': 0, 'prev_minEnergy': 999999999, 'prev_maxEnergy': -999999999, 'prev_cumulativeEnergy': 0})
+        self.assertEqual(mySolarDb.data['Batt 5'], {'10minute_mAsec': 0, 'today_minEnergy': 0, 'today_maxEnergy': 0, 'today_cumulativeEnergy': 0, 'prev_minEnergy': 999999999, 'prev_maxEnergy': -999999999, 'prev_cumulativeEnergy': 0})
+        self.assertEqual(mySolarDb.data['Batt 6'], {'10minute_mAsec': 0, 'today_minEnergy': 0, 'today_maxEnergy': 0, 'today_cumulativeEnergy': 0, 'prev_minEnergy': 999999999, 'prev_maxEnergy': -999999999, 'prev_cumulativeEnergy': 0})
+        self.assertEqual(mySolarDb.data['Batt 7'], {'10minute_mAsec': 0, 'today_minEnergy': 0, 'today_maxEnergy': 0, 'today_cumulativeEnergy': 0, 'prev_minEnergy': 999999999, 'prev_maxEnergy': -999999999, 'prev_cumulativeEnergy': 0})
+        self.assertEqual(mySolarDb.data['Batt 8'], {'10minute_mAsec': 0, 'today_minEnergy': 0, 'today_maxEnergy': 0, 'today_cumulativeEnergy': 0, 'prev_minEnergy': 999999999, 'prev_maxEnergy': -999999999, 'prev_cumulativeEnergy': 0})
 
     def test_addEntry(self):
         mySolarDb = SolarDb("myprefix", self.get_default_config() )
@@ -115,77 +113,122 @@ class SolarDb_test(TestCase):
 
         mySolarDb.addEntry(data)
 
+        self.assertEqual(308, int(mySolarDb.data['Panel']['10minute_mAsec']))
         self.assertEqual(0, int(mySolarDb.data['Panel']['today_minEnergy']))
         self.assertEqual(308, int(mySolarDb.data['Panel']['today_maxEnergy']))
         self.assertEqual(308, int(mySolarDb.data['Panel']['today_cumulativeEnergy']))
-        self.assertEqual(0, int(mySolarDb.data['Panel']['prev_minEnergy']))
+        self.assertEqual(308, int(mySolarDb.data['Panel']['prev_minEnergy']))
         self.assertEqual(308, int(mySolarDb.data['Panel']['prev_maxEnergy']))
         self.assertEqual(308, int(mySolarDb.data['Panel']['prev_cumulativeEnergy']))
 
+        self.assertEqual(-17, int(mySolarDb.data['Batt 5']['10minute_mAsec']))
         self.assertEqual(-17, int(mySolarDb.data['Batt 5']['today_minEnergy']))
         self.assertEqual(0, int(mySolarDb.data['Batt 5']['today_maxEnergy']))
         self.assertEqual(-17, int(mySolarDb.data['Batt 5']['today_cumulativeEnergy']))
         self.assertEqual(-17, int(mySolarDb.data['Batt 5']['prev_minEnergy']))
-        self.assertEqual(0, int(mySolarDb.data['Batt 5']['prev_maxEnergy']))
+        self.assertEqual(-17, int(mySolarDb.data['Batt 5']['prev_maxEnergy']))
         self.assertEqual(-17, int(mySolarDb.data['Batt 5']['prev_cumulativeEnergy']))
 
         mySolarDb.addEntry(data)
 
+        self.assertEqual(616, int(mySolarDb.data['Panel']['10minute_mAsec']))
         self.assertEqual(0, int(mySolarDb.data['Panel']['today_minEnergy']))
         self.assertEqual(616, int(mySolarDb.data['Panel']['today_maxEnergy']))
         self.assertEqual(616, int(mySolarDb.data['Panel']['today_cumulativeEnergy']))
-        self.assertEqual(0, int(mySolarDb.data['Panel']['prev_minEnergy']))
+        self.assertEqual(308, int(mySolarDb.data['Panel']['prev_minEnergy']))
         self.assertEqual(616, int(mySolarDb.data['Panel']['prev_maxEnergy']))
         self.assertEqual(616, int(mySolarDb.data['Panel']['prev_cumulativeEnergy']))
 
+        self.assertEqual(-34, int(mySolarDb.data['Batt 5']['10minute_mAsec']))
         self.assertEqual(-34, int(mySolarDb.data['Batt 5']['today_minEnergy']))
         self.assertEqual(0, int(mySolarDb.data['Batt 5']['today_maxEnergy']))
         self.assertEqual(-34, int(mySolarDb.data['Batt 5']['today_cumulativeEnergy']))
         self.assertEqual(-34, int(mySolarDb.data['Batt 5']['prev_minEnergy']))
-        self.assertEqual(0, int(mySolarDb.data['Batt 5']['prev_maxEnergy']))
+        self.assertEqual(-17, int(mySolarDb.data['Batt 5']['prev_maxEnergy']))
         self.assertEqual(-34, int(mySolarDb.data['Batt 5']['prev_cumulativeEnergy']))
 
 
-    def test__is_write_to_file_needed__no_elapsed(self):
+
+    def test__evaluate_rollovers__no_elapsed(self):
         mySolarDb = SolarDb("myprefix", self.get_default_config() )
         mySolarDb.last_10_min_block = (19*60+21)/10
 
-        result = mySolarDb.is_write_to_file_needed( 
+        result = mySolarDb.evaluate_rollovers(
                     time.mktime((2018,9,4, 19,21,8, 1,247, 1 )) )
-        
-        self.assertEqual(False, result)
+
+        self.assertEqual((False, False), result)
         self.assertEqual((19*60+21)/10, mySolarDb.last_10_min_block)
 
-    def test__is_write_to_file_needed__lastSecondOfWindow(self):
+    def test__evaluate_rollovers__lastSecondOfWindow(self):
         mySolarDb = SolarDb("myprefix", self.get_default_config() )
         mySolarDb.last_10_min_block = (19*60+21)/10
 
-        result = mySolarDb.is_write_to_file_needed( 
+        result = mySolarDb.evaluate_rollovers(
                     time.mktime((2018,9,4, 19,29,59, 1,247, 1 )) )
-        
-        self.assertEqual(False, result)
+
+        self.assertEqual((False, False), result)
         self.assertEqual((19*60+29)/10, mySolarDb.last_10_min_block)
 
-    def test__is_write_to_file_needed__firstSecondOfNextWindow(self):
+    def test__evaluate_rollovers__firstSecondOfNextWindow(self):
         mySolarDb = SolarDb("myprefix", self.get_default_config() )
         mySolarDb.last_10_min_block = (19*60+21)/10
 
         print "mySolarDb.last_10_min_block=%d" %(mySolarDb.last_10_min_block)
 
-        result = mySolarDb.is_write_to_file_needed( 
+        result = mySolarDb.evaluate_rollovers(
                     time.mktime((2018,9,4, 19,30,00, 1,247, 1 )) )
-        
-        self.assertEqual(True, result)
-        self.assertEqual((19*60+30)/10, mySolarDb.last_10_min_block)
-                
 
+        self.assertEqual((True, False), result)
+        self.assertEqual((19*60+30)/10, mySolarDb.last_10_min_block)
+
+    def test__evaluate_rollovers__dailyRolloverMidnight(self):
+        mySolarDb = SolarDb("myprefix", self.get_default_config() )
+        mySolarDb.last_10_min_block = (23*60+55)/10
+
+        print "mySolarDb.last_10_min_block=%d" %(mySolarDb.last_10_min_block)
+
+        result = mySolarDb.evaluate_rollovers(
+                    time.mktime((2018,9,4, 0,0,00, 1,247, 1 )) )
+
+        self.assertEqual((True, True), result)
+        self.assertEqual((0*60+0)/10, mySolarDb.last_10_min_block)
+
+    def test__reset_todays_data(self):
+        mySolarDb = SolarDb("myprefix", self.get_default_config() )
+
+        # make the data something other than the defaults
+        mySolarDb.data['Load'  ]['10minute_mAsec'] = 100
+        mySolarDb.data['Load'  ]['today_cumulativeEnergy'] = 100
+        mySolarDb.data['Load'  ]['prev_maxEnergy'] = -100
+        mySolarDb.data['Load'  ]['prev_cumulativeEnergy'] = 100
+        mySolarDb.data['Load'  ]['today_maxEnergy'] = 100
+        mySolarDb.data['Load'  ]['prev_minEnergy'] = 100
+        mySolarDb.data['Load'  ]['today_minEnergy'] = 1000
+
+        mySolarDb.reset_todays_data()
+
+        self.assertEqual(mySolarDb.data['Load'  ], {'10minute_mAsec': 100, 'today_cumulativeEnergy': 0, 'prev_maxEnergy': -999999999, 'prev_cumulativeEnergy': 0, 'today_maxEnergy': 0, 'prev_minEnergy': 999999999, 'today_minEnergy': 0})
+        self.assertEqual(mySolarDb.data['Batt 2'], {'10minute_mAsec': 0, 'today_cumulativeEnergy': 0, 'prev_maxEnergy': -999999999, 'prev_cumulativeEnergy': 0, 'today_maxEnergy': 0, 'prev_minEnergy': 999999999, 'today_minEnergy': 0})
+        self.assertEqual(mySolarDb.data['Batt 8'], {'10minute_mAsec': 0, 'today_cumulativeEnergy': 0, 'prev_maxEnergy': -999999999, 'prev_cumulativeEnergy': 0, 'today_maxEnergy': 0, 'prev_minEnergy': 999999999, 'today_minEnergy': 0})
+        self.assertEqual(mySolarDb.data['Batt 1'], {'10minute_mAsec': 0, 'today_cumulativeEnergy': 0, 'prev_maxEnergy': -999999999, 'prev_cumulativeEnergy': 0, 'today_maxEnergy': 0, 'prev_minEnergy': 999999999, 'today_minEnergy': 0})
+        self.assertEqual(mySolarDb.data['Batt 3'], {'10minute_mAsec': 0, 'today_cumulativeEnergy': 0, 'prev_maxEnergy': -999999999, 'prev_cumulativeEnergy': 0, 'today_maxEnergy': 0, 'prev_minEnergy': 999999999, 'today_minEnergy': 0})
+        self.assertEqual(mySolarDb.data['Panel' ], {'10minute_mAsec': 0, 'today_cumulativeEnergy': 0, 'prev_maxEnergy': -999999999, 'prev_cumulativeEnergy': 0, 'today_maxEnergy': 0, 'prev_minEnergy': 999999999, 'today_minEnergy': 0})
+        self.assertEqual(mySolarDb.data['Batt 5'], {'10minute_mAsec': 0, 'today_cumulativeEnergy': 0, 'prev_maxEnergy': -999999999, 'prev_cumulativeEnergy': 0, 'today_maxEnergy': 0, 'prev_minEnergy': 999999999, 'today_minEnergy': 0})
+        self.assertEqual(mySolarDb.data['Batt 4'], {'10minute_mAsec': 0, 'today_cumulativeEnergy': 0, 'prev_maxEnergy': -999999999, 'prev_cumulativeEnergy': 0, 'today_maxEnergy': 0, 'prev_minEnergy': 999999999, 'today_minEnergy': 0})
+        self.assertEqual(mySolarDb.data['Batt 7'], {'10minute_mAsec': 0, 'today_cumulativeEnergy': 0, 'prev_maxEnergy': -999999999, 'prev_cumulativeEnergy': 0, 'today_maxEnergy': 0, 'prev_minEnergy': 999999999, 'today_minEnergy': 0})
+        self.assertEqual(mySolarDb.data['Batt 6'], {'10minute_mAsec': 0, 'today_cumulativeEnergy': 0, 'prev_maxEnergy': -999999999, 'prev_cumulativeEnergy': 0, 'today_maxEnergy': 0, 'prev_minEnergy': 999999999, 'today_minEnergy': 0})
+
+    def test__reset_10_min_data(self):
+        mySolarDb = SolarDb("myprefix", self.get_default_config() )
+
+        mySolarDb.reset_todays_data()
 
     #~ def test_time_formatting(self):
-        
+
         #~ cur_time_full = time.time()
         #~ cur_date = time.strftime("%Y_%m_%d", time.localtime(cur_time_full))
         #~ cur_time = time.strftime("%H:%M:%S", time.localtime(cur_time_full))
-        
+
         #~ print(cur_time_full)
         #~ print(cur_date)
         #~ print(cur_time)
@@ -193,8 +236,8 @@ class SolarDb_test(TestCase):
         #~ print(time.localtime(cur_time_full).tm_hour)
         #~ print(time.localtime(cur_time_full).tm_min)
         #~ print(time.localtime(cur_time_full).tm_sec)
-        
-        
+
+
 if __name__ == '__main__':
     main()
 
