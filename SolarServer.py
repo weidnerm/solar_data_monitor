@@ -42,9 +42,9 @@ class SolarServer():
             outputDict["names"].append( name )
             outputDict["voltage"].append( liveData["voltage"][index] )
             outputDict["current"].append( liveData["current"][index] )
-            outputDict["todayCumulativeEnergy"].append( solarDb.data[name]["today_cumulativeEnergy"] )
-            outputDict["cumulativeEnergy"].append( solarDb.data[name]["prev_cumulativeEnergy"] )
-            outputDict["maxEnergy"].append( solarDb.data[name]["prev_maxEnergy"] )
+            outputDict["todayCumulativeEnergy"].append( solarDb.data[name]["today_mAsec"] )
+            outputDict["cumulativeEnergy"].append( solarDb.data[name]["prev_mAsec"] )
+            outputDict["maxEnergy"].append( solarDb.data[name]["prev_mAsec_max"] )
 
         jsonOutput = json.dumps(outputDict)
 

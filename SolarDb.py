@@ -1,31 +1,45 @@
 import time
 import os
-
+import json
 
 class SolarDb:
     def __init__(self, filenamePrefix, config):
         self.config = config
-        self.m_filenamePrefix = filenamePrefix;
+        self.m_filenamePrefix = filenamePrefix
 
         # self.data = {} [<name>] = {}
-        #                              ["today_minEnergy"] = int
-        #                              ["today_maxEnergy"] = int
-        #                              ["today_cumulativeEnergy"] = int
-        #                              ["prev_minEnergy"] = int
-        #                              ["prev_maxEnergy"] = int
-        #                              ["prev_cumulativeEnergy"] = int
+        #                              ["10minute_mAsec"] = int
+        #                              ["today_mAsec_min"] = int
+        #                              ["today_mAsec_max"] = int
+        #                              ["today_mAsec"] = int
+        #                              ["prev_mAsec_min"] = int
+        #                              ["prev_mAsec_max"] = int
+        #                              ["prev_mAsec"] = int
         self.data = {}
-        for entry in config:
+        for entry in self.config:
             tempVal = {}
-            tempVal["today_minEnergy"] = 0  # mA*Sec
-            tempVal["today_maxEnergy"] = 0
-            tempVal["today_cumulativeEnergy"] = 0
-            tempVal["prev_minEnergy"] = 0
-            tempVal["prev_maxEnergy"] = 0
-            tempVal["prev_cumulativeEnergy"] = 0
+            tempVal["10minute_mAsec"] = 0
+            tempVal["10minute_mAsec_min"] = 999999999
+            tempVal["10minute_mAsec_max"] = -999999999
+            tempVal["10minute_count"] = 0
+            tempVal["today_mAsec_min"] = 999999999  # mA*Sec
+            tempVal["today_mAsec_max"] = -999999999
+            tempVal["today_mAsec"] = 0
+            tempVal["today_count"] = 0
+            tempVal["prev_mAsec_min"] = 999999999
+            tempVal["prev_mAsec_max"] = -999999999
+            tempVal["prev_mAsec"] = 0
+            tempVal["prev_count"] = 0
             self.data[entry["name"]] = tempVal
+        self.reset_todays_data()
 
+        self.fileUpdateInterval = 10 # minutes
 
+        cur_time_full = time.time()
+        cur_time_full_struct = time.localtime(cur_time_full)
+        cur_10_min_block = int((cur_time_full_struct.tm_hour*60 + cur_time_full_struct.tm_min)/self.fileUpdateInterval)
+        self.last_10_min_block = cur_10_min_block
+        self.cur_date_str = None
 
 
 
@@ -92,34 +106,148 @@ class SolarDb:
 
 
     def addEntry(self, data):
-        cur_date = time.strftime("%Y_%m_%d")
-        cur_time = time.strftime("%H:%M:%S")
-
         # solarData = {} ['names'] = [index] = strings
         #                ['voltage'] = [index] = float
         #                ['current'] = [index] = int
 
+        cur_time_secs = time.time()
+
+        # update file if needed
+        reset_10min, reset_day = self.evaluate_rollovers(cur_time_secs)
+
+        # write data entry if needed and flush old totals
+        if reset_10min:
+            self.write_data_to_file(cur_time_secs)
+            self.reset_10_min_data()
+
+        # reset daily totals if needed
+        if reset_day:
+            self.reset_todays_data()
+
+        self.cur_time_str = time.strftime("%H:%M:%S", time.localtime(cur_time_secs))
+        self.cur_date_str = time.strftime("%Y_%m_%d", time.localtime(cur_time_secs)) # update date after write so that we use previous date so midnight works
+
+        # accumulate the new data entry
         for index in xrange(len(data["voltage"])):
             name = data['names'][index]
 
-            power_mA = data['current'][index] 
+            power_mA = data['current'][index]
 
+            # accumulate mA hours
             entry = self.data[name]
-            entry['today_cumulativeEnergy'] = entry['today_cumulativeEnergy'] + power_mA
-            entry['prev_cumulativeEnergy'] = entry['prev_cumulativeEnergy'] + power_mA
+            entry['10minute_mAsec'] = entry['10minute_mAsec'] + power_mA
+            entry['today_mAsec'] = entry['today_mAsec'] + power_mA
+            entry['prev_mAsec'] = entry['prev_mAsec'] + power_mA
 
-            if entry['today_minEnergy'] > entry['today_cumulativeEnergy']:
-                entry['today_minEnergy'] = entry['today_cumulativeEnergy']
-            if entry['today_maxEnergy'] < entry['today_cumulativeEnergy']:
-                entry['today_maxEnergy'] = entry['today_cumulativeEnergy']
+            # update count values
+            entry = self.data[name]
+            entry['10minute_count'] = entry['10minute_count'] + 1
+            entry['today_count'] = entry['today_count'] + 1
+            entry['prev_count'] = entry['prev_count'] + 1
 
-            if entry['prev_minEnergy'] > entry['prev_cumulativeEnergy']:
-                entry['prev_minEnergy'] = entry['prev_cumulativeEnergy']
-            if entry['prev_maxEnergy'] < entry['prev_cumulativeEnergy']:
-                entry['prev_maxEnergy'] = entry['prev_cumulativeEnergy']
+            # update today min/max values
+            if entry['10minute_mAsec_min'] > entry['10minute_mAsec']: # if tracked min is too big
+                entry['10minute_mAsec_min'] = entry['10minute_mAsec']
+            if entry['10minute_mAsec_max'] < entry['10minute_mAsec']: # if tracked max is too small
+                entry['10minute_mAsec_max'] = entry['10minute_mAsec']
 
-            
+            # update today min/max values
+            if entry['today_mAsec_min'] > entry['today_mAsec']: # if tracked min is too big
+                entry['today_mAsec_min'] = entry['today_mAsec']
+            if entry['today_mAsec_max'] < entry['today_mAsec']: # if tracked max is too small
+                entry['today_mAsec_max'] = entry['today_mAsec']
 
+            # update cumulative min/max values
+            if entry['prev_mAsec_min'] > entry['prev_mAsec']:
+                entry['prev_mAsec_min'] = entry['prev_mAsec']
+            if entry['prev_mAsec_max'] < entry['prev_mAsec']:
+                entry['prev_mAsec_max'] = entry['prev_mAsec']
+
+
+
+
+
+    # entry = {} ["time"] = seconds from time.time()
+    #            ["samples"] = number of samples present in this file
+    #            ["inputs"] = {}
+    #                          [<sourceName>] = [] = <mAsec>,<mAsec_min>,<mAsec_max>
+
+
+    def get_10min_entry(self, cur_time_secs):
+
+        data = {}
+        data['time_sec'] = cur_time_secs
+        data['time'] = self.cur_time_str
+        data['inputs'] = {}
+        for index in range(len(self.config)):
+            name = self.config[index]["name"]
+            data['inputs'][name] = []
+            data['inputs'][name].append( self.data[name]['10minute_mAsec'])
+            data['inputs'][name].append( self.data[name]['10minute_mAsec_min'])
+            data['inputs'][name].append( self.data[name]['10minute_mAsec_max'])
+
+            data['samples'] = self.data[name]['10minute_count']
+
+        return data
+
+
+
+    def write_data_to_file(self, cur_time_secs):
+        # if (self.data['Panel']['10minute_count'] > 0):  # make sure there is some data to write.  helps with very first run
+        if self.cur_date_str != None:
+            data = self.get_10min_entry(cur_time_secs)
+
+            data_json = json.dumps(data)
+
+            self.m_filename = self.m_filenamePrefix+self.cur_date_str+".csv"
+
+            f= open(self.m_filename,"a+")    # open for writing with append.  create if needed
+            f.write(data_json +'\n')
+            f.close()
+
+
+    def evaluate_rollovers(self, cur_time_secs):
+        write_needed = False
+        new_file_needed = False
+
+        cur_time_full_struct = time.localtime(cur_time_secs)
+        cur_10_min_block = int((cur_time_full_struct.tm_hour*60 + cur_time_full_struct.tm_min)/self.fileUpdateInterval)
+
+        # print "cur_10_min_block=%d" %(cur_10_min_block)
+
+        # write data to a file if its time
+        if cur_10_min_block != self.last_10_min_block:
+
+            self.last_10_min_block = cur_10_min_block
+            write_needed = True
+
+            if cur_10_min_block == 0:
+                new_file_needed = True
+
+        return write_needed, new_file_needed
+
+
+    def reset_todays_data(self):
+        for index in range(len(self.config)):
+            name = self.config[index]["name"]
+
+            self.data[name]["today_mAsec_min"] = 999999999  # mA*Sec
+            self.data[name]["today_mAsec_max"] = -999999999
+            self.data[name]["today_mAsec"] = 0
+            self.data[name]["today_count"] = 0
+            # self.data[name]["prev_mAsec_min"] = 999999999
+            # self.data[name]["prev_mAsec_max"] = -999999999
+            # self.data[name]["prev_mAsec"] = 0
+            # self.data[name]["prev_count"] = 0
+
+    def reset_10_min_data(self):
+        for index in range(len(self.config)):
+            name = self.config[index]["name"]
+
+            self.data[name]["10minute_mAsec"] = 0
+            self.data[name]["10minute_mAsec_min"] = 999999999
+            self.data[name]["10minute_mAsec_max"] = -999999999
+            self.data[name]["10minute_count"] = 0
 
 
 

@@ -92,18 +92,18 @@ class SolarServer_test(TestCase):
     def config_mocks(self, mockSelect, mockSocket, mockOneFifo):
         mockSocket.AF_INET=123
         mockSocket.SOCK_DGRAM=765
-        
+
         mockSelect.select.return_value = ([], [], [])
-        
+
     @patch('SolarServer.OneFifo')
     @patch('SolarServer.socket')
     @patch('SolarServer.select')
     def test_ctor(self, mockSelect, mockSocket, mockOneFifo):
         self.config_mocks(mockSelect, mockSocket, mockOneFifo)
-        
+
         mySolarServer = SolarServer()
-        
-        self.assertEqual([call(123, 765)], 
+
+        self.assertEqual([call(123, 765)],
             mockSocket.socket.call_args_list)
         self.assertEqual([call(('127.0.0.1', 29551))], mockSocket.socket.return_value.bind.call_args_list)
         self.assertEqual([call(False)], mockSocket.socket.return_value.setblocking.call_args_list)
@@ -122,13 +122,13 @@ class SolarServer_test(TestCase):
             'current': [308, -17, -15, 392, -21, -12, 2, 6, 3, 2346],
             'voltage': [12.844, 12.844, 12.848, 12.828, 12.848, 12.844, 12.832, 12.832, 12.836, 12.596]
             }
-        
+
         mySolarServer = SolarServer()
         mySolarServer.listner_address = ('127.0.0.1', 29552)
         mySolarServer.sendUpdate(live_data, mySolarDb)
-        
+
         self.assertEqual([call('{"cumulativeEnergy": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], '
-            '"maxEnergy": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], '
+            '"maxEnergy": [-999999999, -999999999, -999999999, -999999999, -999999999, -999999999, -999999999, -999999999, -999999999, -999999999], '
             '"current": [308, -17, -15, 392, -21, -12, 2, 6, 3, 2346], '
             '"names": ["Panel", "Batt 5", "Batt 6", "Load", "Batt 7", "Batt 8", "Batt 4", "Batt 3", "Batt 2", "Batt 1"], '
             '"todayCumulativeEnergy": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], '
@@ -137,7 +137,7 @@ class SolarServer_test(TestCase):
             , mockSocket.socket.return_value.sendto.call_args_list)
 
         self.assertEqual([call('{"cumulativeEnergy": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], '
-            '"maxEnergy": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], '
+            '"maxEnergy": [-999999999, -999999999, -999999999, -999999999, -999999999, -999999999, -999999999, -999999999, -999999999, -999999999], '
             '"current": [308, -17, -15, 392, -21, -12, 2, 6, 3, 2346], '
             '"names": ["Panel", "Batt 5", "Batt 6", "Load", "Batt 7", "Batt 8", "Batt 4", "Batt 3", "Batt 2", "Batt 1"], '
             '"todayCumulativeEnergy": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], '
@@ -147,4 +147,4 @@ class SolarServer_test(TestCase):
 if __name__ == '__main__':
     main()
 
- 
+
