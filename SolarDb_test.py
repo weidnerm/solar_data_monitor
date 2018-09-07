@@ -368,6 +368,48 @@ class SolarDb_test(TestCase):
                           call('{"time_sec": 1536120600.0, "inputs": {"Load": [392, 392, 392], "Batt 2": [3, 3, 3], "Batt 8": [-12, -12, -12], "Batt 1": [2346, 2346, 2346], "Batt 3": [6, 6, 6], "Panel": [308, 308, 308], "Batt 5": [-17, -17, -17], "Batt 4": [2, 2, 2], "Batt 7": [-21, -21, -21], "Batt 6": [-15, -15, -15]}, "samples": 1, "time": "00:00:00"}\n')], mock_open.return_value.write.call_args_list)
 
 
+
+    @patch('SolarDb.open')
+    @patch('SolarDb.time.time')
+    @patch('SolarDb.glob')
+    def test_readDayLog__one_day(self, mock_glob, mock_time, mock_open):
+        mock_glob.glob.return_value = ['solarLog_2018_09_06.csv', 'solarLog_2018_09_05.csv']
+        mock_open.return_value.readlines.return_value = [
+            '{"time_sec": 1536353400.18906, "inputs": {"Load": [1041246, 2080, 1041246], "Batt 8": [-120477, -120477, -304], "Batt 1": [-73203, -73203, -187], "Batt 3": [-69663, -69663, -177], "Panel": [265766, 152, 265766], "Batt 5": [-137945, -137945, -347], "Batt 4": [-86528, -86528, -217], "Batt 7": [-145348, -145348, -343], "Batt 6": [-158404, -158404, -395]}, "samples": 574, "time": "16:49:59"}',
+            '{"time_sec": 1536354000.675743, "inputs": {"Load": [818830, 1576, 818830], "Batt 8": [-89837, -89837, -180], "Batt 1": [-56725, -56725, -111], "Batt 3": [-54431, -54431, -106], "Panel": [232100, 408, 232100], "Batt 5": [-102850, -102850, -205], "Batt 4": [-67678, -67678, -132], "Batt 7": [-114046, -114046, -223], "Batt 6": [-118699, -118699, -238]}, "samples": 575, "time": "16:59:59"}']
+
+        mySolarDb = SolarDb("myprefix", self.get_default_config() )
+
+        self.assertEqual(
+            {'Load': {'today_count': 2, 'prev_mAsec_min': 1041246, '10minute_mAsec_min': 999999999, '10minute_count': 0, '10minute_mAsec_max': -999999999, 'today_mAsec_max': 1860076, 'prev_count': 4, 'prev_mAsec_max': 3720152, 'today_mAsec': 1860076, '10minute_mAsec': 0, 'today_mAsec_min': 1041246, 'prev_mAsec': 3720152},
+            'Batt 2': {'today_count': 0, 'prev_mAsec_min': 999999999, '10minute_mAsec_min': 999999999, '10minute_count': 0, '10minute_mAsec_max': -999999999, 'today_mAsec_max': -999999999, 'prev_count': 0, 'prev_mAsec_max': -999999999, 'today_mAsec': 0, '10minute_mAsec': 0, 'today_mAsec_min': 999999999, 'prev_mAsec': 0},
+            'Batt 8': {'today_count': 2, 'prev_mAsec_min': -420628, '10minute_mAsec_min': 999999999, '10minute_count': 0, '10minute_mAsec_max': -999999999, 'today_mAsec_max': -120477, 'prev_count': 4, 'prev_mAsec_max': -120477, 'today_mAsec': -210314, '10minute_mAsec': 0, 'today_mAsec_min': -210314, 'prev_mAsec': -420628},
+            'Batt 1': {'today_count': 2, 'prev_mAsec_min': -259856, '10minute_mAsec_min': 999999999, '10minute_count': 0, '10minute_mAsec_max': -999999999, 'today_mAsec_max': -73203, 'prev_count': 4, 'prev_mAsec_max': -73203, 'today_mAsec': -129928, '10minute_mAsec': 0, 'today_mAsec_min': -129928, 'prev_mAsec': -259856},
+            'Batt 3': {'today_count': 2, 'prev_mAsec_min': -248188, '10minute_mAsec_min': 999999999, '10minute_count': 0, '10minute_mAsec_max': -999999999, 'today_mAsec_max': -69663, 'prev_count': 4, 'prev_mAsec_max': -69663, 'today_mAsec': -124094, '10minute_mAsec': 0, 'today_mAsec_min': -124094, 'prev_mAsec': -248188},
+            'Panel': {'today_count': 2, 'prev_mAsec_min': 265766, '10minute_mAsec_min': 999999999, '10minute_count': 0, '10minute_mAsec_max': -999999999, 'today_mAsec_max': 497866, 'prev_count': 4, 'prev_mAsec_max': 995732, 'today_mAsec': 497866, '10minute_mAsec': 0, 'today_mAsec_min': 265766, 'prev_mAsec': 995732},
+            'Batt 5': {'today_count': 2, 'prev_mAsec_min': -481590, '10minute_mAsec_min': 999999999, '10minute_count': 0, '10minute_mAsec_max': -999999999, 'today_mAsec_max': -137945, 'prev_count': 4, 'prev_mAsec_max': -137945, 'today_mAsec': -240795, '10minute_mAsec': 0, 'today_mAsec_min': -240795, 'prev_mAsec': -481590},
+            'Batt 4': {'today_count': 2, 'prev_mAsec_min': -308412, '10minute_mAsec_min': 999999999, '10minute_count': 0, '10minute_mAsec_max': -999999999, 'today_mAsec_max': -86528, 'prev_count': 4, 'prev_mAsec_max': -86528, 'today_mAsec': -154206, '10minute_mAsec': 0, 'today_mAsec_min': -154206, 'prev_mAsec': -308412},
+            'Batt 7': {'today_count': 2, 'prev_mAsec_min': -518788, '10minute_mAsec_min': 999999999, '10minute_count': 0, '10minute_mAsec_max': -999999999, 'today_mAsec_max': -145348, 'prev_count': 4, 'prev_mAsec_max': -145348, 'today_mAsec': -259394, '10minute_mAsec': 0, 'today_mAsec_min': -259394, 'prev_mAsec': -518788},
+            'Batt 6': {'today_count': 2, 'prev_mAsec_min': -554206, '10minute_mAsec_min': 999999999, '10minute_count': 0, '10minute_mAsec_max': -999999999, 'today_mAsec_max': -158404, 'prev_count': 4, 'prev_mAsec_max': -158404, 'today_mAsec': -277103, '10minute_mAsec': 0, 'today_mAsec_min': -277103, 'prev_mAsec': -554206}}, mySolarDb.data)
+
+
+
+    @patch('SolarDb.glob')
+    def test_getFilenameFromIndex(self, mock_glob):
+        mock_glob.glob.return_value = ['solarLog_2018_09_06.csv', 'solarLog_2018_09_07.csv']
+
+        mySolarDb = SolarDb("solarLog_", self.get_default_config() )
+
+        self.assertEquals('solarLog_2018_09_07.csv', mySolarDb.getFilenameFromIndex(0))
+        self.assertEquals('solarLog_2018_09_06.csv', mySolarDb.getFilenameFromIndex(1))
+        self.assertEquals(None,                      mySolarDb.getFilenameFromIndex(2))
+        self.assertEquals(None,                      mySolarDb.getFilenameFromIndex(3))
+        self.assertEquals(None,                      mySolarDb.getFilenameFromIndex(4))
+
+
+
+
+
     #~ def test_time_formatting(self):
 
         #~ cur_time_full = time.time()

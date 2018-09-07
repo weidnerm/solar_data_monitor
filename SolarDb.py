@@ -1,6 +1,7 @@
 import time
 import os
 import json
+import glob
 
 class SolarDb:
     def __init__(self, filenamePrefix, config):
@@ -15,23 +16,11 @@ class SolarDb:
         #                              ["prev_mAsec_min"] = int
         #                              ["prev_mAsec_max"] = int
         #                              ["prev_mAsec"] = int
-        self.data = {}
-        for entry in self.config:
-            tempVal = {}
-            tempVal["10minute_mAsec"] = 0
-            tempVal["10minute_mAsec_min"] = 999999999
-            tempVal["10minute_mAsec_max"] = -999999999
-            tempVal["10minute_count"] = 0
-            tempVal["today_mAsec_min"] = 999999999  # mA*Sec
-            tempVal["today_mAsec_max"] = -999999999
-            tempVal["today_mAsec"] = 0
-            tempVal["today_count"] = 0
-            tempVal["prev_mAsec_min"] = 999999999
-            tempVal["prev_mAsec_max"] = -999999999
-            tempVal["prev_mAsec"] = 0
-            tempVal["prev_count"] = 0
-            self.data[entry["name"]] = tempVal
-        self.reset_todays_data()
+        self.createEmptyDataStructure()
+
+        for index in range(4):
+            self.readDayLog(index)
+        # self.reset_todays_data()
 
         self.fileUpdateInterval = 10 # minutes
 
@@ -103,6 +92,24 @@ class SolarDb:
 
 
 
+    def createEmptyDataStructure(self):
+        self.data = {}
+        for entry in self.config:
+            tempVal = {}
+            tempVal["10minute_mAsec"] = 0
+            tempVal["10minute_mAsec_min"] = 999999999
+            tempVal["10minute_mAsec_max"] = -999999999
+            tempVal["10minute_count"] = 0
+            tempVal["today_mAsec"] = 0
+            tempVal["today_mAsec_min"] = 999999999  # mA*Sec
+            tempVal["today_mAsec_max"] = -999999999
+            tempVal["today_count"] = 0
+            tempVal["prev_mAsec"] = 0
+            tempVal["prev_mAsec_min"] = 999999999
+            tempVal["prev_mAsec_max"] = -999999999
+            tempVal["prev_count"] = 0
+            self.data[entry["name"]] = tempVal
+
 
 
     def addEntry(self, data):
@@ -145,7 +152,7 @@ class SolarDb:
             entry['today_count'] = entry['today_count'] + 1
             entry['prev_count'] = entry['prev_count'] + 1
 
-            # update today min/max values
+            # update 10 min block min/max values
             if entry['10minute_mAsec_min'] > entry['10minute_mAsec']: # if tracked min is too big
                 entry['10minute_mAsec_min'] = entry['10minute_mAsec']
             if entry['10minute_mAsec_max'] < entry['10minute_mAsec']: # if tracked max is too small
@@ -172,7 +179,6 @@ class SolarDb:
     #            ["inputs"] = {}
     #                          [<sourceName>] = [] = <mAsec>,<mAsec_min>,<mAsec_max>
 
-
     def get_10min_entry(self, cur_time_secs):
 
         data = {}
@@ -189,8 +195,6 @@ class SolarDb:
             data['samples'] = self.data[name]['10minute_count']
 
         return data
-
-
 
     def write_data_to_file(self, cur_time_secs):
         # if (self.data['Panel']['10minute_count'] > 0):  # make sure there is some data to write.  helps with very first run
@@ -235,10 +239,6 @@ class SolarDb:
             self.data[name]["today_mAsec_max"] = -999999999
             self.data[name]["today_mAsec"] = 0
             self.data[name]["today_count"] = 0
-            # self.data[name]["prev_mAsec_min"] = 999999999
-            # self.data[name]["prev_mAsec_max"] = -999999999
-            # self.data[name]["prev_mAsec"] = 0
-            # self.data[name]["prev_count"] = 0
 
     def reset_10_min_data(self):
         for index in range(len(self.config)):
@@ -327,6 +327,55 @@ class SolarDb:
 
 
     def readDayLog(self,fileIndex):
+        filename = self.getFilenameFromIndex(fileIndex)
+
+        if filename != None:
+
+            # read data file into logs
+            fp = open(filename, 'r')
+            contents = fp.readlines()
+            fp.close()
+
+            for index in range(len(contents)):
+                fileDataEntry = json.loads(contents[index])
+                if 'inputs' in fileDataEntry:
+                    for source_name in fileDataEntry['inputs']:
+                        if source_name in self.data:
+                            mAsec = fileDataEntry['inputs'][source_name][0]
+                            mAsec_min = fileDataEntry['inputs'][source_name][1]
+                            mAsec_max = fileDataEntry['inputs'][source_name][2]
+
+                            entry = self.data[source_name]
+
+                            if fileIndex == 0:  # only track today stuff if file is for today
+                                entry['today_mAsec'] = entry['today_mAsec'] + mAsec
+                                entry['today_count'] = entry['today_count'] + 1
+                                if entry['today_mAsec_min'] > entry['today_mAsec']: # if tracked min is too big
+                                    entry['today_mAsec_min'] = entry['today_mAsec']
+                                if entry['today_mAsec_max'] < entry['today_mAsec']: # if tracked max is too small
+                                    entry['today_mAsec_max'] = entry['today_mAsec']
+
+                            entry['prev_mAsec'] = entry['prev_mAsec'] + mAsec
+                            entry['prev_count'] = entry['prev_count'] + 1
+                            if entry['prev_mAsec_min'] > entry['prev_mAsec']:
+                                entry['prev_mAsec_min'] = entry['prev_mAsec']
+                            if entry['prev_mAsec_max'] < entry['prev_mAsec']:
+                                entry['prev_mAsec_max'] = entry['prev_mAsec']
+
+
+
+
+
+
+
+    # entry = {} ["time"] = seconds from time.time()
+    #            ["samples"] = number of samples present in this file
+    #            ["inputs"] = {}
+    #                          [<sourceName>] = [] = <mAsec>,<mAsec_min>,<mAsec_max>
+
+
+
+    def readDayLog_orig(self,fileIndex):
         returnVal = [];
 
         filename = self.getFilenameFromIndex(fileIndex)
@@ -386,19 +435,22 @@ class SolarDb:
 
     def getFilenameFromIndex(self, index):
         fileList = []
+        returnValue = None
         pattern = self.m_filenamePrefix + "*.csv"
-#       print(pattern)
+
         for file in glob.glob( pattern ):
             fileList.append(file)
 
         fileList.sort()
         fileList.reverse()
-        filteredIndex = index;
-        if filteredIndex < 0:
-            filteredIndex = 0
-        elif filteredIndex >= len(fileList):
-            filteredIndex = len(fileList)-1
-        return fileList[filteredIndex]
+
+        if index < 0:
+            returnValue = fileList[0]
+        elif index >= len(fileList):
+            returnValue = None
+        else:
+            returnValue = fileList[index]
+        return returnValue
 
 #~ def setupSolar():
     #~ mySolarSensors = SolarSensors()
