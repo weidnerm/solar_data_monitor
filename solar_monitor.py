@@ -302,11 +302,6 @@ def main(config):
         #~ print(live_data)
         #~ time.sleep(1.0)
 
-#    {
-#        "address": "0x46", 
-#        "name": "Batt 2", 
-#        "scale": 1.0
-#    },
 
 
 
