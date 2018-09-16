@@ -363,7 +363,7 @@ class Application(tk.Frame):
                     gridScaleSpan = gridScaleMax-gridScaleMin
 
                     if self.lastPoint == 0:     # set our range of data to be the full range of data.
-                        self.lastPoint = len(self.plotData[channelIndex]["voltage"])  # assume length of each array is the same.
+                        self.lastPoint = len(self.plotData[channelName]["v_avg"])  # assume length of each array is the same.
                     valueCount = self.lastPoint - self.firstPoint
                     skipCount = valueCount/(self.plotwidth-self.leftPad-self.rightPad) # how many data points get put into each horizontal pixel of the plot
                     print("voltage count=%d   plotWidth=%d   skipcount=%d" % (valueCount,self.plotwidth-self.leftPad-self.rightPad,skipCount))
@@ -376,18 +376,28 @@ class Application(tk.Frame):
                         verticalScale = 1
                     else:
                         verticalScale = float(self.plotheight-self.topPad-self.bottomPad)/(gridScaleMax - gridScaleMin)
-                    horizontalScale = float(self.plotwidth-self.rightPad-self.leftPad)/float(valueCount )
+                    # horizontalScale = float(self.plotwidth-self.rightPad-self.leftPad)/float(valueCount )
+                    pixelsPerSecond = float(self.plotwidth-self.rightPad-self.leftPad)/(24*60*60)
                     vertMin = gridScaleMin
 
                     # plot the data
-                    leftValue=self.getDataValueForParm(parm,channelName,0)
-                    for index in xrange(skipCount, valueCount-skipCount, skipCount):
-                        rightValue = self.getDataValueForParm(parm,channelName,index+self.firstPoint);
-                        self.canvas.create_line(plotXBase+horizontalScale*(index),
+                    # leftTime, leftValue=self.getDataValueForParm(parm,channelName,0)
+                    # for index in xrange(skipCount, valueCount-skipCount, skipCount):
+                    #     rightTime, rightValue = self.getDataValueForParm(parm,channelName,index+self.firstPoint);
+                    #     self.canvas.create_line(plotXBase+horizontalScale*(index),
+                    #                             plotYBase-verticalScale*(leftValue-vertMin),
+                    #                             plotXBase+horizontalScale*(index+skipCount),
+                    #                             plotYBase-verticalScale*(rightValue-vertMin))
+                    #     leftValue = rightValue;
+                    leftTime, leftValue=self.getDataValueForParm(parm,channelName,0)
+                    for index in xrange(len(self.plotData[channelName]['time'])):
+                        rightTime, rightValue = self.getDataValueForParm(parm,channelName,index+self.firstPoint);
+                        self.canvas.create_line(plotXBase+pixelsPerSecond*leftTime,
                                                 plotYBase-verticalScale*(leftValue-vertMin),
-                                                plotXBase+horizontalScale*(index+skipCount),
+                                                plotXBase+pixelsPerSecond*rightTime,
                                                 plotYBase-verticalScale*(rightValue-vertMin))
                         leftValue = rightValue;
+                        leftTime = rightTime;
 
                     # draw "0" x axis line
                     if (gridScaleMin < 0) and (gridScaleMax > 0): # max is below 0 and min is above, so draw "0" line.
@@ -398,17 +408,19 @@ class Application(tk.Frame):
                     # put the scale info
                     #
 
+
                     # axis numbers
                     # x-axis numbers - left
-                    self.canvas.create_text(gridLeft, gridBottom + 2, text=self.plotData[channelIndex]["time"][self.firstPoint], anchor=tk.NW)
+                    # self.canvas.create_text(gridLeft, gridBottom + 2, text=self.plotData[channelName]["time"][self.firstPoint], anchor=tk.NW)
+                    self.canvas.create_text(gridLeft, gridBottom + 2, text=self.getTimeText(0), anchor=tk.NW)
                     # x-axis numbers - middle-left
-                    self.canvas.create_text( gridLeft+gridWidth/4 , gridBottom + 2, text=self.plotData[channelIndex]["time"][self.firstPoint+valueCount/4], anchor=tk.N)
+                    self.canvas.create_text( gridLeft+gridWidth/4 , gridBottom + 2, text=self.getTimeText(24*60*60/4), anchor=tk.N)
                     # x-axis numbers - middle
-                    self.canvas.create_text( gridLeft+gridWidth/2 , gridBottom + 2, text=self.plotData[channelIndex]["time"][self.firstPoint+valueCount/2], anchor=tk.N)
+                    self.canvas.create_text( gridLeft+gridWidth/2 , gridBottom + 2, text=self.getTimeText(24*60*60/2), anchor=tk.N)
                     # x-axis numbers - middle-right
-                    self.canvas.create_text( gridLeft+gridWidth*3/4 , gridBottom + 2, text=self.plotData[channelIndex]["time"][self.firstPoint+valueCount*3/4], anchor=tk.N)
+                    self.canvas.create_text( gridLeft+gridWidth*3/4 , gridBottom + 2, text=self.getTimeText(24*60*60*3/4), anchor=tk.N)
                     # x-axis numbers - right
-                    self.canvas.create_text(gridRight, gridBottom + 2, text=self.plotData[channelIndex]["time"][self.firstPoint+valueCount-1], anchor=tk.NE)
+                    self.canvas.create_text(gridRight, gridBottom + 2, text=self.getTimeText(24*60*60), anchor=tk.NE)
 
                     # y-axis numbers - top
                     self.canvas.create_text(0, gridTop + 2, text=("%2.2f" % (gridScaleMin+gridScaleSpan)), anchor=tk.NW)
@@ -423,14 +435,18 @@ class Application(tk.Frame):
 
     def getDataValueForParm(self,parm,channel,index):
         returnVal = 0;
+        timeVal = 0
         if parm == 0:  # voltage
             returnVal = self.plotData[channel]["v_avg"][index]
+            timeVal = self.plotData[channel]["time"][index]
         elif parm == 1: # current
             returnVal = self.plotData[channel]["mA_avg"][index]
+            timeVal = self.plotData[channel]["time"][index]
         elif parm == 2: # power
             returnVal = self.plotData[channel]["mAsec"][index]
             # returnVal = self.plotData[channel]["mAsec"][index] * self.plotData[channel]["current"][index]
-        return returnVal
+            timeVal = self.plotData[channel]["time"][index]
+        return timeVal, returnVal
 
     def getMinMaxForParm(self,parm,channel):
         returnVal = [999999999.0, -999999999.0] # baseline extreme opposite numbers for min and max
@@ -465,7 +481,21 @@ class Application(tk.Frame):
     #                   ['mA_min'] = []
     #                   ['time'] = [] = '11:09:59' = 'HH:MM:SS'
 
+    def getTimeText(self, raw_seconds):
+        timeleft = raw_seconds
 
+        hours = int(timeleft/60/60)
+        timeleft = timeleft-hours*60*60
+
+        minutes = int(timeleft/60)
+        timeleft = timeleft-minutes*60
+
+        seconds = int(timeleft)
+
+        # timeText = '%02d:%02d:%02d' %(hours, minutes, seconds)
+        timeText = '%02d:%02d' %(hours, minutes)
+
+        return timeText
 
     def periodicEventHandler(self):
 #       self.after(1000,self.periodicEventHandler);
