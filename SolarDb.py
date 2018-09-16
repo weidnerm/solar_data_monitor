@@ -18,7 +18,8 @@ class SolarDb:
         #                              ["prev_mAsec"] = int
         self.createEmptyDataStructure()
 
-        for index in range(4):
+        daysToRead = 4; # today plus 3 previous
+        for index in range(daysToRead-1, -1, -1):
             self.readDayLog(index)
         # self.reset_todays_data()
 
