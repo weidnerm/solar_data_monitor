@@ -100,6 +100,14 @@ class SolarDb:
             tempVal["10minute_mAsec_min"] = 999999999
             tempVal["10minute_mAsec_max"] = -999999999
             tempVal["10minute_count"] = 0
+
+            tempVal["10minute_v"] = 0.0 # total volt values for use in calc of average
+            tempVal["10minute_v_min"] = 999999999.0
+            tempVal["10minute_v_max"] = -999999999.0
+            tempVal["10minute_mA"] = 0 # total mA values for use in calc of average
+            tempVal["10minute_mA_min"] = 999999999
+            tempVal["10minute_mA_max"] = -999999999
+
             tempVal["today_mAsec"] = 0
             tempVal["today_mAsec_min"] = 999999999  # mA*Sec
             tempVal["today_mAsec_max"] = -999999999
@@ -143,6 +151,8 @@ class SolarDb:
             # accumulate mA hours
             entry = self.data[name]
             entry['10minute_mAsec'] = entry['10minute_mAsec'] + power_mA
+            entry['10minute_v'] = entry['10minute_v'] + data['voltage'][index]
+            entry['10minute_mA'] = entry['10minute_mA'] + power_mA
             entry['today_mAsec'] = entry['today_mAsec'] + power_mA
             entry['prev_mAsec'] = entry['prev_mAsec'] + power_mA
 
@@ -157,6 +167,16 @@ class SolarDb:
                 entry['10minute_mAsec_min'] = entry['10minute_mAsec']
             if entry['10minute_mAsec_max'] < entry['10minute_mAsec']: # if tracked max is too small
                 entry['10minute_mAsec_max'] = entry['10minute_mAsec']
+
+            if entry['10minute_mA_min'] > power_mA: # if tracked min is too big
+                entry['10minute_mA_min'] = power_mA
+            if entry['10minute_mA_max'] < power_mA: # if tracked max is too small
+                entry['10minute_mA_max'] = power_mA
+
+            if entry['10minute_v_min'] > data['voltage'][index]: # if tracked min is too big
+                entry['10minute_v_min'] = data['voltage'][index]
+            if entry['10minute_v_max'] < data['voltage'][index]: # if tracked max is too small
+                entry['10minute_v_max'] = data['voltage'][index]
 
             # update today min/max values
             if entry['today_mAsec_min'] > entry['today_mAsec']: # if tracked min is too big
@@ -189,8 +209,16 @@ class SolarDb:
             name = self.config[index]["name"]
             data['inputs'][name] = []
             data['inputs'][name].append( self.data[name]['10minute_mAsec'])
-            data['inputs'][name].append( self.data[name]['10minute_mAsec_min'])
-            data['inputs'][name].append( self.data[name]['10minute_mAsec_max'])
+            # data['inputs'][name].append( self.data[name]['10minute_mAsec_min'])
+            # data['inputs'][name].append( self.data[name]['10minute_mAsec_max'])
+
+            data['inputs'][name].append( self.data[name]["10minute_v"]/self.data[name]['10minute_count'])  # average voltage
+            data['inputs'][name].append( self.data[name]["10minute_v_min"])
+            data['inputs'][name].append( self.data[name]["10minute_v_max"])
+
+            data['inputs'][name].append( int(self.data[name]["10minute_mA"]/self.data[name]['10minute_count'])) # average current
+            data['inputs'][name].append( self.data[name]["10minute_mA_min"])
+            data['inputs'][name].append( self.data[name]["10minute_mA_max"] )
 
             data['samples'] = self.data[name]['10minute_count']
 
@@ -247,9 +275,16 @@ class SolarDb:
             self.data[name]["10minute_mAsec"] = 0
             self.data[name]["10minute_mAsec_min"] = 999999999
             self.data[name]["10minute_mAsec_max"] = -999999999
+
+            self.data[name]["10minute_v"] = 0.0
+            self.data[name]["10minute_v_min"] = 999999999.0
+            self.data[name]["10minute_v_max"] = -999999999.0
+
+            self.data[name]["10minute_mA"] = 0
+            self.data[name]["10minute_mA_min"] = 999999999
+            self.data[name]["10minute_mA_max"] = -999999999
+
             self.data[name]["10minute_count"] = 0
-
-
 
     def formerly_addEntry_stuff(self):
 
@@ -328,7 +363,8 @@ class SolarDb:
 
     def readDayLog(self,fileIndex):
         filename = self.getFilenameFromIndex(fileIndex)
-
+        temp_data = {} # temp data indexed by source in dictionary.  
+        
         if filename != None:
 
             # read data file into logs
@@ -338,12 +374,34 @@ class SolarDb:
 
             for index in range(len(contents)):
                 fileDataEntry = json.loads(contents[index])
+
+                record_time = '00:00:00'
+                if 'time' in fileDataEntry:
+                    record_time = fileDataEntry['time']
+
                 if 'inputs' in fileDataEntry:
                     for source_name in fileDataEntry['inputs']:
                         if source_name in self.data:
-                            mAsec = fileDataEntry['inputs'][source_name][0]
-                            mAsec_min = fileDataEntry['inputs'][source_name][1]
-                            mAsec_max = fileDataEntry['inputs'][source_name][2]
+
+                            mAsec  = 0
+                            v_avg  = 0
+                            v_min  = 0
+                            v_max  = 0
+                            mA_avg = 0
+                            mA_min = 0
+                            mA_max = 0
+
+                            if len(fileDataEntry['inputs'][source_name]) == 3:  # we are format 1.0
+                                mAsec = fileDataEntry['inputs'][source_name][0]
+
+                            elif len(fileDataEntry['inputs'][source_name]) == 7:  # we are format 2.0
+                                mAsec = fileDataEntry['inputs'][source_name][0]
+                                v_avg = fileDataEntry['inputs'][source_name][1]
+                                v_min = fileDataEntry['inputs'][source_name][2]
+                                v_max = fileDataEntry['inputs'][source_name][3]
+                                mA_avg = fileDataEntry['inputs'][source_name][4]
+                                mA_min = fileDataEntry['inputs'][source_name][5]
+                                mA_max = fileDataEntry['inputs'][source_name][6]
 
                             entry = self.data[source_name]
 
@@ -362,18 +420,49 @@ class SolarDb:
                             if entry['prev_mAsec_max'] < entry['prev_mAsec']:
                                 entry['prev_mAsec_max'] = entry['prev_mAsec']
 
+                            if not source_name in temp_data:
+                                temp_data[source_name] = {}
+                                temp_data[source_name]['mAsec']  = []
+                                temp_data[source_name]['v_avg']  = []
+                                temp_data[source_name]['v_max']  = []
+                                temp_data[source_name]['v_min']  = []
+                                temp_data[source_name]['mA_avg'] = []
+                                temp_data[source_name]['mA_max'] = []
+                                temp_data[source_name]['mA_min'] = []
+                                temp_data[source_name]['time'] = []
+
+                            temp_data[source_name]['mAsec']  .append(mAsec )
+                            temp_data[source_name]['v_avg']  .append(v_avg )
+                            temp_data[source_name]['v_max']  .append(v_min )
+                            temp_data[source_name]['v_min']  .append(v_max )
+                            temp_data[source_name]['mA_avg'] .append(mA_avg)
+                            temp_data[source_name]['mA_max'] .append(mA_min)
+                            temp_data[source_name]['mA_min'] .append(mA_max)
+                            record_time_secs = int(record_time[0:2])*60*60 + int(record_time[3:5])*60 + int(record_time[6:8])
+                            temp_data[source_name]['time']   .append(record_time_secs)
+
+        return temp_data, filename
+
+    # return_val = {} [<name>] = {}
+    #                   ['mAsec'] = []
+    #                   ['v_avg'] = []
+    #                   ['v_max'] = []
+    #                   ['v_min'] = []
+    #                   ['mA_avg'] = []
+    #                   ['mA_max'] = []
+    #                   ['mA_min'] = []
+    #                   ['time'] = [] = '11:09:59' = 'HH:MM:SS'
 
 
 
 
 
 
-    # entry = {} ["time"] = seconds from time.time()
-    #            ["samples"] = number of samples present in this file
-    #            ["inputs"] = {}
-    #                          [<sourceName>] = [] = <mAsec>,<mAsec_min>,<mAsec_max>
 
-
+    # orig notes # entry = {} ["time"] = seconds from time.time()
+    # orig notes #            ["samples"] = number of samples present in this file
+    # orig notes #            ["inputs"] = {}
+    # orig notes #                          [<sourceName>] = [] = <mAsec>,<mAsec_min>,<mAsec_max>
 
     def readDayLog_orig(self,fileIndex):
         returnVal = [];

@@ -93,16 +93,47 @@ class SolarDb_test(TestCase):
         mySolarDb = SolarDb("myprefix", self.get_default_config() )
 
         self.assertEqual("myprefix", mySolarDb.m_filenamePrefix)
-        self.assertEqual(mySolarDb.data['Panel'] , {'today_count': 0, '10minute_count': 0, 'prev_count': 0, '10minute_mAsec': 0, '10minute_mAsec_min': 999999999, '10minute_mAsec_max': -999999999, 'today_mAsec_min': 999999999, 'today_mAsec_max': -999999999, 'today_mAsec': 0, 'prev_mAsec_min': 999999999, 'prev_mAsec_max': -999999999, 'prev_mAsec': 0})
-        self.assertEqual(mySolarDb.data['Load']  , {'today_count': 0, '10minute_count': 0, 'prev_count': 0, '10minute_mAsec': 0, '10minute_mAsec_min': 999999999, '10minute_mAsec_max': -999999999, 'today_mAsec_min': 999999999, 'today_mAsec_max': -999999999, 'today_mAsec': 0, 'prev_mAsec_min': 999999999, 'prev_mAsec_max': -999999999, 'prev_mAsec': 0})
-        self.assertEqual(mySolarDb.data['Batt 1'], {'today_count': 0, '10minute_count': 0, 'prev_count': 0, '10minute_mAsec': 0, '10minute_mAsec_min': 999999999, '10minute_mAsec_max': -999999999, 'today_mAsec_min': 999999999, 'today_mAsec_max': -999999999, 'today_mAsec': 0, 'prev_mAsec_min': 999999999, 'prev_mAsec_max': -999999999, 'prev_mAsec': 0})
-        self.assertEqual(mySolarDb.data['Batt 2'], {'today_count': 0, '10minute_count': 0, 'prev_count': 0, '10minute_mAsec': 0, '10minute_mAsec_min': 999999999, '10minute_mAsec_max': -999999999, 'today_mAsec_min': 999999999, 'today_mAsec_max': -999999999, 'today_mAsec': 0, 'prev_mAsec_min': 999999999, 'prev_mAsec_max': -999999999, 'prev_mAsec': 0})
-        self.assertEqual(mySolarDb.data['Batt 3'], {'today_count': 0, '10minute_count': 0, 'prev_count': 0, '10minute_mAsec': 0, '10minute_mAsec_min': 999999999, '10minute_mAsec_max': -999999999, 'today_mAsec_min': 999999999, 'today_mAsec_max': -999999999, 'today_mAsec': 0, 'prev_mAsec_min': 999999999, 'prev_mAsec_max': -999999999, 'prev_mAsec': 0})
-        self.assertEqual(mySolarDb.data['Batt 4'], {'today_count': 0, '10minute_count': 0, 'prev_count': 0, '10minute_mAsec': 0, '10minute_mAsec_min': 999999999, '10minute_mAsec_max': -999999999, 'today_mAsec_min': 999999999, 'today_mAsec_max': -999999999, 'today_mAsec': 0, 'prev_mAsec_min': 999999999, 'prev_mAsec_max': -999999999, 'prev_mAsec': 0})
-        self.assertEqual(mySolarDb.data['Batt 5'], {'today_count': 0, '10minute_count': 0, 'prev_count': 0, '10minute_mAsec': 0, '10minute_mAsec_min': 999999999, '10minute_mAsec_max': -999999999, 'today_mAsec_min': 999999999, 'today_mAsec_max': -999999999, 'today_mAsec': 0, 'prev_mAsec_min': 999999999, 'prev_mAsec_max': -999999999, 'prev_mAsec': 0})
-        self.assertEqual(mySolarDb.data['Batt 6'], {'today_count': 0, '10minute_count': 0, 'prev_count': 0, '10minute_mAsec': 0, '10minute_mAsec_min': 999999999, '10minute_mAsec_max': -999999999, 'today_mAsec_min': 999999999, 'today_mAsec_max': -999999999, 'today_mAsec': 0, 'prev_mAsec_min': 999999999, 'prev_mAsec_max': -999999999, 'prev_mAsec': 0})
-        self.assertEqual(mySolarDb.data['Batt 7'], {'today_count': 0, '10minute_count': 0, 'prev_count': 0, '10minute_mAsec': 0, '10minute_mAsec_min': 999999999, '10minute_mAsec_max': -999999999, 'today_mAsec_min': 999999999, 'today_mAsec_max': -999999999, 'today_mAsec': 0, 'prev_mAsec_min': 999999999, 'prev_mAsec_max': -999999999, 'prev_mAsec': 0})
-        self.assertEqual(mySolarDb.data['Batt 8'], {'today_count': 0, '10minute_count': 0, 'prev_count': 0, '10minute_mAsec': 0, '10minute_mAsec_min': 999999999, '10minute_mAsec_max': -999999999, 'today_mAsec_min': 999999999, 'today_mAsec_max': -999999999, 'today_mAsec': 0, 'prev_mAsec_min': 999999999, 'prev_mAsec_max': -999999999, 'prev_mAsec': 0})
+
+        self.assertEqual(mySolarDb.data['Panel']['10minute_count'], 0 )
+        self.assertEqual(mySolarDb.data['Panel']['10minute_mAsec'], 0 )
+        self.assertEqual(mySolarDb.data['Panel']['10minute_mAsec_min'], 999999999 )
+        self.assertEqual(mySolarDb.data['Panel']['10minute_mAsec_max'], -999999999 )
+        self.assertEqual(mySolarDb.data['Panel']['10minute_v'], 0 )
+        self.assertEqual(mySolarDb.data['Panel']['10minute_v_min'], 999999999 )
+        self.assertEqual(mySolarDb.data['Panel']['10minute_v_max'], -999999999 )
+        self.assertEqual(mySolarDb.data['Panel']['10minute_mA'], 0 )
+        self.assertEqual(mySolarDb.data['Panel']['10minute_mA_min'], 999999999 )
+        self.assertEqual(mySolarDb.data['Panel']['10minute_mA_max'], -999999999 )
+        self.assertEqual(mySolarDb.data['Panel']['today_count'], 0 )
+        self.assertEqual(mySolarDb.data['Panel']['today_mAsec'], 0 )
+        self.assertEqual(mySolarDb.data['Panel']['today_mAsec_min'], 999999999 )
+        self.assertEqual(mySolarDb.data['Panel']['today_mAsec_max'], -999999999 )
+        self.assertEqual(mySolarDb.data['Panel']['prev_count'], 0 )
+        self.assertEqual(mySolarDb.data['Panel']['prev_mAsec'], 0 )
+        self.assertEqual(mySolarDb.data['Panel']['prev_mAsec_min'], 999999999 )
+        self.assertEqual(mySolarDb.data['Panel']['prev_mAsec_max'], -999999999 )
+
+        self.assertEqual(mySolarDb.data['Panel']['10minute_count'], 0 )  # spot check at least one field from each input
+        self.assertEqual(mySolarDb.data['Load'  ]['10minute_count'], 0 )
+        self.assertEqual(mySolarDb.data['Batt 1']['10minute_count'], 0 )
+        self.assertEqual(mySolarDb.data['Batt 2']['10minute_count'], 0 )
+        self.assertEqual(mySolarDb.data['Batt 3']['10minute_count'], 0 )
+        self.assertEqual(mySolarDb.data['Batt 4']['10minute_count'], 0 )
+        self.assertEqual(mySolarDb.data['Batt 5']['10minute_count'], 0 )
+        self.assertEqual(mySolarDb.data['Batt 6']['10minute_count'], 0 )
+        self.assertEqual(mySolarDb.data['Batt 7']['10minute_count'], 0 )
+        self.assertEqual(mySolarDb.data['Batt 8']['10minute_count'], 0 )
+
+        # self.assertEqual(mySolarDb.data['Panel'] , {'today_count': 0, '10minute_count': 0, 'prev_count': 0, '10minute_mAsec': 0, '10minute_mAsec_min': 999999999, '10minute_mAsec_max': -999999999, 'today_mAsec_min': 999999999, 'today_mAsec_max': -999999999, 'today_mAsec': 0, 'prev_mAsec_min': 999999999, 'prev_mAsec_max': -999999999, 'prev_mAsec': 0})
+        # self.assertEqual(mySolarDb.data['Load'  ], {'today_count': 0, '10minute_count': 0, 'prev_count': 0, '10minute_mAsec': 0, '10minute_mAsec_min': 999999999, '10minute_mAsec_max': -999999999, 'today_mAsec_min': 999999999, 'today_mAsec_max': -999999999, 'today_mAsec': 0, 'prev_mAsec_min': 999999999, 'prev_mAsec_max': -999999999, 'prev_mAsec': 0})
+        # self.assertEqual(mySolarDb.data['Batt 1'], {'today_count': 0, '10minute_count': 0, 'prev_count': 0, '10minute_mAsec': 0, '10minute_mAsec_min': 999999999, '10minute_mAsec_max': -999999999, 'today_mAsec_min': 999999999, 'today_mAsec_max': -999999999, 'today_mAsec': 0, 'prev_mAsec_min': 999999999, 'prev_mAsec_max': -999999999, 'prev_mAsec': 0})
+        # self.assertEqual(mySolarDb.data['Batt 2'], {'today_count': 0, '10minute_count': 0, 'prev_count': 0, '10minute_mAsec': 0, '10minute_mAsec_min': 999999999, '10minute_mAsec_max': -999999999, 'today_mAsec_min': 999999999, 'today_mAsec_max': -999999999, 'today_mAsec': 0, 'prev_mAsec_min': 999999999, 'prev_mAsec_max': -999999999, 'prev_mAsec': 0})
+        # self.assertEqual(mySolarDb.data['Batt 3'], {'today_count': 0, '10minute_count': 0, 'prev_count': 0, '10minute_mAsec': 0, '10minute_mAsec_min': 999999999, '10minute_mAsec_max': -999999999, 'today_mAsec_min': 999999999, 'today_mAsec_max': -999999999, 'today_mAsec': 0, 'prev_mAsec_min': 999999999, 'prev_mAsec_max': -999999999, 'prev_mAsec': 0})
+        # self.assertEqual(mySolarDb.data['Batt 4'], {'today_count': 0, '10minute_count': 0, 'prev_count': 0, '10minute_mAsec': 0, '10minute_mAsec_min': 999999999, '10minute_mAsec_max': -999999999, 'today_mAsec_min': 999999999, 'today_mAsec_max': -999999999, 'today_mAsec': 0, 'prev_mAsec_min': 999999999, 'prev_mAsec_max': -999999999, 'prev_mAsec': 0})
+        # self.assertEqual(mySolarDb.data['Batt 5'], {'today_count': 0, '10minute_count': 0, 'prev_count': 0, '10minute_mAsec': 0, '10minute_mAsec_min': 999999999, '10minute_mAsec_max': -999999999, 'today_mAsec_min': 999999999, 'today_mAsec_max': -999999999, 'today_mAsec': 0, 'prev_mAsec_min': 999999999, 'prev_mAsec_max': -999999999, 'prev_mAsec': 0})
+        # self.assertEqual(mySolarDb.data['Batt 6'], {'today_count': 0, '10minute_count': 0, 'prev_count': 0, '10minute_mAsec': 0, '10minute_mAsec_min': 999999999, '10minute_mAsec_max': -999999999, 'today_mAsec_min': 999999999, 'today_mAsec_max': -999999999, 'today_mAsec': 0, 'prev_mAsec_min': 999999999, 'prev_mAsec_max': -999999999, 'prev_mAsec': 0})
+        # self.assertEqual(mySolarDb.data['Batt 7'], {'today_count': 0, '10minute_count': 0, 'prev_count': 0, '10minute_mAsec': 0, '10minute_mAsec_min': 999999999, '10minute_mAsec_max': -999999999, 'today_mAsec_min': 999999999, 'today_mAsec_max': -999999999, 'today_mAsec': 0, 'prev_mAsec_min': 999999999, 'prev_mAsec_max': -999999999, 'prev_mAsec': 0})
+        # self.assertEqual(mySolarDb.data['Batt 8'], {'today_count': 0, '10minute_count': 0, 'prev_count': 0, '10minute_mAsec': 0, '10minute_mAsec_min': 999999999, '10minute_mAsec_max': -999999999, 'today_mAsec_min': 999999999, 'today_mAsec_max': -999999999, 'today_mAsec': 0, 'prev_mAsec_min': 999999999, 'prev_mAsec_max': -999999999, 'prev_mAsec': 0})
 
     @patch('SolarDb.open')
     def test_addEntry(self, mock_open):
@@ -116,47 +147,88 @@ class SolarDb_test(TestCase):
 
         mySolarDb.addEntry(data)
 
-        self.assertEqual(308, int(mySolarDb.data['Panel']['10minute_mAsec']))
-        self.assertEqual(308, int(mySolarDb.data['Panel']['10minute_mAsec_min']))
-        self.assertEqual(308, int(mySolarDb.data['Panel']['10minute_mAsec_max']))
-        self.assertEqual(308, int(mySolarDb.data['Panel']['today_mAsec_min']))
-        self.assertEqual(308, int(mySolarDb.data['Panel']['today_mAsec_max']))
-        self.assertEqual(308, int(mySolarDb.data['Panel']['today_mAsec']))
-        self.assertEqual(308, int(mySolarDb.data['Panel']['prev_mAsec_min']))
-        self.assertEqual(308, int(mySolarDb.data['Panel']['prev_mAsec_max']))
-        self.assertEqual(308, int(mySolarDb.data['Panel']['prev_mAsec']))
+        self.assertEqual(308         , int(mySolarDb.data['Panel']['10minute_mAsec']))
+        self.assertEqual(308         , int(mySolarDb.data['Panel']['10minute_mAsec_min']))
+        self.assertEqual(308         , int(mySolarDb.data['Panel']['10minute_mAsec_max']))
+        self.assertEqual(1           , int(mySolarDb.data['Panel']['10minute_count']))
+        self.assertAlmostEqual(12.844,     mySolarDb.data['Panel']['10minute_v'])
+        self.assertAlmostEqual(12.844,     mySolarDb.data['Panel']['10minute_v_min'])
+        self.assertAlmostEqual(12.844,     mySolarDb.data['Panel']['10minute_v_max'])
+        self.assertEqual(308         , int(mySolarDb.data['Panel']['10minute_mA']))
+        self.assertEqual(308         , int(mySolarDb.data['Panel']['10minute_mA_min']))
+        self.assertEqual(308         , int(mySolarDb.data['Panel']['10minute_mA_max']))
+        self.assertEqual(308         , int(mySolarDb.data['Panel']['today_mAsec']))
+        self.assertEqual(308         , int(mySolarDb.data['Panel']['today_mAsec_min']))
+        self.assertEqual(308         , int(mySolarDb.data['Panel']['today_mAsec_max']))
+        self.assertEqual(1           , int(mySolarDb.data['Panel']['today_count']))
+        self.assertEqual(308         , int(mySolarDb.data['Panel']['prev_mAsec']))
+        self.assertEqual(308         , int(mySolarDb.data['Panel']['prev_mAsec_min']))
+        self.assertEqual(308         , int(mySolarDb.data['Panel']['prev_mAsec_max']))
+        self.assertEqual(1           , int(mySolarDb.data['Panel']['prev_count']))
 
-        self.assertEqual(-17, int(mySolarDb.data['Batt 5']['10minute_mAsec']))
-        self.assertEqual(-17, int(mySolarDb.data['Batt 5']['10minute_mAsec_min']))
-        self.assertEqual(-17, int(mySolarDb.data['Batt 5']['10minute_mAsec_max']))
-        self.assertEqual(-17, int(mySolarDb.data['Batt 5']['today_mAsec_min']))
-        self.assertEqual(-17, int(mySolarDb.data['Batt 5']['today_mAsec_max']))
-        self.assertEqual(-17, int(mySolarDb.data['Batt 5']['today_mAsec']))
-        self.assertEqual(-17, int(mySolarDb.data['Batt 5']['prev_mAsec_min']))
-        self.assertEqual(-17, int(mySolarDb.data['Batt 5']['prev_mAsec_max']))
-        self.assertEqual(-17, int(mySolarDb.data['Batt 5']['prev_mAsec']))
+        self.assertEqual(-17         , int(mySolarDb.data['Batt 5']['10minute_mAsec']))
+        self.assertEqual(-17         , int(mySolarDb.data['Batt 5']['10minute_mAsec_min']))
+        self.assertEqual(-17         , int(mySolarDb.data['Batt 5']['10minute_mAsec_max']))
+        self.assertEqual(1           , int(mySolarDb.data['Batt 5']['10minute_count']))
+        self.assertAlmostEqual(12.844,     mySolarDb.data['Batt 5']['10minute_v'])
+        self.assertAlmostEqual(12.844,     mySolarDb.data['Batt 5']['10minute_v_min'])
+        self.assertAlmostEqual(12.844,     mySolarDb.data['Batt 5']['10minute_v_max'])
+        self.assertEqual(-17         , int(mySolarDb.data['Batt 5']['10minute_mA']))
+        self.assertEqual(-17         , int(mySolarDb.data['Batt 5']['10minute_mA_min']))
+        self.assertEqual(-17         , int(mySolarDb.data['Batt 5']['10minute_mA_max']))
+        self.assertEqual(-17         , int(mySolarDb.data['Batt 5']['today_mAsec']))
+        self.assertEqual(-17         , int(mySolarDb.data['Batt 5']['today_mAsec_min']))
+        self.assertEqual(-17         , int(mySolarDb.data['Batt 5']['today_mAsec_max']))
+        self.assertEqual(1           , int(mySolarDb.data['Batt 5']['today_count']))
+        self.assertEqual(-17         , int(mySolarDb.data['Batt 5']['prev_mAsec']))
+        self.assertEqual(-17         , int(mySolarDb.data['Batt 5']['prev_mAsec_min']))
+        self.assertEqual(-17         , int(mySolarDb.data['Batt 5']['prev_mAsec_max']))
+        self.assertEqual(1           , int(mySolarDb.data['Batt 5']['prev_count']))
 
+        data = {
+            'names': ['Panel', 'Batt 5', 'Batt 6', 'Load', 'Batt 7', 'Batt 8', 'Batt 4', 'Batt 3', 'Batt 2', 'Batt 1'],
+            'current': [309, -18, -15, 392, -21, -12, 2, 6, 3, 2346],
+            'voltage': [13.844, 13.844, 13.848, 13.828, 13.848, 13.844, 13.832, 13.832, 13.836, 13.596]
+            }
         mySolarDb.addEntry(data)
 
-        self.assertEqual(616, int(mySolarDb.data['Panel']['10minute_mAsec']))
-        self.assertEqual(308, int(mySolarDb.data['Panel']['10minute_mAsec_min']))
-        self.assertEqual(616, int(mySolarDb.data['Panel']['10minute_mAsec_max']))
-        self.assertEqual(308, int(mySolarDb.data['Panel']['today_mAsec_min']))
-        self.assertEqual(616, int(mySolarDb.data['Panel']['today_mAsec_max']))
-        self.assertEqual(616, int(mySolarDb.data['Panel']['today_mAsec']))
-        self.assertEqual(308, int(mySolarDb.data['Panel']['prev_mAsec_min']))
-        self.assertEqual(616, int(mySolarDb.data['Panel']['prev_mAsec_max']))
-        self.assertEqual(616, int(mySolarDb.data['Panel']['prev_mAsec']))
+        self.assertEqual(617         , int(mySolarDb.data['Panel']['10minute_mAsec']))
+        self.assertEqual(308         , int(mySolarDb.data['Panel']['10minute_mAsec_min']))
+        self.assertEqual(617         , int(mySolarDb.data['Panel']['10minute_mAsec_max']))
+        self.assertEqual(2           , int(mySolarDb.data['Panel']['10minute_count']))
+        self.assertAlmostEqual(26.688,     mySolarDb.data['Panel']['10minute_v'])
+        self.assertAlmostEqual(12.844,     mySolarDb.data['Panel']['10minute_v_min'])
+        self.assertAlmostEqual(13.844,     mySolarDb.data['Panel']['10minute_v_max'])
+        self.assertEqual(617         , int(mySolarDb.data['Panel']['10minute_mA']))
+        self.assertEqual(308         , int(mySolarDb.data['Panel']['10minute_mA_min']))
+        self.assertEqual(309         , int(mySolarDb.data['Panel']['10minute_mA_max']))
+        self.assertEqual(617         , int(mySolarDb.data['Panel']['today_mAsec']))
+        self.assertEqual(308         , int(mySolarDb.data['Panel']['today_mAsec_min']))
+        self.assertEqual(617         , int(mySolarDb.data['Panel']['today_mAsec_max']))
+        self.assertEqual(2           , int(mySolarDb.data['Panel']['today_count']))
+        self.assertEqual(617         , int(mySolarDb.data['Panel']['prev_mAsec']))
+        self.assertEqual(308         , int(mySolarDb.data['Panel']['prev_mAsec_min']))
+        self.assertEqual(617         , int(mySolarDb.data['Panel']['prev_mAsec_max']))
+        self.assertEqual(2           , int(mySolarDb.data['Panel']['prev_count']))
 
-        self.assertEqual(-34, int(mySolarDb.data['Batt 5']['10minute_mAsec']))
-        self.assertEqual(-34, int(mySolarDb.data['Batt 5']['10minute_mAsec_min']))
-        self.assertEqual(-17, int(mySolarDb.data['Batt 5']['10minute_mAsec_max']))
-        self.assertEqual(-34, int(mySolarDb.data['Batt 5']['today_mAsec_min']))
-        self.assertEqual(-17, int(mySolarDb.data['Batt 5']['today_mAsec_max']))
-        self.assertEqual(-34, int(mySolarDb.data['Batt 5']['today_mAsec']))
-        self.assertEqual(-34, int(mySolarDb.data['Batt 5']['prev_mAsec_min']))
-        self.assertEqual(-17, int(mySolarDb.data['Batt 5']['prev_mAsec_max']))
-        self.assertEqual(-34, int(mySolarDb.data['Batt 5']['prev_mAsec']))
+        self.assertEqual(-35         , int(mySolarDb.data['Batt 5']['10minute_mAsec']))
+        self.assertEqual(-35         , int(mySolarDb.data['Batt 5']['10minute_mAsec_min']))
+        self.assertEqual(-17         , int(mySolarDb.data['Batt 5']['10minute_mAsec_max']))
+        self.assertEqual(2           , int(mySolarDb.data['Batt 5']['10minute_count']))
+        self.assertAlmostEqual(26.688,     mySolarDb.data['Batt 5']['10minute_v'])
+        self.assertAlmostEqual(12.844,     mySolarDb.data['Batt 5']['10minute_v_min'])
+        self.assertAlmostEqual(13.844,     mySolarDb.data['Batt 5']['10minute_v_max'])
+        self.assertEqual(-35         , int(mySolarDb.data['Batt 5']['10minute_mA']))
+        self.assertEqual(-18         , int(mySolarDb.data['Batt 5']['10minute_mA_min']))
+        self.assertEqual(-17         , int(mySolarDb.data['Batt 5']['10minute_mA_max']))
+        self.assertEqual(-35         , int(mySolarDb.data['Batt 5']['today_mAsec']))
+        self.assertEqual(-35         , int(mySolarDb.data['Batt 5']['today_mAsec_min']))
+        self.assertEqual(-17         , int(mySolarDb.data['Batt 5']['today_mAsec_max']))
+        self.assertEqual(2           , int(mySolarDb.data['Batt 5']['today_count']))
+        self.assertEqual(-35         , int(mySolarDb.data['Batt 5']['prev_mAsec']))
+        self.assertEqual(-35         , int(mySolarDb.data['Batt 5']['prev_mAsec_min']))
+        self.assertEqual(-17         , int(mySolarDb.data['Batt 5']['prev_mAsec_max']))
+        self.assertEqual(2           , int(mySolarDb.data['Batt 5']['prev_count']))
 
 
 
@@ -250,6 +322,12 @@ class SolarDb_test(TestCase):
         mySolarDb.data['Load'  ]['10minute_mAsec'] = 100
         mySolarDb.data['Load'  ]['10minute_mAsec_max'] = 100
         mySolarDb.data['Load'  ]['10minute_mAsec_min'] = 100
+        mySolarDb.data['Load'  ]['10minute_v'] = 100
+        mySolarDb.data['Load'  ]['10minute_v_max'] = 100
+        mySolarDb.data['Load'  ]['10minute_v_min'] = 100
+        mySolarDb.data['Load'  ]['10minute_mA'] = 100
+        mySolarDb.data['Load'  ]['10minute_mA_max'] = 100
+        mySolarDb.data['Load'  ]['10minute_mA_min'] = 100
         mySolarDb.data['Load'  ]['10minute_count'] = 1
         mySolarDb.data['Load'  ]['today_mAsec'] = 100
         mySolarDb.data['Load'  ]['today_mAsec_min'] = 1000
@@ -265,6 +343,12 @@ class SolarDb_test(TestCase):
         self.assertEqual(mySolarDb.data['Load']['10minute_mAsec'], 0)
         self.assertEqual(mySolarDb.data['Load']['10minute_mAsec_min'], 999999999)
         self.assertEqual(mySolarDb.data['Load']['10minute_mAsec_max'], -999999999)
+        self.assertEqual(mySolarDb.data['Load']['10minute_v'], 0)
+        self.assertEqual(mySolarDb.data['Load']['10minute_v_min'], 999999999)
+        self.assertEqual(mySolarDb.data['Load']['10minute_v_max'], -999999999)
+        self.assertEqual(mySolarDb.data['Load']['10minute_mA'], 0)
+        self.assertEqual(mySolarDb.data['Load']['10minute_mA_min'], 999999999)
+        self.assertEqual(mySolarDb.data['Load']['10minute_mA_max'], -999999999)
         self.assertEqual(mySolarDb.data['Load']['10minute_count'], 0)
         self.assertEqual(mySolarDb.data['Load']['today_mAsec'], 100)
         self.assertEqual(mySolarDb.data['Load']['today_mAsec_min'], 1000)
@@ -292,32 +376,26 @@ class SolarDb_test(TestCase):
 
         mySolarDb.addEntry(data)
         mySolarDb.addEntry(data)
+        data = {
+            'names': ['Panel', 'Batt 5', 'Batt 6', 'Load', 'Batt 7', 'Batt 8', 'Batt 4', 'Batt 3', 'Batt 2', 'Batt 1'],
+            'current': [318, -27, -25, 402, -31, -22, 12, 16, 13, 2356],
+            'voltage': [13.844, 13.844, 13.848, 13.828, 13.848, 13.844, 13.832, 13.832, 13.836, 13.596]
+            }
         mySolarDb.addEntry(data)
         result_dict = mySolarDb.get_10min_entry(123.4)
 
         mySolarDb.addEntry(data)  # force a file write
 
+        self.assertEqual(3              , result_dict['samples'])
+        self.assertEqual('19:21:10'     , result_dict['time'])
+        self.assertEqual(123.4          , result_dict['time_sec'])
+        self.assertEqual([1186, 13.161333333333332, 12.828, 13.828, 395, 392, 402]  , result_dict['inputs']['Load'])
+        self.assertEqual([934, 13.177333333333332, 12.844, 13.844, 311, 308, 318]   , result_dict['inputs']['Panel'])
 
-        expected = {
-            'inputs':
-                    {'Load': [1176, 392, 1176],
-                    'Panel': [924, 308, 924],
-                    'Batt 1': [7038, 2346, 7038],
-                    'Batt 2': [9, 3, 9],
-                    'Batt 3': [18, 6, 18],
-                    'Batt 4': [6, 2, 6],
-                    'Batt 5': [-51, -51, -17],
-                    'Batt 6': [-45, -45, -15],
-                    'Batt 7': [-63, -63, -21],
-                    'Batt 8': [-36, -36, -12] },
-            'samples': 3,
-            'time': '19:21:10',
-            'time_sec': 123.4}
-
-        self.assertEqual(expected, result_dict)
         self.assertEqual([call('myprefix2018_09_04.csv', 'a+')], mock_open.call_args_list)
         self.assertEqual([call()], mock_open.return_value.close.call_args_list)
-        self.assertEqual([call('{"time_sec": 1536103800.0, "inputs": {"Load": [1176, 392, 1176], "Batt 2": [9, 3, 9], "Batt 8": [-36, -36, -12], "Batt 1": [7038, 2346, 7038], "Batt 3": [18, 6, 18], "Panel": [924, 308, 924], "Batt 5": [-51, -51, -17], "Batt 4": [6, 2, 6], "Batt 7": [-63, -63, -21], "Batt 6": [-45, -45, -15]}, "samples": 3, "time": "19:21:10"}\n')], mock_open.return_value.write.call_args_list)
+        # self.assertEqual([call('{"time_sec": 1536103800.0, "inputs": {"Load": [1176, 392, 1176], "Batt 2": [9, 3, 9], "Batt 8": [-36, -36, -12], "Batt 1": [7038, 2346, 7038], "Batt 3": [18, 6, 18], "Panel": [924, 308, 924], "Batt 5": [-51, -51, -17], "Batt 4": [6, 2, 6], "Batt 7": [-63, -63, -21], "Batt 6": [-45, -45, -15]}, "samples": 3, "time": "19:21:10"}\n')], mock_open.return_value.write.call_args_list)
+        self.assertEqual(1, len(mock_open.return_value.write.call_args_list))
 
 
     @patch('SolarDb.open')
@@ -344,28 +422,29 @@ class SolarDb_test(TestCase):
 
         mySolarDb.addEntry(data)  # force a file write
         mySolarDb.addEntry(data)  # force a file write
-        expected = {
-            'inputs':
-                    {'Load': [1176, 392, 1176],
-                    'Panel': [924, 308, 924],
-                    'Batt 1': [7038, 2346, 7038],
-                    'Batt 2': [9, 3, 9],
-                    'Batt 3': [18, 6, 18],
-                    'Batt 4': [6, 2, 6],
-                    'Batt 5': [-51, -51, -17],
-                    'Batt 6': [-45, -45, -15],
-                    'Batt 7': [-63, -63, -21],
-                    'Batt 8': [-36, -36, -12] },
-            'samples': 3,
-            'time': '23:51:10',
-            'time_sec': 123.4}
+        # expected = {
+        #     'inputs':
+        #             {'Load': [1176, 392, 1176],
+        #             'Panel': [924, 308, 924],
+        #             'Batt 1': [7038, 2346, 7038],
+        #             'Batt 2': [9, 3, 9],
+        #             'Batt 3': [18, 6, 18],
+        #             'Batt 4': [6, 2, 6],
+        #             'Batt 5': [-51, -51, -17],
+        #             'Batt 6': [-45, -45, -15],
+        #             'Batt 7': [-63, -63, -21],
+        #             'Batt 8': [-36, -36, -12] },
+        #     'samples': 3,
+        #     'time': '23:51:10',
+        #     'time_sec': 123.4}
 
-        self.assertEqual(expected, result_dict)
+        # self.assertEqual(expected, result_dict)
         self.assertEqual([call('myprefix2018_09_04.csv', 'a+'),
                           call('myprefix2018_09_05.csv', 'a+')], mock_open.call_args_list)
         self.assertEqual([call(), call()], mock_open.return_value.close.call_args_list)
-        self.assertEqual([call('{"time_sec": 1536120000.0, "inputs": {"Load": [1176, 392, 1176], "Batt 2": [9, 3, 9], "Batt 8": [-36, -36, -12], "Batt 1": [7038, 2346, 7038], "Batt 3": [18, 6, 18], "Panel": [924, 308, 924], "Batt 5": [-51, -51, -17], "Batt 4": [6, 2, 6], "Batt 7": [-63, -63, -21], "Batt 6": [-45, -45, -15]}, "samples": 3, "time": "23:51:10"}\n'),
-                          call('{"time_sec": 1536120600.0, "inputs": {"Load": [392, 392, 392], "Batt 2": [3, 3, 3], "Batt 8": [-12, -12, -12], "Batt 1": [2346, 2346, 2346], "Batt 3": [6, 6, 6], "Panel": [308, 308, 308], "Batt 5": [-17, -17, -17], "Batt 4": [2, 2, 2], "Batt 7": [-21, -21, -21], "Batt 6": [-15, -15, -15]}, "samples": 1, "time": "00:00:00"}\n')], mock_open.return_value.write.call_args_list)
+        # self.assertEqual([call('{"time_sec": 1536120000.0, "inputs": {"Load": [1176, 392, 1176], "Batt 2": [9, 3, 9], "Batt 8": [-36, -36, -12], "Batt 1": [7038, 2346, 7038], "Batt 3": [18, 6, 18], "Panel": [924, 308, 924], "Batt 5": [-51, -51, -17], "Batt 4": [6, 2, 6], "Batt 7": [-63, -63, -21], "Batt 6": [-45, -45, -15]}, "samples": 3, "time": "23:51:10"}\n'),
+        #                   call('{"time_sec": 1536120600.0, "inputs": {"Load": [392, 392, 392], "Batt 2": [3, 3, 3], "Batt 8": [-12, -12, -12], "Batt 1": [2346, 2346, 2346], "Batt 3": [6, 6, 6], "Panel": [308, 308, 308], "Batt 5": [-17, -17, -17], "Batt 4": [2, 2, 2], "Batt 7": [-21, -21, -21], "Batt 6": [-15, -15, -15]}, "samples": 1, "time": "00:00:00"}\n')], mock_open.return_value.write.call_args_list)
+        self.assertEqual(2 , len(mock_open.return_value.write.call_args_list))
 
 
 
@@ -380,22 +459,50 @@ class SolarDb_test(TestCase):
 
         mySolarDb = SolarDb("myprefix", self.get_default_config() )
 
-        self.assertEqual(
-            {'Load': {'today_count': 2, 'prev_mAsec_min': 1041246, '10minute_mAsec_min': 999999999, '10minute_count': 0, '10minute_mAsec_max': -999999999, 'today_mAsec_max': 1860076, 'prev_count': 4, 'prev_mAsec_max': 3720152, 'today_mAsec': 1860076, '10minute_mAsec': 0, 'today_mAsec_min': 1041246, 'prev_mAsec': 3720152},
-            'Batt 2': {'today_count': 0, 'prev_mAsec_min': 999999999, '10minute_mAsec_min': 999999999, '10minute_count': 0, '10minute_mAsec_max': -999999999, 'today_mAsec_max': -999999999, 'prev_count': 0, 'prev_mAsec_max': -999999999, 'today_mAsec': 0, '10minute_mAsec': 0, 'today_mAsec_min': 999999999, 'prev_mAsec': 0},
-            'Batt 8': {'today_count': 2, 'prev_mAsec_min': -420628, '10minute_mAsec_min': 999999999, '10minute_count': 0, '10minute_mAsec_max': -999999999, 'today_mAsec_max': -120477, 'prev_count': 4, 'prev_mAsec_max': -120477, 'today_mAsec': -210314, '10minute_mAsec': 0, 'today_mAsec_min': -210314, 'prev_mAsec': -420628},
-            'Batt 1': {'today_count': 2, 'prev_mAsec_min': -259856, '10minute_mAsec_min': 999999999, '10minute_count': 0, '10minute_mAsec_max': -999999999, 'today_mAsec_max': -73203, 'prev_count': 4, 'prev_mAsec_max': -73203, 'today_mAsec': -129928, '10minute_mAsec': 0, 'today_mAsec_min': -129928, 'prev_mAsec': -259856},
-            'Batt 3': {'today_count': 2, 'prev_mAsec_min': -248188, '10minute_mAsec_min': 999999999, '10minute_count': 0, '10minute_mAsec_max': -999999999, 'today_mAsec_max': -69663, 'prev_count': 4, 'prev_mAsec_max': -69663, 'today_mAsec': -124094, '10minute_mAsec': 0, 'today_mAsec_min': -124094, 'prev_mAsec': -248188},
-            'Panel': {'today_count': 2, 'prev_mAsec_min': 265766, '10minute_mAsec_min': 999999999, '10minute_count': 0, '10minute_mAsec_max': -999999999, 'today_mAsec_max': 497866, 'prev_count': 4, 'prev_mAsec_max': 995732, 'today_mAsec': 497866, '10minute_mAsec': 0, 'today_mAsec_min': 265766, 'prev_mAsec': 995732},
-            'Batt 5': {'today_count': 2, 'prev_mAsec_min': -481590, '10minute_mAsec_min': 999999999, '10minute_count': 0, '10minute_mAsec_max': -999999999, 'today_mAsec_max': -137945, 'prev_count': 4, 'prev_mAsec_max': -137945, 'today_mAsec': -240795, '10minute_mAsec': 0, 'today_mAsec_min': -240795, 'prev_mAsec': -481590},
-            'Batt 4': {'today_count': 2, 'prev_mAsec_min': -308412, '10minute_mAsec_min': 999999999, '10minute_count': 0, '10minute_mAsec_max': -999999999, 'today_mAsec_max': -86528, 'prev_count': 4, 'prev_mAsec_max': -86528, 'today_mAsec': -154206, '10minute_mAsec': 0, 'today_mAsec_min': -154206, 'prev_mAsec': -308412},
-            'Batt 7': {'today_count': 2, 'prev_mAsec_min': -518788, '10minute_mAsec_min': 999999999, '10minute_count': 0, '10minute_mAsec_max': -999999999, 'today_mAsec_max': -145348, 'prev_count': 4, 'prev_mAsec_max': -145348, 'today_mAsec': -259394, '10minute_mAsec': 0, 'today_mAsec_min': -259394, 'prev_mAsec': -518788},
-            'Batt 6': {'today_count': 2, 'prev_mAsec_min': -554206, '10minute_mAsec_min': 999999999, '10minute_count': 0, '10minute_mAsec_max': -999999999, 'today_mAsec_max': -158404, 'prev_count': 4, 'prev_mAsec_max': -158404, 'today_mAsec': -277103, '10minute_mAsec': 0, 'today_mAsec_min': -277103, 'prev_mAsec': -554206}}, mySolarDb.data)
+            # 'Panel': {'today_count': 2, 'prev_mAsec_min': , '10minute_mAsec_min': 999999999, '10minute_count': 0, 
+            # '10minute_mAsec_max': -999999999, 'today_mAsec_max': , 'prev_count': 4,
+            #  'prev_mAsec_max': , 'today_mAsec': , '10minute_mAsec': 0,
+            #  'today_mAsec_min': , 'prev_mAsec': },
 
+        self.assertEqual(mySolarDb.data['Panel']['10minute_count'], 0 )  # spot check at least one source
+        self.assertEqual(mySolarDb.data['Panel']['10minute_mAsec'], 0 )
+        self.assertEqual(mySolarDb.data['Panel']['10minute_mAsec_min'], 999999999 )
+        self.assertEqual(mySolarDb.data['Panel']['10minute_mAsec_max'], -999999999 )
+        self.assertEqual(mySolarDb.data['Panel']['10minute_v'], 0 )
+        self.assertEqual(mySolarDb.data['Panel']['10minute_v_min'], 999999999 )
+        self.assertEqual(mySolarDb.data['Panel']['10minute_v_max'], -999999999 )
+        self.assertEqual(mySolarDb.data['Panel']['10minute_mA'], 0 )
+        self.assertEqual(mySolarDb.data['Panel']['10minute_mA_min'], 999999999 )
+        self.assertEqual(mySolarDb.data['Panel']['10minute_mA_max'], -999999999 )
+        self.assertEqual(mySolarDb.data['Panel']['today_count'], 2 )
+        self.assertEqual(mySolarDb.data['Panel']['today_mAsec'], 497866 )
+        self.assertEqual(mySolarDb.data['Panel']['today_mAsec_min'], 265766 )
+        self.assertEqual(mySolarDb.data['Panel']['today_mAsec_max'], 497866 )
+        self.assertEqual(mySolarDb.data['Panel']['prev_count'], 4 )
+        self.assertEqual(mySolarDb.data['Panel']['prev_mAsec'], 995732 )
+        self.assertEqual(mySolarDb.data['Panel']['prev_mAsec_min'], 265766 )
+        self.assertEqual(mySolarDb.data['Panel']['prev_mAsec_max'], 995732 )
+
+        result,filename = mySolarDb.readDayLog(0)
+
+        self.assertEqual('solarLog_2018_09_06.csv', filename)
+
+        # self.assertEqual(
+        #     {'Load': {'today_count': 2, 'prev_mAsec_min': 1041246, '10minute_mAsec_min': 999999999, '10minute_count': 0, '10minute_mAsec_max': -999999999, 'today_mAsec_max': 1860076, 'prev_count': 4, 'prev_mAsec_max': 3720152, 'today_mAsec': 1860076, '10minute_mAsec': 0, 'today_mAsec_min': 1041246, 'prev_mAsec': 3720152},
+        #     'Batt 2': {'today_count': 0, 'prev_mAsec_min': 999999999, '10minute_mAsec_min': 999999999, '10minute_count': 0, '10minute_mAsec_max': -999999999, 'today_mAsec_max': -999999999, 'prev_count': 0, 'prev_mAsec_max': -999999999, 'today_mAsec': 0, '10minute_mAsec': 0, 'today_mAsec_min': 999999999, 'prev_mAsec': 0},
+        #     'Batt 8': {'today_count': 2, 'prev_mAsec_min': -420628, '10minute_mAsec_min': 999999999, '10minute_count': 0, '10minute_mAsec_max': -999999999, 'today_mAsec_max': -120477, 'prev_count': 4, 'prev_mAsec_max': -120477, 'today_mAsec': -210314, '10minute_mAsec': 0, 'today_mAsec_min': -210314, 'prev_mAsec': -420628},
+        #     'Batt 1': {'today_count': 2, 'prev_mAsec_min': -259856, '10minute_mAsec_min': 999999999, '10minute_count': 0, '10minute_mAsec_max': -999999999, 'today_mAsec_max': -73203, 'prev_count': 4, 'prev_mAsec_max': -73203, 'today_mAsec': -129928, '10minute_mAsec': 0, 'today_mAsec_min': -129928, 'prev_mAsec': -259856},
+        #     'Batt 3': {'today_count': 2, 'prev_mAsec_min': -248188, '10minute_mAsec_min': 999999999, '10minute_count': 0, '10minute_mAsec_max': -999999999, 'today_mAsec_max': -69663, 'prev_count': 4, 'prev_mAsec_max': -69663, 'today_mAsec': -124094, '10minute_mAsec': 0, 'today_mAsec_min': -124094, 'prev_mAsec': -248188},
+        #     'Panel': {'today_count': 2, 'prev_mAsec_min': 265766, '10minute_mAsec_min': 999999999, '10minute_count': 0, '10minute_mAsec_max': -999999999, 'today_mAsec_max': 497866, 'prev_count': 4, 'prev_mAsec_max': 995732, 'today_mAsec': 497866, '10minute_mAsec': 0, 'today_mAsec_min': 265766, 'prev_mAsec': 995732},
+        #     'Batt 5': {'today_count': 2, 'prev_mAsec_min': -481590, '10minute_mAsec_min': 999999999, '10minute_count': 0, '10minute_mAsec_max': -999999999, 'today_mAsec_max': -137945, 'prev_count': 4, 'prev_mAsec_max': -137945, 'today_mAsec': -240795, '10minute_mAsec': 0, 'today_mAsec_min': -240795, 'prev_mAsec': -481590},
+        #     'Batt 4': {'today_count': 2, 'prev_mAsec_min': -308412, '10minute_mAsec_min': 999999999, '10minute_count': 0, '10minute_mAsec_max': -999999999, 'today_mAsec_max': -86528, 'prev_count': 4, 'prev_mAsec_max': -86528, 'today_mAsec': -154206, '10minute_mAsec': 0, 'today_mAsec_min': -154206, 'prev_mAsec': -308412},
+        #     'Batt 7': {'today_count': 2, 'prev_mAsec_min': -518788, '10minute_mAsec_min': 999999999, '10minute_count': 0, '10minute_mAsec_max': -999999999, 'today_mAsec_max': -145348, 'prev_count': 4, 'prev_mAsec_max': -145348, 'today_mAsec': -259394, '10minute_mAsec': 0, 'today_mAsec_min': -259394, 'prev_mAsec': -518788},
+        #     'Batt 6': {'today_count': 2, 'prev_mAsec_min': -554206, '10minute_mAsec_min': 999999999, '10minute_count': 0, '10minute_mAsec_max': -999999999, 'today_mAsec_max': -158404, 'prev_count': 4, 'prev_mAsec_max': -158404, 'today_mAsec': -277103, '10minute_mAsec': 0, 'today_mAsec_min': -277103, 'prev_mAsec': -554206}}, mySolarDb.data)
 
 
     @patch('SolarDb.glob')
-    def test_getFilenameFromIndex(self, mock_glob):
+    @patch('SolarDb.open')
+    def test_getFilenameFromIndex(self, mock_open, mock_glob):
         mock_glob.glob.return_value = ['solarLog_2018_09_06.csv', 'solarLog_2018_09_07.csv']
 
         mySolarDb = SolarDb("solarLog_", self.get_default_config() )
@@ -405,8 +512,6 @@ class SolarDb_test(TestCase):
         self.assertEquals(None,                      mySolarDb.getFilenameFromIndex(2))
         self.assertEquals(None,                      mySolarDb.getFilenameFromIndex(3))
         self.assertEquals(None,                      mySolarDb.getFilenameFromIndex(4))
-
-
 
 
 

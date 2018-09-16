@@ -1,11 +1,17 @@
 #!/usr/bin/env python
 import Tkinter as tk
-#~ from solar_monitor import Solar, setupSolar
+import json
+from SolarDb import SolarDb
 
 class Application(tk.Frame):
-    def __init__(self, master=None):
+    def __init__(self, master=None, config=None):
         tk.Frame.__init__(self, master)
         self.grid(sticky=tk.N+tk.S+tk.E+tk.W)
+
+        self.config = config
+        self.m_SolarDb = SolarDb('solarLog_', config)
+        self.filename = "Unknown"
+
         self.createWidgets()
 
         self.plotData = None;
@@ -14,11 +20,12 @@ class Application(tk.Frame):
         self.topPad = 10
         self.bottomPad = 30
         self.rightPad = 10
-        self.currentParm = -1;
+        self.currentParm = 2;
         self.currentFileIndex = 0;  # most recent
         self.firstPoint = 0
         self.lastPoint = 0;
 
+        # self.fetchAndPlot() # draw the initial stuff
 
     def mouse_motion(self, event):
 
@@ -43,7 +50,7 @@ class Application(tk.Frame):
         if self.plotwidth != 0 and self.mouseX > self.leftPad and self.mouseX < self.plotwidth-self.rightPad:
             fraction = float(xInGrid)/float(gridWidth)
         mouseIndex = self.firstPoint + (self.lastPoint-self.firstPoint)*fraction
-        
+
         # handle zooming
         if direction == -1: # zoom in
             self.firstPoint = int(mouseIndex - 0.9*(mouseIndex - self.firstPoint))
@@ -76,93 +83,137 @@ class Application(tk.Frame):
         # set up frames for the 6 sensors
         #
 
-        self.sensor_LabelFrame = []
-        for sensorIndex in xrange(6):
-            self.sensor_LabelFrame.append( tk.LabelFrame(self, text="Sensor") )
-            self.sensor_LabelFrame[sensorIndex].grid(column=sensorIndex, row=0)
+        self.parameter_LabelFrame = tk.LabelFrame(self, text="Parameter")
+        self.parameter_LabelFrame.grid(column=0, row=0, sticky=tk.N+tk.S+tk.E+tk.W)
+        self.parameter_LabelFrame.rowconfigure(0, weight=1)
+        self.parameter_LabelFrame.columnconfigure(0, weight=1)
 
-        self.canvas_LabelFrame = tk.LabelFrame(self, text="Waveform for None")
-        self.canvas_LabelFrame.grid(column=0, row=1, columnspan=7, sticky=tk.N+tk.S+tk.E+tk.W)
+        self.inputs_LabelFrame = tk.LabelFrame(self, text="Input")
+        self.inputs_LabelFrame.grid(column=0, row=1, sticky=tk.N+tk.S+tk.E+tk.W)
+        self.inputs_LabelFrame.rowconfigure(0, weight=1)
+        self.inputs_LabelFrame.columnconfigure(0, weight=1)
 
-        # make virtual 7th column take stretching. and row 1 (with canvas)
-        self.rowconfigure(1, weight=1)
-        self.columnconfigure(6, weight=1)
+        # self.sensor_LabelFrame = []
+        # for sensorIndex in xrange(6):
+        #     self.sensor_LabelFrame.append( tk.LabelFrame(self, text="Sensor") )
+        #     self.sensor_LabelFrame[sensorIndex].grid(column=sensorIndex, row=0)
 
+        # self.canvas_LabelFrame = tk.LabelFrame(self, text="Waveform for None")
+        # self.canvas_LabelFrame.grid(column=0, row=1, columnspan=7, sticky=tk.N+tk.S+tk.E+tk.W)
+        self.canvas_LabelFrame = tk.LabelFrame(self, text="Waveform")
+        self.canvas_LabelFrame.grid(column=1, row=0, rowspan=3, sticky=tk.N+tk.S+tk.E+tk.W)
+
+        # # make virtual 7th column take stretching. and row 1 (with canvas)
+        # self.rowconfigure(1, weight=1)
+        # self.columnconfigure(6, weight=1)
+        # make virtual 3rd row take stretching. and column 1 (with canvas)
+        self.rowconfigure(2, weight=1)
+        self.columnconfigure(1, weight=1)
+
+        # self.canvas_LabelFrame.rowconfigure(0, weight=1)
+        # self.canvas_LabelFrame.columnconfigure(1, weight=1)
         self.canvas_LabelFrame.rowconfigure(0, weight=1)
         self.canvas_LabelFrame.columnconfigure(1, weight=1)
 
-        # add a bit of space left of the readings so that the field stays fixed width
-        for sensorIndex in xrange(6):
-            self.sensor_LabelFrame[sensorIndex].columnconfigure(1, minsize=120)
+        # # add a bit of space left of the readings so that the field stays fixed width
+        # for sensorIndex in xrange(6):
+        #     self.sensor_LabelFrame[sensorIndex].columnconfigure(1, minsize=120)
 
 
-        #
-        # set up IntVar variables for checkboxes
-        #
-        self.sensor_voltageIntVar = []
-        self.sensor_currentIntVar = []
-        self.sensor_powerIntVar = []
-        for sensorIndex in xrange(6):
-            self.sensor_voltageIntVar.append( tk.IntVar( ) )
-            self.sensor_currentIntVar.append( tk.IntVar( ) )
-            self.sensor_powerIntVar.append( tk.IntVar( ) )
+        # #
+        # # set up IntVar variables for checkboxes
+        # #
+        # self.sensor_voltageIntVar = []
+        # self.sensor_currentIntVar = []
+        # self.sensor_powerIntVar = []
+        # for sensorIndex in xrange(6):
+        #     self.sensor_voltageIntVar.append( tk.IntVar( ) )
+        #     self.sensor_currentIntVar.append( tk.IntVar( ) )
+        #     self.sensor_powerIntVar.append( tk.IntVar( ) )
 
+        self.parameter_mAsec_IntVar = tk.IntVar( )
+        self.parameter_volts_IntVar = tk.IntVar( )
+        self.parameter_mA_IntVar = tk.IntVar( )
+        self.sensor_enable_IntVar = []
+        for sensorIndex in xrange(len(self.config)):
+            self.sensor_enable_IntVar.append( tk.IntVar( ) )
 
-        #
-        # set up checkboxes for Sensors
-        #
+        # #
+        # # set up checkboxes for Sensors
+        # #
 
-        self.sensor_voltageCheckbox = []
-        self.sensor_currentCheckbox = []
-        self.sensor_powerCheckbox = []
-        for sensorIndex in xrange(6):
-            checkButton = tk.Checkbutton(self.sensor_LabelFrame[sensorIndex], text="V", variable=self.sensor_voltageIntVar[sensorIndex], command=lambda sensorIndex=sensorIndex: self.checkbuttonHandler(0,sensorIndex) )
-            self.sensor_voltageCheckbox.append( checkButton )
-            self.sensor_voltageCheckbox[sensorIndex].grid(column=0, row=1, sticky=tk.W)
+        # self.sensor_voltageCheckbox = []
+        # self.sensor_currentCheckbox = []
+        # self.sensor_powerCheckbox = []
+        # for sensorIndex in xrange(6):
+        #     checkButton = tk.Checkbutton(self.sensor_LabelFrame[sensorIndex], text="V", variable=self.sensor_voltageIntVar[sensorIndex], command=lambda sensorIndex=sensorIndex: self.checkbuttonHandler(0,sensorIndex) )
+        #     self.sensor_voltageCheckbox.append( checkButton )
+        #     self.sensor_voltageCheckbox[sensorIndex].grid(column=0, row=1, sticky=tk.W)
 
-            checkButton = tk.Checkbutton(self.sensor_LabelFrame[sensorIndex], text="mA", variable=self.sensor_currentIntVar[sensorIndex], command=lambda sensorIndex=sensorIndex: self.checkbuttonHandler(1,sensorIndex))
-            self.sensor_currentCheckbox.append( checkButton)
-            self.sensor_currentCheckbox[sensorIndex].grid(column=0, row=2, sticky=tk.W)
+        #     checkButton = tk.Checkbutton(self.sensor_LabelFrame[sensorIndex], text="mA", variable=self.sensor_currentIntVar[sensorIndex], command=lambda sensorIndex=sensorIndex: self.checkbuttonHandler(1,sensorIndex))
+        #     self.sensor_currentCheckbox.append( checkButton)
+        #     self.sensor_currentCheckbox[sensorIndex].grid(column=0, row=2, sticky=tk.W)
 
-            checkButton = tk.Checkbutton(self.sensor_LabelFrame[sensorIndex], text="mW", variable=self.sensor_powerIntVar[sensorIndex], command=lambda sensorIndex=sensorIndex: self.checkbuttonHandler(2,sensorIndex))
-            self.sensor_powerCheckbox.append(checkButton )
-            self.sensor_powerCheckbox[sensorIndex].grid(column=0, row=3, sticky=tk.W)
-
-
-        #
-        # set up StringVar for data outputs
-        #
-
-        self.sensor_voltageStringVar = []
-        self.sensor_currentStringVar = []
-        self.sensor_powerStringVar = []
-        for sensorIndex in xrange(6):
-            self.sensor_voltageStringVar.append( tk.StringVar( ) )
-            self.sensor_voltageStringVar[sensorIndex].set("xx.xxx Volts")
-
-            self.sensor_currentStringVar.append( tk.StringVar( ) )
-            self.sensor_currentStringVar[sensorIndex].set("y.yyy Amps")
-
-            self.sensor_powerStringVar.append( tk.StringVar( ) )
-            self.sensor_powerStringVar[sensorIndex].set("xx.xxx Watts")
-
+        #     checkButton = tk.Checkbutton(self.sensor_LabelFrame[sensorIndex], text="mW", variable=self.sensor_powerIntVar[sensorIndex], command=lambda sensorIndex=sensorIndex: self.checkbuttonHandler(2,sensorIndex))
+        #     self.sensor_powerCheckbox.append(checkButton )
+        #     self.sensor_powerCheckbox[sensorIndex].grid(column=0, row=3, sticky=tk.W)
 
         #
-        # set up Label widgets for data outputs
+        # set up checkboxes for Parameters
         #
+        self.parameter_mAsec_CheckButton = tk.Checkbutton(self.parameter_LabelFrame, text="mAsec", variable=self.parameter_mAsec_IntVar, command=lambda sensorIndex=0: self.checkbuttonHandler(0,0) )
+        self.parameter_mAsec_CheckButton.grid(column=0, row=0, sticky=tk.W)
 
-        self.sensor_voltageLabel = []
-        self.sensor_currentLabel = []
-        self.sensor_powerLabel = []
-        for sensorIndex in xrange(6):
-            self.sensor_voltageLabel.append( tk.Label(self.sensor_LabelFrame[sensorIndex], textvariable=self.sensor_voltageStringVar[sensorIndex]) )
-            self.sensor_voltageLabel[sensorIndex].grid(column=1, row=1, sticky=tk.E)
+        self.parameter_volts_CheckButton = tk.Checkbutton(self.parameter_LabelFrame, text="volts", variable=self.parameter_volts_IntVar, command=lambda sensorIndex=0: self.checkbuttonHandler(0,0) )
+        self.parameter_volts_CheckButton.grid(column=0, row=1, sticky=tk.W)
 
-            self.sensor_currentLabel.append( tk.Label(self.sensor_LabelFrame[sensorIndex], textvariable=self.sensor_currentStringVar[sensorIndex]) )
-            self.sensor_currentLabel[sensorIndex].grid(column=1, row=2, sticky=tk.E)
+        self.parameter_mA_CheckButton = tk.Checkbutton(self.parameter_LabelFrame, text="mA", variable=self.parameter_mA_IntVar, command=lambda sensorIndex=0: self.checkbuttonHandler(0,0) )
+        self.parameter_mA_CheckButton.grid(column=0, row=2, sticky=tk.W)
 
-            self.sensor_powerLabel.append( tk.Label(self.sensor_LabelFrame[sensorIndex], textvariable=self.sensor_powerStringVar[sensorIndex]) )
-            self.sensor_powerLabel[sensorIndex].grid(column=1, row=3, sticky=tk.E)
+        #
+        # set up checkboxes for inputs
+        #
+        self.sensor_Checkbox = []
+        for sensorIndex in xrange(len(self.config)):
+            checkButton = tk.Checkbutton(self.inputs_LabelFrame, text=self.config[sensorIndex]['name'], variable=self.sensor_enable_IntVar[sensorIndex], command=lambda sensorIndex=sensorIndex: self.checkbuttonHandler(0,sensorIndex) )
+            self.sensor_Checkbox.append( checkButton )
+            self.sensor_Checkbox[sensorIndex].grid(column=0, row=sensorIndex, sticky=tk.W)
+
+
+        # #
+        # # set up StringVar for data outputs
+        # #
+
+        # self.sensor_voltageStringVar = []
+        # self.sensor_currentStringVar = []
+        # self.sensor_powerStringVar = []
+        # for sensorIndex in xrange(6):
+        #     self.sensor_voltageStringVar.append( tk.StringVar( ) )
+        #     self.sensor_voltageStringVar[sensorIndex].set("xx.xxx Volts")
+
+        #     self.sensor_currentStringVar.append( tk.StringVar( ) )
+        #     self.sensor_currentStringVar[sensorIndex].set("y.yyy Amps")
+
+        #     self.sensor_powerStringVar.append( tk.StringVar( ) )
+        #     self.sensor_powerStringVar[sensorIndex].set("xx.xxx Watts")
+
+
+        # #
+        # # set up Label widgets for data outputs
+        # #
+
+        # self.sensor_voltageLabel = []
+        # self.sensor_currentLabel = []
+        # self.sensor_powerLabel = []
+        # for sensorIndex in xrange(6):
+        #     self.sensor_voltageLabel.append( tk.Label(self.sensor_LabelFrame[sensorIndex], textvariable=self.sensor_voltageStringVar[sensorIndex]) )
+        #     self.sensor_voltageLabel[sensorIndex].grid(column=1, row=1, sticky=tk.E)
+
+        #     self.sensor_currentLabel.append( tk.Label(self.sensor_LabelFrame[sensorIndex], textvariable=self.sensor_currentStringVar[sensorIndex]) )
+        #     self.sensor_currentLabel[sensorIndex].grid(column=1, row=2, sticky=tk.E)
+
+        #     self.sensor_powerLabel.append( tk.Label(self.sensor_LabelFrame[sensorIndex], textvariable=self.sensor_powerStringVar[sensorIndex]) )
+        #     self.sensor_powerLabel[sensorIndex].grid(column=1, row=3, sticky=tk.E)
 
 
 
@@ -171,10 +222,10 @@ class Application(tk.Frame):
         #
         # set up the left and right buttons
         #
-        self.canvasLeftButton = tk.Button(self.canvas_LabelFrame, text='<', command=self.clickRight)
+        self.canvasLeftButton = tk.Button(self.canvas_LabelFrame, text='<', command=self.clickLeft)
         self.canvasLeftButton.grid(column=0,row=0)
 
-        self.canvasRightButton = tk.Button(self.canvas_LabelFrame, text='>', command=self.clickLeft)
+        self.canvasRightButton = tk.Button(self.canvas_LabelFrame, text='>', command=self.clickRight)
         self.canvasRightButton.grid(column=2,row=0)
 
 
@@ -244,25 +295,25 @@ class Application(tk.Frame):
             self.sensor_powerStringVar[sensorIndex].set("%2.3f Watts" % (solarData["voltage"][sensorIndex]*solarData["current"][sensorIndex]/1000.0))
 
     def clickRight(self):
-        self.currentFileIndex = self.currentFileIndex +1
+        if self.currentFileIndex > 0:
+            self.currentFileIndex = self.currentFileIndex -1
         self.fetchAndPlot();
 
     def clickLeft(self):
-        if self.currentFileIndex > 0:
-            self.currentFileIndex = self.currentFileIndex -1
+        self.currentFileIndex = self.currentFileIndex +1
         self.fetchAndPlot();
 
     def fetchAndPlot(self):
 #       self.plotDate = self.mySolar.m_Timestamper.getDate()
 #       self.plotDate = "2016_12_09"
 
-        (self.plotData, filename) = self.mySolar.m_SolarDb.readDayLog(self.currentFileIndex);
+        (self.plotData, self.filename) = self.m_SolarDb.readDayLog(self.currentFileIndex);
 
-        self.filename = filename
-        self.mySolar.computeNetPower(self.plotData)
-        
+        # self.mySolar.computeNetPower(self.plotData)
+
         # reset the edges
-        self.lastPoint = len(self.plotData[0]["voltage"])  # assume length of each array is the same.
+        self.lastPoint = len(self.plotData['Panel']["mAsec"])  # assume length of each array is the same.
+        print("self.lastPoint = %d" % self.lastPoint)
         self.firstPoint = 0
 
         self.plotGraph()
@@ -292,14 +343,17 @@ class Application(tk.Frame):
 
         # plot the data traces
         if (not self.plotData == None) and (self.currentParm != -1 ):
-            for channelIndex in xrange(6):
-                if self.chanList[channelIndex] == 1:
+            for channelIndex in xrange(len(self.config)):
+                channelName = self.config[channelIndex]['name']
+                # if self.chanList[channelIndex] == 1:
+                if channelName == 'Panel':
 
                     parm = self.currentParm
 
-                    tempMinMax = self.getMinMaxForParm(parm, channelIndex)
-                    gridScaleMax = tempMinMax[1];
-                    gridScaleMin = tempMinMax[0];
+                    gridScaleMin, gridScaleMax = self.getMinMaxForParm(parm, channelName)
+
+                    print 'gridScaleMin, gridScaleMax'
+                    print gridScaleMin, gridScaleMax
                     gridLeft = self.leftPad
                     gridRight = self.plotwidth-self.rightPad
                     gridBottom = self.plotheight-self.bottomPad
@@ -326,9 +380,9 @@ class Application(tk.Frame):
                     vertMin = gridScaleMin
 
                     # plot the data
-                    leftValue=self.getDataValueForParm(parm,channelIndex,0)
+                    leftValue=self.getDataValueForParm(parm,channelName,0)
                     for index in xrange(skipCount, valueCount-skipCount, skipCount):
-                        rightValue = self.getDataValueForParm(parm,channelIndex,index+self.firstPoint);
+                        rightValue = self.getDataValueForParm(parm,channelName,index+self.firstPoint);
                         self.canvas.create_line(plotXBase+horizontalScale*(index),
                                                 plotYBase-verticalScale*(leftValue-vertMin),
                                                 plotXBase+horizontalScale*(index+skipCount),
@@ -367,36 +421,51 @@ class Application(tk.Frame):
                     # y-axis numbers - bottom
                     self.canvas.create_text(0, gridBottom - 2, text=("%2.2f" % (gridScaleMin)), anchor=tk.SW)
 
-    def getDataValueForParm(self,parm,channelIndex,index):
+    def getDataValueForParm(self,parm,channel,index):
         returnVal = 0;
         if parm == 0:  # voltage
-            returnVal = self.plotData[channelIndex]["voltage"][index];
+            returnVal = self.plotData[channel]["v_avg"][index]
         elif parm == 1: # current
-            returnVal = self.plotData[channelIndex]["current"][index];
+            returnVal = self.plotData[channel]["mA_avg"][index]
         elif parm == 2: # power
-            returnVal = self.plotData[channelIndex]["voltage"][index] * self.plotData[channelIndex]["current"][index];
+            returnVal = self.plotData[channel]["mAsec"][index]
+            # returnVal = self.plotData[channel]["mAsec"][index] * self.plotData[channel]["current"][index]
         return returnVal
 
-    def getMinMaxForParm(self,parm,channelIndex):
+    def getMinMaxForParm(self,parm,channel):
         returnVal = [999999999.0, -999999999.0] # baseline extreme opposite numbers for min and max
         channelMax = 0; channelMin = 0
-        for channelIndex in xrange(6):
-            if self.chanList[channelIndex] == 1:# is channel enabled. FIXME when clickers working
+        # for channel in channelList:
+        if channel in self.plotData:
+            for index in range(len(self.plotData[channel]["v_max"])):
+                # if self.chanList[channel] == 1:# is channel enabled. FIXME when clickers working
                 if parm == 0: # voltage
-                    channelMax = self.plotData[channelIndex]["maxVoltage"];
-                    channelMin = self.plotData[channelIndex]["minVoltage"];
+                    channelMax = self.plotData[channel]["v_max"][index]
+                    channelMin = self.plotData[channel]["v_min"][index]
                 elif parm == 1: # current
-                    channelMax = self.plotData[channelIndex]["maxCurrent"];
-                    channelMin = self.plotData[channelIndex]["minCurrent"];
+                    channelMax = self.plotData[channel]["mA_max"][index]
+                    channelMin = self.plotData[channel]["mA_min"][index]
                 elif parm == 2: # power
-                    channelMax = self.plotData[channelIndex]["maxPower"];
-                    channelMin = self.plotData[channelIndex]["minPower"];
+                    channelMax = self.plotData[channel]["mAsec"][index]
+                    channelMin = self.plotData[channel]["mAsec"][index]
 
                 if channelMax > returnVal[1]: # find new max
                     returnVal[1] = channelMax;
                 if channelMin < returnVal[0]: # find new min
                     returnVal[0] = channelMin;
-        return returnVal
+        return returnVal[0], returnVal[1]
+
+    # return_val = {} [<name>] = {}
+    #                   ['mAsec'] = []
+    #                   ['v_avg'] = []
+    #                   ['v_max'] = []
+    #                   ['v_min'] = []
+    #                   ['mA_avg'] = []
+    #                   ['mA_max'] = []
+    #                   ['mA_min'] = []
+    #                   ['time'] = [] = '11:09:59' = 'HH:MM:SS'
+
+
 
     def periodicEventHandler(self):
 #       self.after(1000,self.periodicEventHandler);
@@ -410,8 +479,8 @@ class Application(tk.Frame):
 
 
 
-def main():
-    app = Application()
+def main(config):
+    app = Application(config=config)
     app.master.title('Solar Panel Monitor')
 
 #   app.after(0,app.periodicEventHandler);
@@ -425,5 +494,11 @@ def main():
 
 
 if __name__ == "__main__":
-    main();
+    fp = open("config.json", "r")
+    config_string = fp.read()
+    fp.close()
+    config = json.loads(config_string)
+
+    main(config)
+    # main();
 
