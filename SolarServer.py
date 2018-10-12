@@ -11,7 +11,7 @@ class SolarServer():
         self.one_fifo = OneFifo('/tmp/solar_data.fifo')
         self.one_fifo.__enter__()
 
-        self.listner_address = None
+        self.listner_address = []
 
         self.socket = socket.socket(socket.AF_INET, #internet,
                                     socket.SOCK_DGRAM) #UDP
@@ -60,6 +60,8 @@ class SolarServer():
 
 
     def handleNewAttachments(self):
+        self.listner_address = []
+        
         queue_empty = False
         while queue_empty == False:
             ready_to_read, ready_to_write, in_error = select.select( [self.socket], [], [], 0.001) # only wait 1 msec
@@ -68,10 +70,13 @@ class SolarServer():
                 queue_empty = True
             else:
                 data, address = ready_to_read[0].recvfrom(4096)
-                self.listner_address = address
-                print('got sub msg from %s:%s' % (self.listner_address[0], self.listner_address[1]))
+                if not address in self.listner_address:
+                    self.listner_address.append(address)
+                    print('got sub msg from')
+                    print(self.listner_address)
 
     def sendUdpToListeners(self, json):
         if self.listner_address != None:
-            print('sending to %s:%s msg %s' % (self.listner_address[0], self.listner_address[1], json))
-            self.socket.sendto(json, self.listner_address)
+            for address in self.listner_address:
+                print('sending to %s:%s msg %s' % (address[0], address[1], json))
+                self.socket.sendto(json, address)

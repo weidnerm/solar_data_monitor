@@ -396,6 +396,7 @@ class Application(tk.Frame):
         if newData != None:
             #~ print(newData)
             self.plotGraph(newData)
+        self.mySolarClient.socket.sendto( 'sub', ('127.0.0.1', 29551))
 
         self.after(900,self.periodicEventHandler);
         #~ self.plotGraph(self.parsedData)
@@ -411,7 +412,7 @@ class SolarClient():
                                     socket.SOCK_DGRAM) #UDP
         self.socket.setblocking(False)
         #~ self.socket.bind( ('127.0.0.1', 29551) )  # port = 's'*256 + 'o'
-        self.socket.sendto( 'sub', ('127.0.0.1', 29551))
+        #~ self.socket.sendto( 'sub', ('127.0.0.1', 29551))
 
     def retrieveData(self):
         result = self.one_fifo.read()
