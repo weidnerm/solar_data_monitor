@@ -16,7 +16,7 @@ class SolarServer():
         self.socket = socket.socket(socket.AF_INET, #internet,
                                     socket.SOCK_DGRAM) #UDP
         self.socket.setblocking(False)
-        self.socket.bind( ('127.0.0.1', 29551) ) 
+        self.socket.bind( ('0.0.0.0', 29551) ) 
 
 
     #~ def sendToClients(self,msg):
