@@ -362,7 +362,7 @@ class SolarDb:
         return rolledOverToNewDay;
 
 
-    def readDayLog(self,fileIndex):
+    def readDayLog(self,fileIndex, startup=True):
         filename = self.getFilenameFromIndex(fileIndex)
         temp_data = {} # temp data indexed by source in dictionary.  
         
@@ -406,20 +406,21 @@ class SolarDb:
 
                             entry = self.data[source_name]
 
-                            if fileIndex == 0:  # only track today stuff if file is for today
-                                entry['today_mAsec'] = entry['today_mAsec'] + mAsec
-                                entry['today_count'] = entry['today_count'] + 1
-                                if entry['today_mAsec_min'] > entry['today_mAsec']: # if tracked min is too big
-                                    entry['today_mAsec_min'] = entry['today_mAsec']
-                                if entry['today_mAsec_max'] < entry['today_mAsec']: # if tracked max is too small
-                                    entry['today_mAsec_max'] = entry['today_mAsec']
+                            if startup == True:
+                                if fileIndex == 0:  # only track today stuff if file is for today
+                                    entry['today_mAsec'] = entry['today_mAsec'] + mAsec
+                                    entry['today_count'] = entry['today_count'] + 1
+                                    if entry['today_mAsec_min'] > entry['today_mAsec']: # if tracked min is too big
+                                        entry['today_mAsec_min'] = entry['today_mAsec']
+                                    if entry['today_mAsec_max'] < entry['today_mAsec']: # if tracked max is too small
+                                        entry['today_mAsec_max'] = entry['today_mAsec']
 
-                            entry['prev_mAsec'] = entry['prev_mAsec'] + mAsec
-                            entry['prev_count'] = entry['prev_count'] + 1
-                            if entry['prev_mAsec_min'] > entry['prev_mAsec']:
-                                entry['prev_mAsec_min'] = entry['prev_mAsec']
-                            if entry['prev_mAsec_max'] < entry['prev_mAsec']:
-                                entry['prev_mAsec_max'] = entry['prev_mAsec']
+                                entry['prev_mAsec'] = entry['prev_mAsec'] + mAsec
+                                entry['prev_count'] = entry['prev_count'] + 1
+                                if entry['prev_mAsec_min'] > entry['prev_mAsec']:
+                                    entry['prev_mAsec_min'] = entry['prev_mAsec']
+                                if entry['prev_mAsec_max'] < entry['prev_mAsec']:
+                                    entry['prev_mAsec_max'] = entry['prev_mAsec']
 
                             if not source_name in temp_data:
                                 temp_data[source_name] = {}
@@ -434,11 +435,11 @@ class SolarDb:
 
                             temp_data[source_name]['mAsec']  .append(mAsec )
                             temp_data[source_name]['v_avg']  .append(v_avg )
-                            temp_data[source_name]['v_max']  .append(v_min )
-                            temp_data[source_name]['v_min']  .append(v_max )
+                            temp_data[source_name]['v_max']  .append(v_max )
+                            temp_data[source_name]['v_min']  .append(v_min )
                             temp_data[source_name]['mA_avg'] .append(mA_avg)
-                            temp_data[source_name]['mA_max'] .append(mA_min)
-                            temp_data[source_name]['mA_min'] .append(mA_max)
+                            temp_data[source_name]['mA_max'] .append(mA_max)
+                            temp_data[source_name]['mA_min'] .append(mA_min)
                             record_time_secs = int(record_time[0:2])*60*60 + int(record_time[3:5])*60 + int(record_time[6:8])
                             temp_data[source_name]['time']   .append(record_time_secs)
 
