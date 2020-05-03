@@ -312,4 +312,13 @@ if __name__ == "__main__":
     fp.close()
     config = json.loads(config_string)
 
+    length = len(config)
+    for index in range(length-1, -1, -1):
+        print('index=%d' % (index))
+        if 'enable' in config[index]:
+            if config[index]['enable'] != 1:
+                dropped_entry = config.pop(index)
+                print('dropping disabled entry from config')
+                print(dropped_entry)
+
     main(config)

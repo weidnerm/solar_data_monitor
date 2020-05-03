@@ -2,6 +2,7 @@ import time
 import os
 import json
 import glob
+import traceback
 
 class SolarDb:
     def __init__(self, filenamePrefix, config):
@@ -374,7 +375,12 @@ class SolarDb:
             fp.close()
 
             for index in range(len(contents)):
-                fileDataEntry = json.loads(contents[index])
+                fileDataEntry = {}
+                try:
+                    fileDataEntry = json.loads(contents[index])
+                except Exception:
+                    print(traceback.format_exc())
+                    
 
                 record_time = '00:00:00'
                 if 'time' in fileDataEntry:
