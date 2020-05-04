@@ -62,54 +62,79 @@ $( function() {
     
     
     var myChart = {
-    chart: {
-        zoomType: 'xy'
-    },
-    title: {
-        text: 'Solar - Panel'
-    },
+        chart: {
+            zoomType: 'xy',
+            //~ styledMode: 1
+        },
+        title: {
+            text: 'Solar - Panel',
+                style: {
+                    fontSize: "25px"
+                }
+        },
 
-    yAxis: [{ // Primary yAxis
-        labels: {
-            style: {
-                color: "#00ff00"
-            }
+        xAxis: {
+            type: 'datetime',
+            //~ dateTimeLabelFormats: 
+                //~ { hour: '%H:%M'},
+            labels: {
+                format: '{value:%H:%M}',
+                style: { fontSize: "20px" },
+            },
         },
-        title: {
-            text: 'Current (mA)',
-            style: {
-                color: "#00ff00"
+
+
+        yAxis: [{ // Primary yAxis
+            labels: {
+                style: {
+                    color: "#00ff00",
+                    fontSize: "20px"
+                }
+            },
+            title: {
+                text: 'Current (mA)',
+                style: {
+                    color: "#00ff00",
+                    fontSize: "20px"
+                }
             }
-        }
-    }, { // Secondary yAxis
-        title: {
-            text: 'Voltage (V)',
-            style: {
-                color: "#ff0000"
-            }
+        }, { // Secondary yAxis
+            title: {
+                text: 'Voltage (V)',
+                style: {
+                    color: "#ff0000",
+                    fontSize: "20px"
+                }
+            },
+            labels: {
+                style: {
+                    color: "#ff0000",
+                    fontSize: "20px"
+                }
+            },
+            opposite: true
+        }],
+        tooltip: {
+            shared: true
         },
-        labels: {
-            style: {
-                color: "#ff0000"
-            }
+        legend: {
+            layout: 'vertical',
+            align: 'left',
+            x: 120,
+            verticalAlign: 'top',
+            y: 100,
+            floating: true,
+            itemStyle: { fontSize: "15px"
+            },
+            title: {                style: {
+                        fontSize: "20px"
+                    }
+            },
+            backgroundColor:
+                Highcharts.defaultOptions.legend.backgroundColor || // theme
+                'rgba(255,255,255,0.25)'
         },
-        opposite: true
-    }],
-    tooltip: {
-        shared: true
-    },
-    legend: {
-        layout: 'vertical',
-        align: 'left',
-        x: 120,
-        verticalAlign: 'top',
-        y: 100,
-        floating: true,
-        backgroundColor:
-            Highcharts.defaultOptions.legend.backgroundColor || // theme
-            'rgba(255,255,255,0.25)'
-    },
-    series: []
+        series: []
     };
     
     var myChartWaterfall = {
@@ -126,8 +151,16 @@ $( function() {
         },
 
         yAxis: {
+            labels: {
+                style: {
+                    fontSize: "20px"
+                }
+            },
             title: {
-                text: 'AHr'
+                text: 'AHr',
+                style: {
+                    fontSize: "20px"
+                }
             }
         },
 
@@ -213,6 +246,7 @@ $( function() {
                 var max_mA = input_data[6]
                 //~ console.log(input_data);
 
+                time_hours = time_hours *60*60*1000
                 avg_volt_series.push([time_hours,avg_volt])
                 min_volt_series.push([time_hours,min_volt])
                 max_volt_series.push([time_hours,max_volt])
