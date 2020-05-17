@@ -50,6 +50,19 @@ $( function() {
         return result;
     }
 
+    
+    function get_mA_color(mA, fade){
+        var color = '#000000'
+        if (mA < 0) {
+            color = '#ff0000' }
+        else if (mA > 0) {
+            color = '#00ff00' }
+            
+        if (fade == true)
+            color = color+'20'
+            
+        return color;
+    }
 
     function getDateList(maxDays){
         var result = "[]";
@@ -102,13 +115,13 @@ $( function() {
             title: {
                 text: 'Voltage (V)',
                 style: {
-                    color: "#ff0000",
+                    color: "#ffa500",
                     fontSize: "20px"
                 }
             },
             labels: {
                 style: {
-                    color: "#ff0000",
+                    color: "#ffa500",
                     fontSize: "20px"
                 }
             },
@@ -250,16 +263,18 @@ $( function() {
                 avg_volt_series.push([time_hours,avg_volt])
                 min_volt_series.push([time_hours,min_volt])
                 max_volt_series.push([time_hours,max_volt])
-                avg_mA_series.push([time_hours,avg_mA])
-                min_mA_series.push([time_hours,min_mA])
-                max_mA_series.push([time_hours,max_mA])
+                avg_mA_series.push({ x:time_hours, y:avg_mA, color: get_mA_color(avg_mA, false) })
+                min_mA_series.push({ x:time_hours, y:min_mA, color: get_mA_color(min_mA, true) })
+                max_mA_series.push({ x:time_hours, y:max_mA, color: get_mA_color(max_mA, true) })
+                //~ min_mA_series.push([time_hours,min_mA])
+                //~ max_mA_series.push([time_hours,max_mA])
             }
         }
         var series_entry;
         
         series_entry = {
                 name: input_channel+' Avg Voltage',
-                color: "#ff0000",
+                color: "#ffa500",
                 type: 'line',
                 yAxis: 1,
                 data: avg_volt_series,
@@ -268,7 +283,7 @@ $( function() {
         
         series_entry = {
                 name: input_channel+' Min Voltage',
-                color: "#ff000020",
+                color: "#ffa50020",
                 type: 'line',
                 yAxis: 1,
                 data: min_volt_series,
@@ -277,7 +292,7 @@ $( function() {
         
         series_entry = {
                 name: input_channel+' Max Voltage',
-                color: "#ff000020",
+                color: "#ffa50020",
                 type: 'line',
                 yAxis: 1,
                 data: max_volt_series,
