@@ -301,6 +301,7 @@ $( function() {
         series_entry = {
                 name: input_channel+' Min Voltage',
                 color: "#ffa50020",
+                marker: {enabled: false},
                 type: 'line',
                 yAxis: 1,
                 data: min_volt_series,
@@ -310,6 +311,7 @@ $( function() {
         series_entry = {
                 name: input_channel+' Max Voltage',
                 color: "#ffa50020",
+                marker: {enabled: false},
                 type: 'line',
                 yAxis: 1,
                 data: max_volt_series,
@@ -333,6 +335,7 @@ $( function() {
                 zoneAxis: 'y',
                 zones: [{value:0, color:'#ff000020'}, {color:'#00ff0020'}],
                 color: '#00ff0020',
+                marker: {enabled: false},
                 type: 'line',
                 yAxis: 0,
                 data: min_mA_series,
@@ -344,7 +347,7 @@ $( function() {
                 zoneAxis: 'y',
                 zones: [{value:0, color:'#ff000020'}, {color:'#00ff0020'}],
                 color: '#00ff0020',
-                //~ marker: {enabled: false},
+                marker: {enabled: false},
                 type: 'line',
                 yAxis: 0,
                 data: max_mA_series,
