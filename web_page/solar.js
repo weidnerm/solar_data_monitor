@@ -188,22 +188,7 @@ $( function() {
         series: [{
             upColor: '#00ff00',
             color: '#ff0000',
-            data: [{
-                name: 'Start',
-                y: 120000
-            }, {
-                name: 'Product Revenue',
-                y: -569000
-            }, {
-                name: 'Service Revenue',
-                y: 231000
-            }, {
-                name: 'Fixed Costs',
-                y: 342000
-            }, {
-                name: 'Variable Costs',
-                y: -233000
-            }],
+            data: [],
             dataLabels: {
                 enabled: true,
                 formatter: function () {
@@ -249,14 +234,46 @@ $( function() {
                 //~ console.log(time_int);
                 
                 var inputs = entry['inputs'];
-                var input_data = inputs[input_channel];
-                var total_mA_sec = input_data[0]
-                var avg_volt = input_data[1]
-                var min_volt = input_data[2]
-                var max_volt = input_data[3]
-                var avg_mA = input_data[4]
-                var min_mA = input_data[5]
-                var max_mA = input_data[6]
+                var total_mA_sec = 0
+                var avg_volt = 0
+                var min_volt = 0
+                var max_volt = 0
+                var avg_mA = 0
+                var min_mA = 0
+                var max_mA = 0
+                if (input_channel == 'All Batts') {
+                            console.log('input_channel '+ input_channel)
+                    var key_list = Object.keys(inputs)
+                    var batt_count = 0
+                    for ( var key_index=0; key_index<key_list.length ; key_index++) {
+                        if (key_list[key_index].startsWith('Batt')) {
+                            var input_data = inputs[key_list[key_index]];
+                            total_mA_sec += input_data[0]
+                            avg_volt += input_data[1]
+                            min_volt += input_data[2]
+                            max_volt += input_data[3]
+                            avg_mA += input_data[4]
+                            min_mA += input_data[5]
+                            max_mA += input_data[6] 
+                            batt_count += 1
+                        }
+                    }
+                    if (batt_count != 0) {
+                        avg_volt /= batt_count
+                        min_volt /= batt_count
+                        max_volt /= batt_count
+                    }
+                } else {
+                    var input_data = inputs[input_channel];
+                    total_mA_sec = input_data[0]
+                    avg_volt = input_data[1]
+                    min_volt = input_data[2]
+                    max_volt = input_data[3]
+                    avg_mA = input_data[4]
+                    min_mA = input_data[5]
+                    max_mA = input_data[6]
+                }
+                    
                 //~ console.log(input_data);
 
                 time_hours = time_hours *60*60*1000
@@ -302,7 +319,9 @@ $( function() {
         
         series_entry = {
                 name: input_channel+' Avg mA',
-                color: "#00ff00",
+                zoneAxis: 'y',
+                zones: [{value:0, color:'#ff0000'}, {color:'#00ff00'}],
+                color: '#00ff0020',
                 type: 'line',
                 yAxis: 0,
                 data: avg_mA_series,
@@ -311,7 +330,9 @@ $( function() {
         
         series_entry = {
                 name: input_channel+' Min mA',
-                color: "#00ff0020",
+                zoneAxis: 'y',
+                zones: [{value:0, color:'#ff000020'}, {color:'#00ff0020'}],
+                color: '#00ff0020',
                 type: 'line',
                 yAxis: 0,
                 data: min_mA_series,
@@ -320,7 +341,10 @@ $( function() {
         
         series_entry = {
                 name: input_channel+' Max mA',
-                color: "#00ff0020",
+                zoneAxis: 'y',
+                zones: [{value:0, color:'#ff000020'}, {color:'#00ff0020'}],
+                color: '#00ff0020',
+                //~ marker: {enabled: false},
                 type: 'line',
                 yAxis: 0,
                 data: max_mA_series,
@@ -341,7 +365,7 @@ $( function() {
         Highcharts.chart('container', myChart);
     }
     else
-    {
+    { // BattEnergy
 
         console.log(myChartWaterfall['series'][0]['data'] )
         myChartWaterfall['series'][0]['data'] = []
