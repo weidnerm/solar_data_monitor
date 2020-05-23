@@ -270,6 +270,13 @@ $( function() {
     
     
     if(input_channel == 'BattEnergy') {
+        document.getElementById('left').setAttribute("style","display:inline-block;width:100%");
+        document.getElementById('left').style.width='100%';
+        document.getElementById('middle').setAttribute("style","display:none");
+        document.getElementById('middle').style.width='0%';
+        document.getElementById('right').setAttribute("style","display:none");
+        document.getElementById('right').style.width='0%';
+
 
         console.log(myChartWaterfall['series'][0]['data'] )
         myChartWaterfall['series'][0]['data'] = []
@@ -335,13 +342,27 @@ $( function() {
             console.log(batt_day_ma_sec)
         }
 
-        Highcharts.chart('container', myChartWaterfall);
+        Highcharts.chart('left', myChartWaterfall);
     }
     else if(input_channel == 'Live') {
-        
-        Highcharts.chart('container', myLiveBars);
+        document.getElementById('left').setAttribute("style","display:inline-block;width:50%");
+        document.getElementById('left').style.width='50%';
+        document.getElementById('middle').setAttribute("style","display:inline-block;width:25%");
+        document.getElementById('middle').style.width='25%';
+        document.getElementById('right').setAttribute("style","display:inline-block;width:25%");
+        document.getElementById('right').style.width='25%';
+            
+            
+        Highcharts.chart('left', myLiveBars);
     }
     else {
+        document.getElementById('left').setAttribute("style","display:inline-block;width:100%");
+        document.getElementById('left').style.width='100%';
+        document.getElementById('middle').setAttribute("style","display:none");
+        document.getElementById('middle').style.width='0%';
+        document.getElementById('right').setAttribute("style","display:none");
+        document.getElementById('right').style.width='0%';
+
         var date_text = date_list[date_list.length-1-days_ago]
     
         var raw_data = getData(date_text);
@@ -499,7 +520,7 @@ $( function() {
     //~ document.body.appendChild(btn);               // Append <button> to <body>
 
 
-        Highcharts.chart('container', myChart);
+        Highcharts.chart('left', myChart);
     }
 
  });
