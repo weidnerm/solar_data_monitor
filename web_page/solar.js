@@ -73,6 +73,15 @@ $( function() {
         return result;
     }
     
+    function getLiveData(liveSource){
+        var result = "[]";
+
+        $.getJSON("solar.php?liveSource=" + liveSource, function(res) { result = res; });
+
+        //~ result = JSON.parse(result)
+        return result;
+    }
+    
     
     var myChart = {
         chart: {
@@ -352,6 +361,7 @@ $( function() {
         document.getElementById('right').setAttribute("style","display:inline-block;width:25%");
         document.getElementById('right').style.width='25%';
             
+        var raw_data = getLiveData('192.168.86.44');
             
         Highcharts.chart('left', myLiveBars);
     }

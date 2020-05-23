@@ -70,16 +70,17 @@
         echo $json_results;
     }
 
-    if(!empty($_GET['live'])){
-        $source=$_GET['live'];
+    if(!empty($_GET['liveSource'])){
+        $liveSource=$_GET['liveSource'];
         
         $sock = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
 
-        $msg = "sub";
+        $msg = 'sub';
         $len = strlen($msg);
 
-        socket_sendto($sock, $msg, $len, 0, $source, 29551);
+        socket_sendto($sock, $msg, $len, 0, $liveSource, 29551);
         socket_close($sock);
+        $json_results = '{}';
         
         echo $json_results;
     }
