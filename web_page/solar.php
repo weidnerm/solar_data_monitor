@@ -48,7 +48,7 @@
         
         $contents_array = [];
 
-
+        //~ get list of filenames in dir.
         if ($handle = opendir($dir)) {
 
             while (false !== ($entry = readdir($handle))) {
@@ -66,6 +66,20 @@
         sort($contents_array);
         
         $json_results = json_encode($contents_array);
+        
+        echo $json_results;
+    }
+
+    if(!empty($_GET['live'])){
+        $source=$_GET['live'];
+        
+        $sock = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
+
+        $msg = "sub";
+        $len = strlen($msg);
+
+        socket_sendto($sock, $msg, $len, 0, $source, 29551);
+        socket_close($sock);
         
         echo $json_results;
     }

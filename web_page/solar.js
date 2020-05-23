@@ -201,13 +201,147 @@ $( function() {
             pointPadding: 0
         }]
     }
+    
+    var myLiveBars = {
+        chart: {
+            type: 'column'
+        },
+        title: {
+            text: 'Stacked column chart'
+        },
+        xAxis: {
+            categories: ['Apples', 'Oranges', 'Pears', 'Grapes', 'Bananas']
+        },
+        yAxis: {
+            min: 0,
+            title: {
+                text: 'Total fruit consumption'
+            },
+            stackLabels: {
+                enabled: true,
+                style: {
+                    fontWeight: 'bold',
+                    color: ( // theme
+                        Highcharts.defaultOptions.title.style &&
+                        Highcharts.defaultOptions.title.style.color
+                    ) || 'gray'
+                }
+            }
+        },
+        legend: {
+            align: 'right',
+            x: -30,
+            verticalAlign: 'top',
+            y: 25,
+            floating: true,
+            backgroundColor:
+                Highcharts.defaultOptions.legend.backgroundColor || 'white',
+            borderColor: '#CCC',
+            borderWidth: 1,
+            shadow: false
+        },
+        tooltip: {
+            headerFormat: '<b>{point.x}</b><br/>',
+            pointFormat: '{series.name}: {point.y}<br/>Total: {point.stackTotal}'
+        },
+        plotOptions: {
+            column: {
+                stacking: 'normal',
+                dataLabels: {
+                    enabled: true
+                }
+            }
+        },
+        series: [{
+            name: 'John',
+            data: [5, 3, 4, 7, 2]
+        }, {
+            name: 'Jane',
+            data: [2, 2, 3, 2, 1]
+        }, {
+            name: 'Joe',
+            data: [3, 4, 4, 2, 5]
+        }]
+    }
+
         
     var date_list = getDateList();
     //~ console.log(date_list);
     
     
-    if(input_channel != 'BattEnergy')
-    {
+    if(input_channel == 'BattEnergy') {
+
+        console.log(myChartWaterfall['series'][0]['data'] )
+        myChartWaterfall['series'][0]['data'] = []
+
+        for(var dayago_index=0 ; dayago_index<days_ago ; dayago_index++)
+        {
+            var date_text = date_list[date_list.length+dayago_index-days_ago]
+        
+            var raw_data = getData(date_text);
+            var time = 0;
+            var batt_day_ma_sec = 0;
+            var panel_day_ma_sec = 0;
+            var load_day_ma_sec = 0;
+            
+            for(var index=0; index<raw_data.length-1; index++)  // subtract 1 since last entry is blank
+            {
+
+                var entry = JSON.parse(raw_data[index]);
+                //~ console.log(entry);
+                
+                if(entry.hasOwnProperty('time')) 
+                {
+                    var inputs = entry['inputs'];
+                    var key_list = Object.keys(inputs)
+                    for ( var key_index=0; key_index<key_list.length ; key_index++)
+                    {
+                        if (key_list[key_index].startsWith('Batt'))
+                        {
+                            var input_data = inputs[key_list[key_index]];
+                            var total_mA_sec = input_data[0]
+                            
+                            batt_day_ma_sec += total_mA_sec
+                        }
+                        if (key_list[key_index].startsWith('Panel'))
+                        {
+                            var input_data = inputs[key_list[key_index]];
+                            var total_mA_sec = input_data[0]
+                            
+                            panel_day_ma_sec += total_mA_sec
+                        }
+                        if (key_list[key_index].startsWith('Load'))
+                        {
+                            var input_data = inputs[key_list[key_index]];
+                            var total_mA_sec = input_data[0]
+                            
+                            load_day_ma_sec += total_mA_sec
+                        }
+                    }
+                    
+                }
+            }
+
+            series_entry = {
+                    name: date_text+ '<br>load',
+                    y: -load_day_ma_sec/1000/60/60};
+            myChartWaterfall['series'][0]['data'].push(series_entry);
+            console.log(batt_day_ma_sec)
+
+            series_entry = {
+                    name: date_text+'<br>panel',
+                    y: panel_day_ma_sec/1000/60/60};
+            myChartWaterfall['series'][0]['data'].push(series_entry);
+            console.log(batt_day_ma_sec)
+        }
+
+        Highcharts.chart('container', myChartWaterfall);
+    }
+    else if(input_channel == 'Live') {
+        
+        Highcharts.chart('container', myLiveBars);
+    }
+    else {
         var date_text = date_list[date_list.length-1-days_ago]
     
         var raw_data = getData(date_text);
@@ -366,75 +500,6 @@ $( function() {
 
 
         Highcharts.chart('container', myChart);
-    }
-    else
-    { // BattEnergy
-
-        console.log(myChartWaterfall['series'][0]['data'] )
-        myChartWaterfall['series'][0]['data'] = []
-
-        for(var dayago_index=0 ; dayago_index<days_ago ; dayago_index++)
-        {
-            var date_text = date_list[date_list.length+dayago_index-days_ago]
-        
-            var raw_data = getData(date_text);
-            var time = 0;
-            var batt_day_ma_sec = 0;
-            var panel_day_ma_sec = 0;
-            var load_day_ma_sec = 0;
-            
-            for(var index=0; index<raw_data.length-1; index++)  // subtract 1 since last entry is blank
-            {
-
-                var entry = JSON.parse(raw_data[index]);
-                //~ console.log(entry);
-                
-                if(entry.hasOwnProperty('time')) 
-                {
-                    var inputs = entry['inputs'];
-                    var key_list = Object.keys(inputs)
-                    for ( var key_index=0; key_index<key_list.length ; key_index++)
-                    {
-                        if (key_list[key_index].startsWith('Batt'))
-                        {
-                            var input_data = inputs[key_list[key_index]];
-                            var total_mA_sec = input_data[0]
-                            
-                            batt_day_ma_sec += total_mA_sec
-                        }
-                        if (key_list[key_index].startsWith('Panel'))
-                        {
-                            var input_data = inputs[key_list[key_index]];
-                            var total_mA_sec = input_data[0]
-                            
-                            panel_day_ma_sec += total_mA_sec
-                        }
-                        if (key_list[key_index].startsWith('Load'))
-                        {
-                            var input_data = inputs[key_list[key_index]];
-                            var total_mA_sec = input_data[0]
-                            
-                            load_day_ma_sec += total_mA_sec
-                        }
-                    }
-                    
-                }
-            }
-
-            series_entry = {
-                    name: date_text+ '<br>load',
-                    y: -load_day_ma_sec/1000/60/60};
-            myChartWaterfall['series'][0]['data'].push(series_entry);
-            console.log(batt_day_ma_sec)
-
-            series_entry = {
-                    name: date_text+'<br>panel',
-                    y: panel_day_ma_sec/1000/60/60};
-            myChartWaterfall['series'][0]['data'].push(series_entry);
-            console.log(batt_day_ma_sec)
-        }
-
-        Highcharts.chart('container', myChartWaterfall);
     }
 
  });
