@@ -454,6 +454,7 @@ $( function() {
         document.getElementById('right').style.width='25%';
             
         var raw_data = getLiveData('192.168.86.44');
+        console.log(raw_data);
             
         Highcharts.chart('left', myLiveBatts);
         Highcharts.chart('middle', myLiveToday);

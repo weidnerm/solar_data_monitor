@@ -41,7 +41,7 @@
         echo $json_results;
     }
 
-    if(!empty($_GET['maxDays'])){
+    else if(!empty($_GET['maxDays'])){
         $days=$_GET['maxDays'];
 
         $dir = "/home/pi/proj/solar/solar_data_monitor";
@@ -70,19 +70,24 @@
         echo $json_results;
     }
 
-    if(!empty($_GET['liveSource'])){
+    else if(!empty($_GET['liveSource'])){
         $liveSource=$_GET['liveSource'];
         
-        $sock = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
+        $sock = socket_create(AF_INET, SOCK_DGRAM, 0);
 
         $msg = 'sub';
-        $len = strlen($msg);
 
-        socket_sendto($sock, $msg, $len, 0, $liveSource, 29551);
-        socket_close($sock);
-        $json_results = '{}';
+        socket_sendto($sock, $msg, strlen($msg), 0, $liveSource, 29551);
         
-        echo $json_results;
+        $reply = '{"y":1}';
+        
+        socket_recv($sock, $reply, 2045, MSG_WAITALL);
+
+        socket_close($sock);
+        
+        //~ $reply = '{"y":"'.strlen($reply).'"}';
+         
+        echo $reply;
     }
 
    
