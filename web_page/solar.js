@@ -211,20 +211,80 @@ $( function() {
         }]
     }
     
-    var myLiveBars = {
+    var myLiveBatts = {
         chart: {
             type: 'column'
         },
+        legend:{ enabled:false },
         title: {
-            text: 'Stacked column chart'
+            text: 'Battery State'
         },
         xAxis: {
-            categories: ['Apples', 'Oranges', 'Pears', 'Grapes', 'Bananas']
+            categories: ['Batt 1<br>110mA<br>1.555W', 'Batt 2', 'Batt 3', 'Batt 4', 'Batt 5']
         },
         yAxis: {
             min: 0,
+            max: 100,
             title: {
-                text: 'Total fruit consumption'
+                text: 'Battery Charge State'
+            },
+            stackLabels: {
+                enabled: false,
+                style: {
+                    fontWeight: 'bold',
+                    color: ( // theme
+                        Highcharts.defaultOptions.title.style &&
+                        Highcharts.defaultOptions.title.style.color
+                    ) || 'gray'
+                }
+            }
+        },
+
+        tooltip: {
+            headerFormat: '<b>{point.x}</b><br/>',
+            pointFormat: '{series.name}: {point.y}<br/>Total: {point.stackTotal}'
+        },
+        plotOptions: {
+            column: {
+                stacking: 'normal',
+                dataLabels: {
+                    enabled: true
+                }
+            }
+        },
+        series: [
+        {
+            dataLabels: {
+                enabled: false
+            },
+            groupPadding:0.0,
+            borderWidth:0,
+            color: '#404040',
+            data: [51, 27, 40, 70, 20]
+        },
+         {
+            borderWidth:0,
+            groupPadding:0.0,
+            data: [{y:49, color:'#ff0000'},{y:73, color:'#00ff00'},{y:60, color:'#ff0000'},{y:30, color:'#ff0000'},{y:80, color:'#ffff00'}]
+        }]
+    }
+
+    var myLiveToday = {
+        chart: {
+            type: 'column'
+        },
+        legend:{ enabled:false },
+        title: {
+            text: 'Panel/Batt/Load Energy'
+        },
+        xAxis: {
+            categories: ['Panel<br><br>8.4AH', 'Batt<br>92%<br>1.5AH', 'Load<br><br>16.8AH']
+        },
+        yAxis: {
+            min: 0,
+            max: 12,
+            title: {
+                text: 'Accumulated Energy'
             },
             stackLabels: {
                 enabled: true,
@@ -237,18 +297,7 @@ $( function() {
                 }
             }
         },
-        legend: {
-            align: 'right',
-            x: -30,
-            verticalAlign: 'top',
-            y: 25,
-            floating: true,
-            backgroundColor:
-                Highcharts.defaultOptions.legend.backgroundColor || 'white',
-            borderColor: '#CCC',
-            borderWidth: 1,
-            shadow: false
-        },
+
         tooltip: {
             headerFormat: '<b>{point.x}</b><br/>',
             pointFormat: '{series.name}: {point.y}<br/>Total: {point.stackTotal}'
@@ -262,18 +311,61 @@ $( function() {
             }
         },
         series: [{
-            name: 'John',
-            data: [5, 3, 4, 7, 2]
-        }, {
-            name: 'Jane',
-            data: [2, 2, 3, 2, 1]
-        }, {
-            name: 'Joe',
-            data: [3, 4, 4, 2, 5]
+            borderWidth:0,
+            groupPadding:0.0,
+            data: [{y:6, color:'#ff0000'},{y:3, color:'#00ff00'},{y:5, color:'#ffff00'}]
         }]
     }
 
-        
+    var myLiveNow = {
+        chart: {
+            type: 'column'
+        },
+        legend:{ enabled:false },
+        title: {
+            text: 'Panel/Batt/Load Power'
+        },
+        xAxis: {
+            categories: ['Panel<br>14.124V', 'Batt<br>14.124V', 'Load<br>14.124V']
+        },
+        yAxis: {
+            min: 0,
+            max: 12,
+            title: {
+                text: 'Power Transfer'
+            },
+            stackLabels: {
+                enabled: true,
+                style: {
+                    fontWeight: 'bold',
+                    color: ( // theme
+                        Highcharts.defaultOptions.title.style &&
+                        Highcharts.defaultOptions.title.style.color
+                    ) || 'gray'
+                }
+            }
+        },
+
+        tooltip: {
+            headerFormat: '<b>{point.x}</b><br/>',
+            pointFormat: '{series.name}: {point.y}<br/>Total: {point.stackTotal}'
+        },
+        plotOptions: {
+            column: {
+                stacking: 'normal',
+                dataLabels: {
+                    enabled: true
+                }
+            }
+        },
+        series: [{
+            borderWidth:0,
+            groupPadding:0.0,
+            data: [{y:5, color:'#ff0000'},{y:3, color:'#00ff00'},{y:2, color:'#ffff00'}]
+        }]
+    }
+
+  
     var date_list = getDateList();
     //~ console.log(date_list);
     
@@ -363,7 +455,9 @@ $( function() {
             
         var raw_data = getLiveData('192.168.86.44');
             
-        Highcharts.chart('left', myLiveBars);
+        Highcharts.chart('left', myLiveBatts);
+        Highcharts.chart('middle', myLiveToday);
+        Highcharts.chart('right', myLiveNow);
     }
     else {
         document.getElementById('left').setAttribute("style","display:inline-block;width:100%");
