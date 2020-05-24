@@ -213,21 +213,38 @@ $( function() {
     
     var myLiveBatts = {
         chart: {
-            type: 'column'
+            type: 'column',
+            events: {
+                load: function () {
+
+                    // set up the updating of the chart each second
+                    var series0 = this.series[0];
+                    var series1 = this.series[1];
+                    var x_axis = this.xAxis[0]
+                    setInterval(function () {
+                        series0.setData(myLiveBatts['series'][0]['data'])
+                        series1.setData(myLiveBatts['series'][1]['data'])
+                        x_axis.setCategories(myLiveBatts['xAxis']['categories'])
+                    }, 2000);
+                }
+            }
         },
         legend:{ enabled:false },
         title: {
             text: 'Battery State'
         },
         xAxis: {
-            categories: ['Batt 1<br>110mA<br>1.555W', 'Batt 2', 'Batt 3', 'Batt 4', 'Batt 5']
+            categories: ['Batt 1<br>110mA<br>1.555W', 'Batt 2', 'Batt 3', 'Batt 4', 'Batt 5'],
+            labels: { style: { fontSize: "15px" }}
         },
         yAxis: {
             min: 0,
             max: 100,
             title: {
-                text: 'Battery Charge State'
+                text: 'Battery Charge State',
+                enabled: false
             },
+            labels: { style: { fontSize: "20px" }},
             stackLabels: {
                 enabled: false,
                 formatter: function () {
@@ -251,6 +268,7 @@ $( function() {
             column: {
                 stacking: 'normal',
                 dataLabels: {
+                    style: { fontSize: "20px" },
                     enabled: true,
                     formatter: function () {
                         return this.y.toFixed(1);
@@ -277,28 +295,41 @@ $( function() {
 
     var myLiveToday = {
         chart: {
-            type: 'column'
+            type: 'column',
+            events: {
+                load: function () {
+
+                    // set up the updating of the chart each second
+                    var series = this.series[0];
+                    setInterval(function () {
+                        series.setData(myLiveToday['series'][0]['data'])
+                    }, 2000);
+                }
+            }
         },
         legend:{ enabled:false },
         title: {
             text: 'Panel/Batt/Load Energy'
         },
         xAxis: {
-            categories: ['Panel<br><br>8.4AH', 'Batt<br>92%<br>1.5AH', 'Load<br><br>16.8AH']
+            categories: ['Panel<br><br>8.4AH', 'Batt<br>92%<br>1.5AH', 'Load<br><br>16.8AH'],
+            labels: { style: { fontSize: "15px" }}
         },
         yAxis: {
             min: 0,
             max: 12,
             title: {
-                text: 'Accumulated Energy'
+                text: 'Accumulated Energy',
+                enabled: false
             },
+            labels: { style: { fontSize: "20px" }},
             stackLabels: {
                 enabled: true,
                 formatter: function () {
                     return this.total.toFixed(1)
                     },
                 style: {
-                    fontWeight: 'bold',
+                    fontSize: "20px",
                     color: ( // theme
                         Highcharts.defaultOptions.title.style &&
                         Highcharts.defaultOptions.title.style.color
@@ -316,6 +347,7 @@ $( function() {
                 stacking: 'normal',
                 dataLabels: {
                     enabled: true,
+                    style: { fontSize: "20px" },
                     formatter: function () {
                         return this.y.toFixed(1);
                         }
@@ -331,20 +363,33 @@ $( function() {
 
     var myLiveNow = {
         chart: {
-            type: 'column'
+            type: 'column',
+            events: {
+                load: function () {
+
+                    // set up the updating of the chart each second
+                    var series = this.series[0];
+                    setInterval(function () {
+                        update_live_data()
+                        series.setData(myLiveNow['series'][0]['data'])
+                    }, 2000);
+                }
+            }
         },
         legend:{ enabled:false },
         title: {
-            text: 'Panel/Batt/Load Power'
+            text: 'Panel/Batt/Load Power',
         },
         xAxis: {
-            categories: ['Panel<br>14.124V', 'Batt<br>14.124V', 'Load<br>14.124V']
+            categories: ['Panel<br>14.124V', 'Batt<br>14.124V', 'Load<br>14.124V'],
+            labels: { style: { fontSize: "15px" }}
         },
         yAxis: {
             min: 0,
             max: 12,
             title: {
-                text: 'Power Transfer'
+                text: 'Power Transfer',
+                enabled: false
             },
             stackLabels: {
                 enabled: true,
@@ -352,7 +397,7 @@ $( function() {
                     return this.total.toFixed(1)
                     },
                 style: {
-                    fontWeight: 'bold',
+                    fontSize: "20px",
                     color: ( // theme
                         Highcharts.defaultOptions.title.style &&
                         Highcharts.defaultOptions.title.style.color
@@ -370,6 +415,7 @@ $( function() {
                 stacking: 'normal',
                 dataLabels: {
                     enabled: true,
+                    style: { fontSize: "20px" },
                     formatter: function () {
                         return this.y.toFixed(1)
                         }
@@ -382,6 +428,121 @@ $( function() {
             data: [{y:5, color:'#00ff00'},{y:3, color:'#00ff00'},{y:2, color:'#ffff00'}]
         }]
     }
+
+
+    function update_live_data()
+    {
+        var raw_data = getLiveData('192.168.86.44');
+        
+        // Live Panel Stuff
+        index = 0
+        myLiveNow['series'][0]['data'][0]['y'] = Math.abs(raw_data['current'][index]/1000.0)
+        myLiveNow['xAxis']['categories'][0] = 'Panel<br>'+raw_data['voltage'][index].toFixed(3)+' V<br>'+raw_data['current'][index]+' mA<br>'+
+            (raw_data['voltage'][index]*Math.abs(raw_data['current'][index])/1000.0).toFixed(3)+' W'
+
+        // Live Load Stuff
+        index = 1
+        myLiveNow['series'][0]['data'][2]['y'] = raw_data['current'][index]/1000.0
+        myLiveNow['xAxis']['categories'][2] = 'Load<br>'+raw_data['voltage'][index].toFixed(3)+' V<br>'+raw_data['current'][index]+' mA<br>'+
+            (raw_data['voltage'][index]*raw_data['current'][index]/1000.0).toFixed(3)+' W'
+
+        // Live Batt Stuff
+        batt_mA = 0
+        for(index=0; index<raw_data['names'].length ; index++) {
+            if ( raw_data['names'][index].startsWith('Batt') ) {
+                batt_mA = batt_mA + raw_data['current'][index]
+            }
+        }
+        myLiveNow['series'][0]['data'][1]['y'] = Math.abs(batt_mA/1000.0)
+        myLiveNow['xAxis']['categories'][1] = 'Batt<br>'+raw_data['voltage'][2].toFixed(3)+' V<br>'+batt_mA+' mA<br>'+
+            (raw_data['voltage'][2]*batt_mA/1000.0).toFixed(3)+' W'
+        if (batt_mA < 0) {
+            myLiveNow['series'][0]['data'][1]['color'] = '#ff0000'
+        }
+        else {
+            myLiveNow['series'][0]['data'][1]['color'] = '#00ff00'
+        }
+        
+        
+        // Today Panel Stuff
+        index = 0
+        mA_hours = raw_data['todayCumulativeEnergy'][index]/1000.0/3600.0 // /3600 convert sec to hr; /1000 mA to A;
+        myLiveToday['series'][0]['data'][0]['y'] = mA_hours
+        myLiveToday['xAxis']['categories'][0] = 'Panel<br>'+mA_hours.toFixed(1)+' AH<br>'
+  
+        // Today Load Stuff
+        index = 1
+        mA_hours = raw_data['todayCumulativeEnergy'][index]/1000.0/3600.0 // /3600 convert sec to hr; /1000 mA to A;
+        myLiveToday['series'][0]['data'][2]['y'] = mA_hours
+        myLiveToday['xAxis']['categories'][2] = 'Load<br>'+mA_hours.toFixed(1)+' AH<br>'
+        
+        // Live Batt Stuff
+        batt_mA = 0
+        for(index=0; index<raw_data['names'].length ; index++) {
+            if ( raw_data['names'][index].startsWith('Batt') ) {
+                batt_mA = batt_mA + raw_data['todayCumulativeEnergy'][index]
+            }
+        }
+        batt_mAH = batt_mA/1000.0/3600.0
+        myLiveToday['series'][0]['data'][1]['y'] = Math.abs(batt_mAH)
+        myLiveToday['xAxis']['categories'][1] = 'Batt<br>'+batt_mAH.toFixed(1)+' AH<br>'+75.0+' %<br>'
+        if (batt_mAH < 0) {
+            myLiveToday['series'][0]['data'][1]['color'] = '#ff0000'
+        }
+        else {
+            myLiveToday['series'][0]['data'][1]['color'] = '#00ff00'
+        }
+
+
+        // Live Battery States
+        disp_index = 0
+        myLiveBatts['xAxis']['categories'] = []
+        myLiveBatts['series'][0]['data'] = []
+        myLiveBatts['series'][1]['data'] = []
+        for(in_index=0; in_index<raw_data['names'].length ; in_index++) {
+            if ( raw_data['names'][in_index].startsWith('Batt') ) {
+                x_value = raw_data['names'][in_index]+'<br>'+raw_data['voltage'][in_index].toFixed(3)+' V<br>'+raw_data['current'][in_index]+' mA<br>'+
+                    (raw_data['voltage'][in_index]*raw_data['current'][in_index]/1000.0).toFixed(3)+' W'
+                myLiveBatts['xAxis']['categories'].push( x_value )
+                
+                mA = raw_data['current'][in_index]
+                color = '#ffff00'
+                if (mA < -10) {
+                    color = '#ff0000'
+                } else if (mA > 10) {
+                    color = '#00ff00'
+                }
+                
+                relBatLevel = raw_data['maxEnergy'][in_index] - raw_data['cumulativeEnergy'][in_index]
+                maxBatDrainAmount = 2000*3600
+                actualBatFracMaxDrainRelative = 1.0 - relBatLevel/maxBatDrainAmount
+                
+                //~ console.log(relBatLevel)
+                if (relBatLevel > maxBatDrainAmount) {
+                    relBatLevel = maxBatDrainAmount;
+                }
+                relBatLevel = 100*relBatLevel/maxBatDrainAmount
+                
+                entry = {
+                    color: color,
+                    y: 100-relBatLevel
+                    }
+                
+                myLiveBatts['series'][1]['data'].push(entry)
+                myLiveBatts['series'][0]['data'].push(relBatLevel)
+        
+                disp_index = disp_index + 1
+            }
+        }
+
+    }
+
+    //~ "cumulativeEnergy": [231501292, 194475208, 2538188, 1353050, 2162488, 25234260], 
+    //~ "maxEnergy": [231501292, 194475208, 2665923, 1483545, 2364451, 25234260], 
+    //~ "current": [404, 110, 34, 21, 45, 191], 
+    //~ "names": ["Panel", "Load", "Batt 8", "Batt 4", "Batt 3", "Batt 1"], 
+    //~ "todayCumulativeEnergy": [34906936, 25906098, 2641135, 1625169, 1848521, 2390061], 
+    //~ "voltage": [18.476, 14.156, 14.16, 14.152000000000001, 14.14, 14.128]}
 
   
     var date_list = getDateList();
@@ -472,118 +633,8 @@ $( function() {
         document.getElementById('right').style.width='25%';
         //~ setTimeout(function () { location.reload(1); }, 10000);
             
-        var raw_data = getLiveData('192.168.86.44');
-        
-        // Live Panel Stuff
-        index = 0
-        myLiveNow['series'][0]['data'][0]['y'] = Math.abs(raw_data['current'][index]/1000.0)
-        myLiveNow['xAxis']['categories'][0] = 'Panel<br>'+raw_data['voltage'][index].toFixed(3)+' V<br>'+raw_data['current'][index]+' mA<br>'+
-            (raw_data['voltage'][index]*raw_data['current'][index]/1000.0).toFixed(3)+' W'
-
-        // Live Load Stuff
-        index = 1
-        myLiveNow['series'][0]['data'][2]['y'] = raw_data['current'][index]/1000.0
-        myLiveNow['xAxis']['categories'][2] = 'Load<br>'+raw_data['voltage'][index].toFixed(3)+' V<br>'+raw_data['current'][index]+' mA<br>'+
-            (raw_data['voltage'][index]*raw_data['current'][index]/1000.0).toFixed(3)+' W'
-
-        // Live Batt Stuff
-        batt_mA = 0
-        for(index=0; index<raw_data['names'].length ; index++) {
-            if ( raw_data['names'][index].startsWith('Batt') ) {
-                batt_mA = batt_mA + raw_data['current'][index]
-            }
-        }
-        myLiveNow['series'][0]['data'][1]['y'] = Math.abs(batt_mA/1000.0)
-        myLiveNow['xAxis']['categories'][1] = 'Batt<br>'+raw_data['voltage'][0].toFixed(3)+' V<br>'+batt_mA+' mA<br>'+
-            (raw_data['voltage'][0]*batt_mA/1000.0).toFixed(3)+' W'
-        if (batt_mA < 0) {
-            myLiveNow['series'][0]['data'][1]['color'] = '#ff0000'
-        }
-        else {
-            myLiveNow['series'][0]['data'][1]['color'] = '#00ff00'
-        }
-        
-        
-        // Today Panel Stuff
-        index = 0
-        mA_hours = raw_data['todayCumulativeEnergy'][index]/1000.0/3600.0 // /3600 convert sec to hr; /1000 mA to A;
-        myLiveToday['series'][0]['data'][0]['y'] = mA_hours
-        myLiveToday['xAxis']['categories'][0] = 'Panel<br>'+mA_hours.toFixed(1)+' AH<br>'
-  
-        // Today Load Stuff
-        index = 1
-        mA_hours = raw_data['todayCumulativeEnergy'][index]/1000.0/3600.0 // /3600 convert sec to hr; /1000 mA to A;
-        myLiveToday['series'][0]['data'][2]['y'] = mA_hours
-        myLiveToday['xAxis']['categories'][2] = 'Load<br>'+mA_hours.toFixed(1)+' AH<br>'
-        
-        // Live Batt Stuff
-        batt_mA = 0
-        for(index=0; index<raw_data['names'].length ; index++) {
-            if ( raw_data['names'][index].startsWith('Batt') ) {
-                batt_mA = batt_mA + raw_data['todayCumulativeEnergy'][index]
-            }
-        }
-        batt_mAH = batt_mA/1000.0/3600.0
-        myLiveToday['series'][0]['data'][1]['y'] = Math.abs(batt_mAH)
-        myLiveToday['xAxis']['categories'][1] = 'Batt<br>'+batt_mAH.toFixed(1)+' AH<br>'+75.0+' pct<br>'
-        if (batt_mAH < 0) {
-            myLiveToday['series'][0]['data'][1]['color'] = '#ff0000'
-        }
-        else {
-            myLiveToday['series'][0]['data'][1]['color'] = '#00ff00'
-        }
-
-
-        // Live Battery States
-        disp_index = 0
-        myLiveBatts['xAxis']['categories'] = []
-        myLiveBatts['series'][0]['data'] = []
-        myLiveBatts['series'][1]['data'] = []
-        for(in_index=0; in_index<raw_data['names'].length ; in_index++) {
-            if ( raw_data['names'][in_index].startsWith('Batt') ) {
-                myLiveBatts['xAxis']['categories'].push( raw_data['names'][in_index]+'<br>'+raw_data['voltage'][in_index].toFixed(3)+' V<br>'+raw_data['current'][in_index]+' mA<br>'+
-                    (raw_data['voltage'][in_index]*raw_data['current'][in_index]/1000.0).toFixed(3)+' W' )
-                
-                mA = raw_data['current'][in_index]
-                color = '#ffff00'
-                if (mA < -10) {
-                    color = '#ff0000'
-                } else if (mA > 10) {
-                    color = '#00ff00'
-                }
-                
-                relBatLevel = raw_data['maxEnergy'][in_index] - raw_data['cumulativeEnergy'][in_index]
-                maxBatDrainAmount = 2000*3600
-                actualBatFracMaxDrainRelative = 1.0 - relBatLevel/maxBatDrainAmount
-                
-                //~ console.log(relBatLevel)
-                if (relBatLevel > maxBatDrainAmount) {
-                    relBatLevel = maxBatDrainAmount;
-                }
-                relBatLevel = 100*relBatLevel/maxBatDrainAmount
-                
-                entry = {
-                    color: color,
-                    y: 100-relBatLevel}
-                
-                myLiveBatts['series'][1]['data'].push(entry)
-                myLiveBatts['series'][0]['data'].push(relBatLevel)
-        
-                disp_index = disp_index + 1
-            }
-        }
-
-        
-
-
-
-//~ "cumulativeEnergy": [231501292, 194475208, 2538188, 1353050, 2162488, 25234260], 
-//~ "maxEnergy": [231501292, 194475208, 2665923, 1483545, 2364451, 25234260], 
-//~ "current": [404, 110, 34, 21, 45, 191], 
-//~ "names": ["Panel", "Load", "Batt 8", "Batt 4", "Batt 3", "Batt 1"], 
-//~ "todayCumulativeEnergy": [34906936, 25906098, 2641135, 1625169, 1848521, 2390061], 
-//~ "voltage": [18.476, 14.156, 14.16, 14.152000000000001, 14.14, 14.128]}
-
+            
+        update_live_data()
             
         Highcharts.chart('left', myLiveBatts);
         Highcharts.chart('middle', myLiveToday);
