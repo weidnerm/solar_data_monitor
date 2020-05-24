@@ -395,7 +395,7 @@ $( function() {
         document.getElementById('middle').style.width='0%';
         document.getElementById('right').setAttribute("style","display:none");
         document.getElementById('right').style.width='0%';
-
+        //~ setTimeout(function () { location.reload(1); }, 120000);
 
         console.log(myChartWaterfall['series'][0]['data'] )
         myChartWaterfall['series'][0]['data'] = []
@@ -470,6 +470,7 @@ $( function() {
         document.getElementById('middle').style.width='25%';
         document.getElementById('right').setAttribute("style","display:inline-block;width:25%");
         document.getElementById('right').style.width='25%';
+        //~ setTimeout(function () { location.reload(1); }, 10000);
             
         var raw_data = getLiveData('192.168.86.44');
         
@@ -555,7 +556,7 @@ $( function() {
                 maxBatDrainAmount = 2000*3600
                 actualBatFracMaxDrainRelative = 1.0 - relBatLevel/maxBatDrainAmount
                 
-                console.log(relBatLevel)
+                //~ console.log(relBatLevel)
                 if (relBatLevel > maxBatDrainAmount) {
                     relBatLevel = maxBatDrainAmount;
                 }
@@ -595,6 +596,7 @@ $( function() {
         document.getElementById('middle').style.width='0%';
         document.getElementById('right').setAttribute("style","display:none");
         document.getElementById('right').style.width='0%';
+        //~ setTimeout(function () { location.reload(1); }, 120000);
 
         var date_text = date_list[date_list.length-1-days_ago]
     
