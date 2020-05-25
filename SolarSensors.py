@@ -23,11 +23,18 @@ class SolarSensors:
         returnVal["current"] = [];
 
         for index in range(len(self.m_sensors)):
-            returnVal["names"].append(self.m_sensorNames[index]);
-
             voltage = self.m_sensors[index].getBusVoltage_V()
             current = int(self.m_sensors[index].getCurrent_mA() * self.m_scale_factors[index])
-            returnVal["voltage"].append( voltage );
-            returnVal["current"].append( current );
+            
+            if self.m_sensorNames[index] in returnVal["names"]: # already found an entry for this. its got multiple  channels.  accumulate it.
+                for search_index in range(len(returnVal["names"])):
+                    if self.m_sensorNames[index] == returnVal["names"][search_index]:
+                        #~ returnVal["voltage"][search_index] = returnVal["voltage"][search_index] + voltage
+                        returnVal["current"][search_index] = returnVal["current"][search_index] + current
+                        break
+            else: # new entry
+                returnVal["names"].append(self.m_sensorNames[index]);
+                returnVal["voltage"].append( voltage );
+                returnVal["current"].append( current );
 
         return returnVal;

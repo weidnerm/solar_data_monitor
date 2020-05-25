@@ -309,7 +309,7 @@ $( function() {
         },
         legend:{ enabled:false },
         title: {
-            text: 'Panel/Batt/Load Energy'
+            text: 'Energy (AH)'
         },
         xAxis: {
             categories: ['Panel<br><br>8.4AH', 'Batt<br>92%<br>1.5AH', 'Load<br><br>16.8AH'],
@@ -378,7 +378,7 @@ $( function() {
         },
         legend:{ enabled:false },
         title: {
-            text: 'Panel/Batt/Load Power',
+            text: 'Power (A)',
         },
         xAxis: {
             categories: ['Panel<br>14.124V', 'Batt<br>14.124V', 'Load<br>14.124V'],
@@ -386,11 +386,12 @@ $( function() {
         },
         yAxis: {
             min: 0,
-            max: 12,
+            max: 7,
             title: {
                 text: 'Power Transfer',
                 enabled: false
             },
+            labels: { style: { fontSize: "20px" }},
             stackLabels: {
                 enabled: true,
                 formatter: function () {
@@ -434,17 +435,62 @@ $( function() {
     {
         var raw_data = getLiveData('192.168.86.44');
         
+        // Live Battery States
+        var accumActualBatFracMaxDrainRelative = 0
+        var batteryCount = 0
+        disp_index = 0
+        myLiveBatts['xAxis']['categories'] = []
+        myLiveBatts['series'][0]['data'] = []
+        myLiveBatts['series'][1]['data'] = []
+        for(in_index=0; in_index<raw_data['names'].length ; in_index++) {
+            if ( raw_data['names'][in_index].startsWith('Batt') ) {
+                x_value = raw_data['names'][in_index]+'<br>'+raw_data['voltage'][in_index].toFixed(3)+' V<br>'+raw_data['current'][in_index]+' mA<br>'+
+                    (raw_data['voltage'][in_index]*raw_data['current'][in_index]/1000.0).toFixed(3)+' W'
+                myLiveBatts['xAxis']['categories'].push( x_value )
+                
+                mA = raw_data['current'][in_index]
+                color = '#ffff00'
+                if (mA < -10) {
+                    color = '#ff0000'
+                } else if (mA > 10) {
+                    color = '#00ff00'
+                }
+                
+                relBatLevel = raw_data['maxEnergy'][in_index] - raw_data['cumulativeEnergy'][in_index]
+                maxBatDrainAmount = 2000*3600
+                actualBatFracMaxDrainRelative = 1.0 - relBatLevel/maxBatDrainAmount
+                accumActualBatFracMaxDrainRelative += actualBatFracMaxDrainRelative
+                
+                //~ console.log(relBatLevel)
+                if (relBatLevel > maxBatDrainAmount) {
+                    relBatLevel = maxBatDrainAmount;
+                }
+                relBatLevel = 100*relBatLevel/maxBatDrainAmount
+                
+                entry = {
+                    color: color,
+                    y: 100-relBatLevel
+                    }
+                
+                myLiveBatts['series'][1]['data'].push(entry)
+                myLiveBatts['series'][0]['data'].push(relBatLevel)
+        
+                batteryCount = batteryCount + 1
+                disp_index = disp_index + 1
+            }
+        }
+
         // Live Panel Stuff
         index = 0
         myLiveNow['series'][0]['data'][0]['y'] = Math.abs(raw_data['current'][index]/1000.0)
-        myLiveNow['xAxis']['categories'][0] = 'Panel<br>'+raw_data['voltage'][index].toFixed(3)+' V<br>'+raw_data['current'][index]+' mA<br>'+
-            (raw_data['voltage'][index]*Math.abs(raw_data['current'][index])/1000.0).toFixed(3)+' W'
+        myLiveNow['xAxis']['categories'][0] = 'Panel<br>'+raw_data['voltage'][index].toFixed(2)+' V<br>'+raw_data['current'][index]+' mA<br>'+
+            (raw_data['voltage'][index]*Math.abs(raw_data['current'][index])/1000.0).toFixed(1)+' W'
 
         // Live Load Stuff
         index = 1
         myLiveNow['series'][0]['data'][2]['y'] = raw_data['current'][index]/1000.0
-        myLiveNow['xAxis']['categories'][2] = 'Load<br>'+raw_data['voltage'][index].toFixed(3)+' V<br>'+raw_data['current'][index]+' mA<br>'+
-            (raw_data['voltage'][index]*raw_data['current'][index]/1000.0).toFixed(3)+' W'
+        myLiveNow['xAxis']['categories'][2] = 'Load<br>'+raw_data['voltage'][index].toFixed(2)+' V<br>'+raw_data['current'][index]+' mA<br>'+
+            (raw_data['voltage'][index]*raw_data['current'][index]/1000.0).toFixed(1)+' W'
 
         // Live Batt Stuff
         batt_mA = 0
@@ -454,8 +500,8 @@ $( function() {
             }
         }
         myLiveNow['series'][0]['data'][1]['y'] = Math.abs(batt_mA/1000.0)
-        myLiveNow['xAxis']['categories'][1] = 'Batt<br>'+raw_data['voltage'][2].toFixed(3)+' V<br>'+batt_mA+' mA<br>'+
-            (raw_data['voltage'][2]*batt_mA/1000.0).toFixed(3)+' W'
+        myLiveNow['xAxis']['categories'][1] = 'Batt<br>'+raw_data['voltage'][2].toFixed(2)+' V<br>'+batt_mA+' mA<br>'+
+            (raw_data['voltage'][2]*batt_mA/1000.0).toFixed(1)+' W'
         if (batt_mA < 0) {
             myLiveNow['series'][0]['data'][1]['color'] = '#ff0000'
         }
@@ -485,7 +531,7 @@ $( function() {
         }
         batt_mAH = batt_mA/1000.0/3600.0
         myLiveToday['series'][0]['data'][1]['y'] = Math.abs(batt_mAH)
-        myLiveToday['xAxis']['categories'][1] = 'Batt<br>'+batt_mAH.toFixed(1)+' AH<br>'+75.0+' %<br>'
+        myLiveToday['xAxis']['categories'][1] = 'Batt<br>'+batt_mAH.toFixed(1)+' AH<br>'+(accumActualBatFracMaxDrainRelative/batteryCount*100).toFixed(1)+' %<br>'
         if (batt_mAH < 0) {
             myLiveToday['series'][0]['data'][1]['color'] = '#ff0000'
         }
@@ -494,46 +540,6 @@ $( function() {
         }
 
 
-        // Live Battery States
-        disp_index = 0
-        myLiveBatts['xAxis']['categories'] = []
-        myLiveBatts['series'][0]['data'] = []
-        myLiveBatts['series'][1]['data'] = []
-        for(in_index=0; in_index<raw_data['names'].length ; in_index++) {
-            if ( raw_data['names'][in_index].startsWith('Batt') ) {
-                x_value = raw_data['names'][in_index]+'<br>'+raw_data['voltage'][in_index].toFixed(3)+' V<br>'+raw_data['current'][in_index]+' mA<br>'+
-                    (raw_data['voltage'][in_index]*raw_data['current'][in_index]/1000.0).toFixed(3)+' W'
-                myLiveBatts['xAxis']['categories'].push( x_value )
-                
-                mA = raw_data['current'][in_index]
-                color = '#ffff00'
-                if (mA < -10) {
-                    color = '#ff0000'
-                } else if (mA > 10) {
-                    color = '#00ff00'
-                }
-                
-                relBatLevel = raw_data['maxEnergy'][in_index] - raw_data['cumulativeEnergy'][in_index]
-                maxBatDrainAmount = 2000*3600
-                actualBatFracMaxDrainRelative = 1.0 - relBatLevel/maxBatDrainAmount
-                
-                //~ console.log(relBatLevel)
-                if (relBatLevel > maxBatDrainAmount) {
-                    relBatLevel = maxBatDrainAmount;
-                }
-                relBatLevel = 100*relBatLevel/maxBatDrainAmount
-                
-                entry = {
-                    color: color,
-                    y: 100-relBatLevel
-                    }
-                
-                myLiveBatts['series'][1]['data'].push(entry)
-                myLiveBatts['series'][0]['data'].push(relBatLevel)
-        
-                disp_index = disp_index + 1
-            }
-        }
 
     }
 

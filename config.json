@@ -48,15 +48,15 @@
         "scale": 1.0
     }, 
     {
-        "enable": 0, 
+        "enable": 1, 
         "address": "0x46", 
-        "name": "Batt 2", 
+        "name": "Batt 9", 
         "scale": 1.0
     },
     {
         "enable": 1, 
         "address": "0x4a", 
-        "name": "Batt 1", 
+        "name": "Batt 9", 
         "scale": 1.0
     } 
  ]
