@@ -231,7 +231,7 @@ $( function() {
         },
         legend:{ enabled:false },
         title: {
-            text: 'Battery State'
+            text: 'Battery State (%)'
         },
         xAxis: {
             categories: ['Batt 1<br>110mA<br>1.555W', 'Batt 2', 'Batt 3', 'Batt 4', 'Batt 5'],

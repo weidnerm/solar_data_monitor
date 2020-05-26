@@ -6,13 +6,13 @@
         "scale": 2.0
     }, 
     {
-        "enable": 0, 
+        "enable": 1, 
         "address": "0x49", 
         "name": "Batt 5", 
         "scale": 1.0
     }, 
     {
-        "enable": 0, 
+        "enable": 1, 
         "address": "0x41", 
         "name": "Batt 6", 
         "scale": 1.0
@@ -24,7 +24,7 @@
         "scale": 2.0
     }, 
     {
-        "enable": 0, 
+        "enable": 1, 
         "address": "0x42", 
         "name": "Batt 7", 
         "scale": 1.0
