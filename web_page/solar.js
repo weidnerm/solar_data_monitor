@@ -481,27 +481,43 @@ $( function() {
         }
 
         // Live Panel Stuff
-        index = 0
-        myLiveNow['series'][0]['data'][0]['y'] = Math.abs(raw_data['current'][index]/1000.0)
-        myLiveNow['xAxis']['categories'][0] = 'Panel<br>'+raw_data['voltage'][index].toFixed(2)+' V<br>'+raw_data['current'][index]+' mA<br>'+
-            (raw_data['voltage'][index]*Math.abs(raw_data['current'][index])/1000.0).toFixed(1)+' W'
+        panel_index = 0
+        for(temp_index=0; temp_index<raw_data['names'].length; temp_index++) {
+            if (raw_data['names'][temp_index] == 'Panel') {
+                panel_index = temp_index
+                break
+            }
+        }
+        console.log('panel_index='+panel_index)
+        myLiveNow['series'][0]['data'][0]['y'] = Math.abs(raw_data['current'][panel_index]/1000.0)
+        myLiveNow['xAxis']['categories'][0] = 'Panel<br>'+raw_data['voltage'][panel_index].toFixed(2)+' V<br>'+raw_data['current'][panel_index]+' mA<br>'+
+            (raw_data['voltage'][panel_index]*Math.abs(raw_data['current'][panel_index])/1000.0).toFixed(1)+' W'
 
         // Live Load Stuff
-        index = 1
-        myLiveNow['series'][0]['data'][2]['y'] = raw_data['current'][index]/1000.0
-        myLiveNow['xAxis']['categories'][2] = 'Load<br>'+raw_data['voltage'][index].toFixed(2)+' V<br>'+raw_data['current'][index]+' mA<br>'+
-            (raw_data['voltage'][index]*raw_data['current'][index]/1000.0).toFixed(1)+' W'
+        load_index = 0
+        for(temp_index=0; temp_index<raw_data['names'].length; temp_index++) {
+            if (raw_data['names'][temp_index] == 'Load') {
+                load_index = temp_index
+                break
+            }
+        }
+        console.log('load_index='+load_index)
+        myLiveNow['series'][0]['data'][2]['y'] = raw_data['current'][load_index]/1000.0
+        myLiveNow['xAxis']['categories'][2] = 'Load<br>'+raw_data['voltage'][load_index].toFixed(2)+' V<br>'+raw_data['current'][load_index]+' mA<br>'+
+            (raw_data['voltage'][load_index]*raw_data['current'][load_index]/1000.0).toFixed(1)+' W'
 
         // Live Batt Stuff
         batt_mA = 0
+        some_batt_index = 0
         for(index=0; index<raw_data['names'].length ; index++) {
             if ( raw_data['names'][index].startsWith('Batt') ) {
                 batt_mA = batt_mA + raw_data['current'][index]
+                some_batt_index = index
             }
         }
         myLiveNow['series'][0]['data'][1]['y'] = Math.abs(batt_mA/1000.0)
-        myLiveNow['xAxis']['categories'][1] = 'Batt<br>'+raw_data['voltage'][2].toFixed(2)+' V<br>'+batt_mA+' mA<br>'+
-            (raw_data['voltage'][2]*batt_mA/1000.0).toFixed(1)+' W'
+        myLiveNow['xAxis']['categories'][1] = 'Batt<br>'+raw_data['voltage'][some_batt_index].toFixed(2)+' V<br>'+batt_mA+' mA<br>'+
+            (raw_data['voltage'][some_batt_index]*batt_mA/1000.0).toFixed(1)+' W'
         if (batt_mA < 0) {
             myLiveNow['series'][0]['data'][1]['color'] = '#ff0000'
         }
@@ -511,14 +527,12 @@ $( function() {
         
         
         // Today Panel Stuff
-        index = 0
-        mA_hours = raw_data['todayCumulativeEnergy'][index]/1000.0/3600.0 // /3600 convert sec to hr; /1000 mA to A;
+        mA_hours = raw_data['todayCumulativeEnergy'][panel_index]/1000.0/3600.0 // /3600 convert sec to hr; /1000 mA to A;
         myLiveToday['series'][0]['data'][0]['y'] = mA_hours
         myLiveToday['xAxis']['categories'][0] = 'Panel<br>'+mA_hours.toFixed(1)+' AH<br>'
   
         // Today Load Stuff
-        index = 1
-        mA_hours = raw_data['todayCumulativeEnergy'][index]/1000.0/3600.0 // /3600 convert sec to hr; /1000 mA to A;
+        mA_hours = raw_data['todayCumulativeEnergy'][load_index]/1000.0/3600.0 // /3600 convert sec to hr; /1000 mA to A;
         myLiveToday['series'][0]['data'][2]['y'] = mA_hours
         myLiveToday['xAxis']['categories'][2] = 'Load<br>'+mA_hours.toFixed(1)+' AH<br>'
         
