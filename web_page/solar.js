@@ -218,11 +218,11 @@ $( function() {
                 load: function () {
 
                     // set up the updating of the chart each second
-                    var series0 = this.series[0];
+                    var series2 = this.series[2];
                     var series1 = this.series[1];
                     var x_axis = this.xAxis[0]
                     setInterval(function () {
-                        series0.setData(myLiveBatts['series'][0]['data'])
+                        series2.setData(myLiveBatts['series'][2]['data'])
                         series1.setData(myLiveBatts['series'][1]['data'])
                         x_axis.setCategories(myLiveBatts['xAxis']['categories'])
                     }, 2000);
@@ -237,7 +237,7 @@ $( function() {
             categories: ['Batt 1<br>110mA<br>1.555W', 'Batt 2', 'Batt 3', 'Batt 4', 'Batt 5'],
             labels: { style: { fontSize: "15px" }}
         },
-        yAxis: {
+        yAxis: [{
             min: 0,
             max: 100,
             title: {
@@ -259,6 +259,28 @@ $( function() {
                 }
             }
         },
+        {
+            min: 0,
+            max: 1000,
+            title: {
+                enabled: false
+            },
+            labels: { style: { fontSize: "20px" }},
+            opposite: true,
+            stackLabels: {
+                enabled: false,
+                formatter: function () {
+                    return this.total.toFixed(1)
+                    },
+                style: {
+                    fontWeight: 'bold',
+                    color: ( // theme
+                        Highcharts.defaultOptions.title.style &&
+                        Highcharts.defaultOptions.title.style.color
+                    ) || 'gray'
+                }
+            }
+        }        ],
 
         tooltip: {
             headerFormat: '<b>{point.x}</b><br/>',
@@ -266,7 +288,8 @@ $( function() {
         },
         plotOptions: {
             column: {
-                stacking: 'normal',
+                //~ stacking: 'normal',
+                grouping: false,
                 dataLabels: {
                     style: { fontSize: "20px" },
                     enabled: true,
@@ -281,16 +304,28 @@ $( function() {
             dataLabels: {
                 enabled: false
             },
-            groupPadding:0.0,
             borderWidth:0,
+            groupPadding:0.0,
             color: '#404040',
-            data: [51, 27, 40]
+            data: [100,100,100]
         },
-         {
+        {
+            color: '#a0a0a0',
             borderWidth:0,
             groupPadding:0.0,
             data: [{y:49, color:'#ff0000'},{y:73, color:'#00ff00'},{y:60, color:'#ff0000'}]
-        }]
+        },
+        {
+            dataLabels: {
+                enabled: false
+            },
+            groupPadding:0.30,
+            yAxis: 1,
+            borderWidth:0,
+            color: '#404040',
+            data: [51, 27, 40]
+        }
+        ]
     }
 
     var myLiveToday = {
@@ -413,7 +448,8 @@ $( function() {
         },
         plotOptions: {
             column: {
-                stacking: 'normal',
+                //~ stacking: 'normal',
+                grouping: false,
                 dataLabels: {
                     enabled: true,
                     style: { fontSize: "20px" },
@@ -442,6 +478,7 @@ $( function() {
         myLiveBatts['xAxis']['categories'] = []
         myLiveBatts['series'][0]['data'] = []
         myLiveBatts['series'][1]['data'] = []
+        myLiveBatts['series'][2]['data'] = []
         for(in_index=0; in_index<raw_data['names'].length ; in_index++) {
             if ( raw_data['names'][in_index].startsWith('Batt') ) {
                 x_value = raw_data['names'][in_index]+'<br>'+raw_data['voltage'][in_index].toFixed(3)+' V<br>'+raw_data['current'][in_index]+' mA<br>'+
@@ -469,11 +506,12 @@ $( function() {
                 
                 entry = {
                     color: color,
-                    y: 100-relBatLevel
+                    y: Math.abs(raw_data['current'][in_index])
                     }
                 
-                myLiveBatts['series'][1]['data'].push(entry)
-                myLiveBatts['series'][0]['data'].push(relBatLevel)
+                myLiveBatts['series'][0]['data'].push(100)
+                myLiveBatts['series'][1]['data'].push(100-relBatLevel)
+                myLiveBatts['series'][2]['data'].push(entry)
         
                 batteryCount = batteryCount + 1
                 disp_index = disp_index + 1
@@ -726,7 +764,8 @@ $( function() {
                     }
                 } else {
                     var input_data = inputs[input_channel];
-                    total_mA_sec = input_data[0]
+                    if (input_data == undefined)  {input_data = (0,0,0,0,0,0,0)}
+                    total_mA_sec = input_data[0] 
                     avg_volt = input_data[1]
                     min_volt = input_data[2]
                     max_volt = input_data[3]
